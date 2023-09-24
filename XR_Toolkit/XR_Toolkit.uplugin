@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.7",
+	"FriendlyName": "XR_Toolkit",
+	"Description": "Multiplayer VR Framework. Included networked interactions like grab and use. Replicated Locomotion System.",
+	"Category": "Other",
+	"CreatedBy": "Johannes Tscharn",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "XR_Toolkit",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}
