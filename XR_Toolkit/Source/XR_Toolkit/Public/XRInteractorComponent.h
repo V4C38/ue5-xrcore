@@ -97,6 +97,18 @@ public:
 	bool IsLocallyControlled() const;
 
 	/**
+	 * Return the assochiated Pawn. Useful for intermediaries that use XRInteractors like the XRLaser. 
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction System|XR Interactor Component")
+	APawn* GetOwningPawn() const;
+
+	/**
+	 *  Set the assochiated Pawn. 
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction System|XR Interactor Component")
+	void SetOwningPawn(APawn* InOwningPawn);
+
+	/**
 	 * Return the associated PhysicsConstraint.
 	 * NOTE: Must be assigned manually first. 
 	*/
@@ -128,6 +140,9 @@ private:
 	
 	UPROPERTY(Replicated)
 	TArray<UXRInteractionComponent*> ActiveInteractionComponents = {};
+
+	UPROPERTY()
+	APawn* OwningPawn = nullptr;
 
 	void CacheIsLocallyControlled();
 	bool bIsLocallyControlled = false;

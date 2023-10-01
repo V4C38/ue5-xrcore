@@ -133,13 +133,23 @@ void UXRInteractorComponent::InitializeComponent()
 void UXRInteractorComponent::CacheIsLocallyControlled()
 {
 	AActor* Owner = GetOwner();
-	APawn* OwningPawn = Cast<APawn>(Owner);
-	if (OwningPawn)
+	APawn* TempOwningPawn = Cast<APawn>(Owner);
+	if (TempOwningPawn)
 	{
 		bIsLocallyControlled = OwningPawn->IsLocallyControlled();
 	}
 }
 
+
+void UXRInteractorComponent::SetOwningPawn(APawn* InOwningPawn)
+{
+	OwningPawn = InOwningPawn;
+}
+
+APawn* UXRInteractorComponent::GetOwningPawn() const
+{
+	return OwningPawn;
+}
 
 void UXRInteractorComponent::Server_AddActiveInteractionComponent_Implementation(UXRInteractionComponent* InInteractionComponent)
 {
