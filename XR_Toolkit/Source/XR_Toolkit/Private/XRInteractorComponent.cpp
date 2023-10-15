@@ -161,7 +161,7 @@ void UXRInteractorComponent::Server_AddActiveInteractionComponent_Implementation
 }
 void UXRInteractorComponent::Multicast_StoppedInteracting_Implementation(UXRInteractionComponent* InteractionComponent)
 {
-	OnStartInteracting.Broadcast(this, InteractionComponent);
+	OnStopInteracting.Broadcast(this, InteractionComponent);
 }
 
 void UXRInteractorComponent::Server_RemoveActiveInteractionComponent_Implementation(UXRInteractionComponent* InInteractionComponent)
@@ -175,7 +175,7 @@ void UXRInteractorComponent::Server_RemoveActiveInteractionComponent_Implementat
 
 void UXRInteractorComponent::Multicast_StartedInteracting_Implementation(UXRInteractionComponent* InteractionComponent)
 {
-	OnStopInteracting.Broadcast(this, InteractionComponent);
+	OnStartInteracting.Broadcast(this, InteractionComponent);
 }
 
 void UXRInteractorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
