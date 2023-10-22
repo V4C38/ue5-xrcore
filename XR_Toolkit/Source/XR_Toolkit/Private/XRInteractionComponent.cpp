@@ -145,6 +145,16 @@ void UXRInteractionComponent::SetSupressLaserWhenInteracting(bool InSupressLaser
 	bSupressLaserWhenInteracting = InSupressLaser;
 }
 
+bool UXRInteractionComponent::GetSnapXRLaserToActor() const
+{
+	return bSnapXRLaserToActor;
+}
+
+void UXRInteractionComponent::SetSnapXRLaserToActor(bool InSnapXRLaserToActor)
+{
+	bSnapXRLaserToActor = InSnapXRLaserToActor;
+}
+
 void UXRInteractionComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
                                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

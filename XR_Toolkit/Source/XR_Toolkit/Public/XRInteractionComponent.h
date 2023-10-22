@@ -121,27 +121,38 @@ public:
 	 * Enables / Disables this Interaction to be triggered via the LaserComponent. Will also disable Highlighting via the Laser. 
 	 * The Actor will be ignored during the collision checks in the InteractionSystemComponent. 
 	 */
-	UPROPERTY(EditAnywhere, Category="XRToolkit|XR Interaction|Config")
+	UPROPERTY(EditAnywhere, Category="XRToolkit|XR Interaction|Config|Laser")
 	bool bEnableLaserInteraction = true;
 	
 	/**
 	 * Enables / Disables this Interaction to be triggered via the LaserComponent. Will also disable Highlighting via the Laser. 
 	 * The Actor will be ignored during the collision checks in the InteractionSystemComponent. 
 	 */
-	UFUNCTION(Blueprintpure, Category="XRToolkit|XR Interaction|Config")
+	UFUNCTION(Blueprintpure, Category="XRToolkit|XR Interaction|Config|Laser")
 	bool IsLaserInteractionEnabled() const;
 
 	/**
 	 * Should this XRInteraction disable the XRLaser while the Interaction is active.
 	 */
-	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Config")
+	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Config|Laser")
 	bool GetSupressLaserWhenInteracting() const;
 	/**
 	 * Set if this XRInteraction disables the XRLaser while the Interaction is active.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction|Config")
+	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction|Config|Laser")
 	void SetSupressLaserWhenInteracting(bool InSupressLaser);
-	
+
+	/**
+	 * Should this XRInteraction force the XRLaser to snap to the owning Actor.
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Config|Laser")
+	bool GetSnapXRLaserToActor() const;
+	/**
+	 * Set if this XRInteraction forces the XRLaser to snap to the owning Actor.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction|Config|Laser")
+	void SetSnapXRLaserToActor(bool InSnapXRLaserToActor);
+
 	/**
 	* Caches all UMeshComponents on the owner. Those are considered for Overlaps and call OnInteractionHovered.
 	* Initially Called on BeginPlay already - can be used for Override or if Components are added at runtime. 
@@ -199,8 +210,14 @@ protected:
 	/**
 	 * Should this XRInteraction disable the XRLaser while the Interaction is active.
 	 */
-	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config|Laser")
 	bool bSupressLaserWhenInteracting = true;
+
+	/**
+	 * Should this XRInteraction force the XRLaser to snap to the OwningActor.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config|Laser")
+	bool bSnapXRLaserToActor = false;
 	
 	
 private:
