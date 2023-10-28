@@ -36,14 +36,14 @@ public:
 
 protected:
 
-    UPROPERTY(EditAnywhere, Category="XRToolkit|XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
     bool bResetAfterInteractionEnd = false;
 
     UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
-    bool bUseOnHover = false;
+    bool bTriggerOnHover = false;
 
     UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
-    float CooldownDuration = 0.2f;
+    float CooldownDuration = 0.05f;
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 

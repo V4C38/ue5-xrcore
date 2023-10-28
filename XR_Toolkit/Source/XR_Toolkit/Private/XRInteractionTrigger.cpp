@@ -14,7 +14,7 @@ UXRInteractionTrigger::UXRInteractionTrigger()
 void UXRInteractionTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	if (bUseOnHover)
+	if (bTriggerOnHover)
 	{
 		bSnapXRLaserToActor = false;
 	}
@@ -24,7 +24,7 @@ void UXRInteractionTrigger::BeginPlay()
 
 void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteractor)
 {
-	if (bUseOnHover)
+	if (bTriggerOnHover)
 	{
 		return;
 	}
@@ -39,7 +39,7 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 {
-	if (bUseOnHover)
+	if (bTriggerOnHover)
 	{
 		return;
 	}
@@ -54,7 +54,7 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
 	Super::HoverInteraction(InInteractor, bInHoverState);
-	if (!bUseOnHover)
+	if (!bTriggerOnHover)
 	{
 		return;
 	}
@@ -82,7 +82,7 @@ void UXRInteractionTrigger::RequestCooldown()
 {
 	if (CooldownDuration > 0.0f)
 	{
-		Deactivate();
+		SetActive(false, false);
 		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
 		TimerManager.SetTimer(CooldownTimerHandle, this, &UXRInteractionTrigger::EnableComponent, CooldownDuration, false);
 	}
@@ -90,7 +90,7 @@ void UXRInteractionTrigger::RequestCooldown()
 
 void UXRInteractionTrigger::EnableComponent()
 {
-	Activate();
+	SetActive(true, false);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------

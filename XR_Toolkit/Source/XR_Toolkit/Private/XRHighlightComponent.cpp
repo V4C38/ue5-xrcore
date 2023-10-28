@@ -8,24 +8,12 @@ UXRHighlightComponent::UXRHighlightComponent()
 	bAutoActivate = true;
 }
 
-
 void UXRHighlightComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	InitializeFadeTimeline();
 	SetHighlightTag(HighlightMeshTag);
-	
-	if (HighlightFadeCurve)
-	{
-		FOnTimelineFloat TimelineUpdate;
-		TimelineUpdate.BindUFunction(this, FName("TimelineUpdate"));
-		
-		FOnTimelineEventStatic TimelineFinished;
-		FadeTimeline.SetTimelineFinishedFunc(TimelineFinished);
-		
-		FadeTimeline.SetLooping(false);
-	
-		FadeTimeline.AddInterpFloat(HighlightFadeCurve, TimelineUpdate);
-	}
+	SetHighlightFadeCurve(HighlightFadeCurve);
 }
 
 void UXRHighlightComponent::TickComponent(float DeltaTime, ELevelTick TickType,
@@ -33,11 +21,9 @@ void UXRHighlightComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	FadeTimeline.TickTimeline(DeltaTime);
-
-	// NOTE: for some reason the Component will not stop ticking even though it is called on timeline finished
-	// GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Yellow, TEXT("Highlight Tick"));
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void UXRHighlightComponent::SetHighlighted(float InHighlightState)
 {
@@ -52,47 +38,43 @@ void UXRHighlightComponent::SetHighlighted(float InHighlightState)
 	}
 }
 
-
-float UXRHighlightComponent::GetHighlightState()
-{
-	return HighlightState;
-}
-
-
 void UXRHighlightComponent::FadeXRHighlight(bool bFadeIn)
 {
-	if (IsActive())
+	if (!IsActive())
 	{
-		if (HighlightFadeCurve)
+		SetHighlighted(0.0f);
+		return;
+	}
+	if (HighlightFadeCurve)
+	{
+		if (!bIsTimelineInitialized)
 		{
-			SetComponentTickEnabled(true);
-			if(bFadeIn)
+			InitializeFadeTimeline();
+		}
+		SetComponentTickEnabled(true);
+		if (bFadeIn)
 			{
-				FadeTimeline.Play();
-			}
-			else
-			{
-				FadeTimeline.Reverse();
-			}
+			FadeTimeline.Play();
 		}
 		else
 		{
-			if (bFadeIn)
-			{
-				SetHighlighted(1.0f);
-			}
-			else
-			{
-				SetHighlighted(0.0f);
-			}
+			FadeTimeline.Reverse();
 		}
 	}
 	else
 	{
-		SetHighlighted(0.0f);
+		if (bFadeIn)
+		{
+			SetHighlighted(1.0f);
+		}
+		else
+		{
+			SetHighlighted(0.0f);
+		}
 	}
-
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void UXRHighlightComponent::TimelineUpdate(float InTimelineProgress)
 {
@@ -102,27 +84,39 @@ void UXRHighlightComponent::TimelineUpdate(float InTimelineProgress)
 void UXRHighlightComponent::TimelineFinished()
 {
 	SetComponentTickEnabled(false);
-	// GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Yellow, TEXT("Highlight Tick"));
 }
 
-
-
-
-void UXRHighlightComponent::SetHighlightTag(FName InHighlightMeshTag)
+void UXRHighlightComponent::SetHighlightFadeCurve(UCurveFloat* InHighlightFadeCurve)
 {
-	CacheHighlightableMeshComponents();
+	HighlightFadeCurve = InHighlightFadeCurve;
+	if (HighlightFadeCurve)
+	{
+		FOnTimelineFloat TimelineUpdate;
+		TimelineUpdate.BindUFunction(this, FName("TimelineUpdate"));
+
+		FOnTimelineEventStatic TimelineFinished;
+		FadeTimeline.SetTimelineFinishedFunc(TimelineFinished);
+		FadeTimeline.SetLooping(false);
+		FadeTimeline.AddInterpFloat(HighlightFadeCurve, TimelineUpdate);
+	}
 }
 
-FName UXRHighlightComponent::GetHighlightTag() const
+void UXRHighlightComponent::InitializeFadeTimeline()
 {
-	return HighlightMeshTag;
-}
+	if (HighlightFadeCurve && !bIsTimelineInitialized)
+	{
+		FOnTimelineFloat TimelineUpdate;
+		TimelineUpdate.BindUFunction(this, FName("TimelineUpdate"));
 
-TArray<UMeshComponent*> UXRHighlightComponent::GetHighlightMeshes() const
-{
-	return HighlightableMeshComponents;
-}
+		FOnTimelineEventStatic TimelineFinished;
+		TimelineFinished.BindUFunction(this, FName("TimelineFinished"));
 
+		FadeTimeline.SetTimelineFinishedFunc(TimelineFinished);
+		FadeTimeline.AddInterpFloat(HighlightFadeCurve, TimelineUpdate);
+
+		bIsTimelineInitialized = true;
+	}
+}
 
 void UXRHighlightComponent::CacheHighlightableMeshComponents()
 {
@@ -145,6 +139,29 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 	HighlightableMeshComponents = ValidComponents;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+float UXRHighlightComponent::GetHighlightState()
+{
+	return HighlightState;
+}
+
+void UXRHighlightComponent::SetHighlightTag(FName InHighlightMeshTag)
+{
+	CacheHighlightableMeshComponents();
+}
+
+FName UXRHighlightComponent::GetHighlightTag() const
+{
+	return HighlightMeshTag;
+}
+
+TArray<UMeshComponent*> UXRHighlightComponent::GetHighlightMeshes() const
+{
+	return HighlightableMeshComponents;
+}
+
+
 void UXRHighlightComponent::SetActive(bool bNewActive, bool bReset)
 {
 	Super::SetActive(bNewActive, bReset);
@@ -153,8 +170,5 @@ void UXRHighlightComponent::SetActive(bool bNewActive, bool bReset)
 		SetHighlighted(false);
 	}
 }
-
-
-
 
 
