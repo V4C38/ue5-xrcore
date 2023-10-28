@@ -116,3 +116,5 @@ XR_Toolkit/Binaries/Win64/UnrealEditor.modules
 *.response
 *.exp
 *.pdb
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionTrigger.gen.cpp
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionTrigger.generated.h

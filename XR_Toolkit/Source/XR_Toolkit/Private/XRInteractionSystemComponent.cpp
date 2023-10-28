@@ -51,7 +51,7 @@ void UXRInteractionSystemComponent::Server_StartInteraction_Implementation(
 void UXRInteractionSystemComponent::Multicast_StartInteraction_Implementation(
 	UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InXRInteractor)
 {
-	InInteractionComponent->Client_StartInteraction(InXRInteractor);
+	InInteractionComponent->StartInteraction(InXRInteractor);
 	OnInteractionStart.Broadcast(this, InInteractionComponent, InXRInteractor);
 }
 // =================================================================================================================================
@@ -79,7 +79,7 @@ void UXRInteractionSystemComponent::Server_StopInteraction_Implementation(UXRInt
 void UXRInteractionSystemComponent::Multicast_StopInteraction_Implementation(
 	UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InXRInteractor)
 {
-	InInteractionComponent->Client_EndInteraction(InXRInteractor);
+	InInteractionComponent->EndInteraction(InXRInteractor);
 	OnInteractionEnd.Broadcast(this, InInteractionComponent, InXRInteractor);
 }
 // =================================================================================================================================
