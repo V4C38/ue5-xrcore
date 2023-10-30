@@ -33,7 +33,7 @@ void UXRHighlightComponent::SetHighlighted(float InHighlightState)
 	{
 		if (HighlightMeshComponent)
 		{
-			HighlightMeshComponent->SetScalarParameterValueOnMaterials("HighlightState", InHighlightState);
+			HighlightMeshComponent->SetScalarParameterValueOnMaterials(HighlightMaterialParameter, InHighlightState);
 		}
 	}
 }

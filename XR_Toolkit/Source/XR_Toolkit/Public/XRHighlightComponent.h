@@ -85,6 +85,9 @@ public:
 
 protected:
 	UPROPERTY()
+	FName HighlightMaterialParameter = "XRHighlight_State";
+
+	UPROPERTY()
 	FTimeline FadeTimeline;
 
 	UFUNCTION()
