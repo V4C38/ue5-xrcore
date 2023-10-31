@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+#include "Sound/SoundBase.h"
 #include "XRInteractionComponent.generated.h"
 
 
@@ -158,7 +159,7 @@ public:
 	 * Return the assigned XRInteractionHighlightComponent. Only valid if bEnableHighlighting is true on BeginPlay.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Highlight")
-	UXRInteractionHighlightComponent* GetXRInteractionHighlightComponent();
+	UXRHighlightComponent* GetXRHighlightComponent();
 
 protected:
 	virtual void InitializeComponent() override;
@@ -214,25 +215,7 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
 	bool bAllowTakeOver = true;
 
-	/**
-	 * Ebanble Material based Highlighting for this Interaction. 
-	 * Spawn an XRInteractionHighlight on BeginPlay and set this interaction as it`s assigned Interaction if true at BeginPlay.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
-	bool bEnableHighlighting = true;
-
-	/**
-	 * Tag used to determine which MeshComponents to cache on the Owning Actor for highlighting.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
-	FName HighlightMeshTag = "highlight";
-
-	/**
-	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be set instantly.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
-	UCurveFloat* HighlightFadeCurve = nullptr;
-
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
 	 * Enables / Disables this Interaction to be triggered via the LaserComponent. Will also disable Highlighting via the Laser.
 	 * The Actor will be ignored during the collision checks in the InteractionSystemComponent.
@@ -253,20 +236,56 @@ protected:
 	bool bSnapXRLaserToActor = false;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Ebanble Material based Highlighting for this Interaction.
+	 * Spawn an XRInteractionHighlight on BeginPlay and set this interaction as it`s assigned Interaction if true at BeginPlay.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
+	bool bEnableHighlighting = true;
+
+	/**
+	 * Tag used to determine which MeshComponents to cache on the Owning Actor for highlighting.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
+	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
+
+	/**
+	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be set instantly.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Highlighting")
+	UCurveFloat* HighlightFadeCurve = nullptr;
+
+	UPROPERTY()
+	UXRHighlightComponent* XRHighlightComponent = nullptr;
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	* Played when the Interaction starts at the location of the XRInteractionComponent.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Audio")
+	USoundBase* InteractionStartSound= nullptr;
+	/**
+	* Played when the Interaction ends at the location of the XRInteractionComponent.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Audio")
+	USoundBase* InteractionEndSound = nullptr;
+
+	UPROPERTY()
+	UAudioComponent* CurrentAudioComponent = nullptr;
+
+	UFUNCTION()
+	void RequestAudioPlay(USoundBase* InSound);
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
 
-	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction|Config|Highlighting")
-	void SpawnAndConfigureInteractionHighlight();
+	UFUNCTION()
+	void SpawnAndConfigureXRHighlight();
 	
 	UPROPERTY()
 	TArray<UMeshComponent*> InteractionCollision = {nullptr};
 	
 	UPROPERTY()
 	UXRInteractorComponent* ActiveInteractor = nullptr;
-
-	UPROPERTY()
-	UXRInteractionHighlightComponent* XRInteractionHighlightComponent = nullptr;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

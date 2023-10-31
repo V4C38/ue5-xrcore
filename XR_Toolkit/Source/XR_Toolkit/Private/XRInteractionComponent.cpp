@@ -1,7 +1,8 @@
 
 #include "XRInteractionComponent.h"
 #include "XRInteractorComponent.h"
-#include "XRInteractionHighlightComponent.h"
+#include "XRHighlightComponent.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -25,7 +26,7 @@ void UXRInteractionComponent::BeginPlay()
 	CacheInteractionCollision();
 	if (bEnableHighlighting)
 	{
-		SpawnAndConfigureInteractionHighlight();
+		SpawnAndConfigureXRHighlight();
 	}
 }
 
@@ -36,9 +37,14 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 	SetActiveInteractor(InInteractor);
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
+	RequestAudioPlay(InteractionStartSound);
 	if (GetIsContinuousInteraction())
 	{
 		bIsInteractionActive = true;
+		if (XRHighlightComponent)
+		{
+			XRHighlightComponent->SetHighlighted(0.0f);
+		}
 	}
 }
 
@@ -47,11 +53,16 @@ void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteracto
 	OnInteractionEnd(InInteractor);
 	OnInteractionEnded.Broadcast(this, InInteractor);
 	SetActiveInteractor(nullptr);
+	RequestAudioPlay(InteractionEndSound);
 	
 	UXRInteractorComponent* HoveringInteractor = GetHoveringInteractor();
 	if (HoveringInteractor)
 	{
 		OnInteractionHovered.Broadcast(this, HoveringInteractor, true);
+		if (XRHighlightComponent)
+		{
+			XRHighlightComponent->FadeXRHighlight(true);
+		}
 	}
 	
 	bIsInteractionActive = false;
@@ -59,7 +70,10 @@ void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteracto
 
 void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
-
+	if (XRHighlightComponent && !bIsInteractionActive)
+	{
+		XRHighlightComponent->FadeXRHighlight(bInHoverState);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -137,28 +151,44 @@ void UXRInteractionComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, 
 	}
 }
 
-void UXRInteractionComponent::SpawnAndConfigureInteractionHighlight()
+void UXRInteractionComponent::SpawnAndConfigureXRHighlight()
 {
-	if (XRInteractionHighlightComponent)
+	if (XRHighlightComponent)
 	{
 		return;
 	}
-	XRInteractionHighlightComponent = NewObject<UXRInteractionHighlightComponent>(this->GetOwner());
-	if (XRInteractionHighlightComponent)
+	XRHighlightComponent = NewObject<UXRHighlightComponent>(this->GetOwner());
+	if (XRHighlightComponent)
 	{
-		XRInteractionHighlightComponent->RegisterComponent();
-		XRInteractionHighlightComponent->SetHighlightFadeCurve(HighlightFadeCurve);
-		XRInteractionHighlightComponent->SetHighlightTag(HighlightMeshTag);
-		XRInteractionHighlightComponent->AssignXRInteraction(this);
-		XRInteractionHighlightComponent->Activate();
+		XRHighlightComponent->RegisterComponent();
+		XRHighlightComponent->SetHighlightFadeCurve(HighlightFadeCurve);
+		XRHighlightComponent->SetHighlightIgnoreMeshTag(HighlightIgnoreMeshTag);
+		XRHighlightComponent->Activate();
 	}
 }
 
-UXRInteractionHighlightComponent* UXRInteractionComponent::GetXRInteractionHighlightComponent()
+UXRHighlightComponent* UXRInteractionComponent::GetXRHighlightComponent()
 {
-	return XRInteractionHighlightComponent;
+	return XRHighlightComponent;
 }
 
+
+void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
+{
+	if (CurrentAudioComponent && CurrentAudioComponent->IsPlaying())
+	{
+		CurrentAudioComponent->Stop();
+	}
+
+	if (InSound)
+	{
+		CurrentAudioComponent = UGameplayStatics::SpawnSoundAtLocation(
+			GetWorld(),
+			InSound,
+			this->GetComponentLocation()
+		);
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void UXRInteractionComponent::SetActiveInteractor(UXRInteractorComponent* InInteractor)

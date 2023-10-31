@@ -12,7 +12,7 @@ void UXRHighlightComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	InitializeFadeTimeline();
-	SetHighlightTag(HighlightMeshTag);
+	SetHighlightIgnoreMeshTag(HighlightIgnoreMeshTag);
 	SetHighlightFadeCurve(HighlightFadeCurve);
 }
 
@@ -28,6 +28,11 @@ void UXRHighlightComponent::TickComponent(float DeltaTime, ELevelTick TickType,
 void UXRHighlightComponent::SetHighlighted(float InHighlightState)
 {
 	HighlightState = InHighlightState;
+
+	if (FadeTimeline.IsPlaying() && InHighlightState == 0.0f)
+	{
+		FadeTimeline.Stop();
+	}
 
 	for (auto* HighlightMeshComponent : HighlightableMeshComponents)
 	{
@@ -129,7 +134,7 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 	{
 		if (MeshComponent)
 		{
-			if (MeshComponent->ComponentHasTag(HighlightMeshTag))
+			if (!MeshComponent->ComponentHasTag(HighlightIgnoreMeshTag))
 			{
 				ValidComponents.Add(MeshComponent);
 			}
@@ -146,14 +151,14 @@ float UXRHighlightComponent::GetHighlightState()
 	return HighlightState;
 }
 
-void UXRHighlightComponent::SetHighlightTag(FName InHighlightMeshTag)
+void UXRHighlightComponent::SetHighlightIgnoreMeshTag(FName InHighlightMeshTag)
 {
 	CacheHighlightableMeshComponents();
 }
 
-FName UXRHighlightComponent::GetHighlightTag() const
+FName UXRHighlightComponent::GetHighlightIgnoreMeshTag() const
 {
-	return HighlightMeshTag;
+	return HighlightIgnoreMeshTag;
 }
 
 TArray<UMeshComponent*> UXRHighlightComponent::GetHighlightMeshes() const

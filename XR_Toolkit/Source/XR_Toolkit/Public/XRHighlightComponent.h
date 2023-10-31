@@ -50,7 +50,7 @@ public:
 	 * Tag used to determine which MeshComponents to cache on the Owning Actor
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Highlight Component")
-	FName HighlightMeshTag = "highlight";
+	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
 
 	/**
 	* Caches all UMeshComponents with the given Tag on the Owning Actor.
@@ -58,13 +58,13 @@ public:
 	* @param InHighlightMeshTag All UMeshComponents with this tag will be cached for highlighting. 
 	*/
 	UFUNCTION(BlueprintCallable, Category="XRToolkit|XR Highlight Component")
-	void SetHighlightTag(FName InHighlightMeshTag);
+	void SetHighlightIgnoreMeshTag(FName InHighlightIgnoreMeshTag);
 
 	/**
 	* Returns the currently assigned HighlightTag.
 	*/
 	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Highlight Component")
-	FName GetHighlightTag() const;
+	FName GetHighlightIgnoreMeshTag() const;
 
 	/**
 	* Returns the currently cached UMeshComponents that are considered for Highlighting. 

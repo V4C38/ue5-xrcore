@@ -34,7 +34,6 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 	{
 		RequestCooldown();
 	}
-
 }
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
@@ -58,7 +57,16 @@ void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteracto
 	{
 		return;
 	}
-	SetTriggerState(bInHoverState);
+	if (bInHoverState)
+	{
+		Super::StartInteraction(InInteractor);
+		SetTriggerState(true);
+	}
+	else
+	{
+		Super::EndInteraction(InInteractor);
+		SetTriggerState(false);
+	}
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 

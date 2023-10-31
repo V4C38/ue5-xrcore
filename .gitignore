@@ -118,3 +118,7 @@ XR_Toolkit/Binaries/Win64/UnrealEditor.modules
 *.pdb
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionTrigger.gen.cpp
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionTrigger.generated.h
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionAudioComponent.generated.h
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionAudioComponent.gen.cpp
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRAudioComponent.generated.h
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRAudioComponent.gen.cpp
