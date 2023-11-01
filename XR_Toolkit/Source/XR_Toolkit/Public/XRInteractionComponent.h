@@ -227,7 +227,7 @@ protected:
 	 * Should this XRInteraction disable the XRLaser while the Interaction is active.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Laser")
-	bool bSupressLaserWhenInteracting = true;
+	bool bSupressLaserWhenInteracting = false;
 
 	/**
 	 * Should this XRInteraction force the XRLaser to snap to the OwningActor.

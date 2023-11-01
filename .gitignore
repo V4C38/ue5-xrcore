@@ -122,3 +122,5 @@ XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractio
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionAudioComponent.gen.cpp
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRAudioComponent.generated.h
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRAudioComponent.gen.cpp
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionGrab.gen.cpp
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionGrab.generated.h

@@ -6,6 +6,8 @@
 #include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 UXRInteractionComponent::UXRInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -31,7 +33,8 @@ void UXRInteractionComponent::BeginPlay()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// Interaction Events
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInteractor)
 {
 	SetActiveInteractor(InInteractor);
@@ -64,7 +67,6 @@ void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteracto
 			XRHighlightComponent->FadeXRHighlight(true);
 		}
 	}
-	
 	bIsInteractionActive = false;
 }
 
@@ -77,7 +79,8 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// Collision
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::CacheInteractionCollision()
 {
 	const AActor* ParentActor = GetOwner();
@@ -119,8 +122,6 @@ UXRInteractorComponent* UXRInteractionComponent::GetHoveringInteractor()
 	return OverlappingInteractor;
 }
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 void UXRInteractionComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -151,6 +152,9 @@ void UXRInteractionComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, 
 	}
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Highlighting & Audio
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::SpawnAndConfigureXRHighlight()
 {
 	if (XRHighlightComponent)
@@ -189,6 +193,7 @@ void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
 		);
 	}
 }
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void UXRInteractionComponent::SetActiveInteractor(UXRInteractorComponent* InInteractor)
