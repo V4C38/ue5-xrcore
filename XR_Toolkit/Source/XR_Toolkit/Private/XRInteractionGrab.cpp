@@ -1,5 +1,6 @@
 #include "XRInteractionGrab.h"
 #include "XRReplicatedPhysicsComponent.h"
+#include "XRInteractorComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 
 
@@ -139,4 +140,10 @@ void UXRInteractionGrab::InitializePhysics()
 			}
 		}
 	}
+}
+
+
+UXRReplicatedPhysicsComponent* UXRInteractionGrab::GetPhysicsReplicationComponent()
+{
+	return XRReplicatedPhysicsComponent;
 }

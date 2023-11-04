@@ -98,12 +98,12 @@ public:
 	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
 	 **/
 	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
-	float ReplicationIntervalMax = 0.065f;
+	float ReplicationIntervalMax = 0.05f;
 	/**
 	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
 	 **/
 	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
-	float ReplicationIntervalMin = 0.025f;
+	float ReplicationIntervalMin = 0.02f;
 
 	/**
 	 * Disable the interpolation between the transforms received from the server on the client. This allows monitoring 
@@ -116,7 +116,7 @@ public:
 	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
 	 **/
 	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
-	float VelocityTreshold = 350.0f;
+	float VelocityThreshold = 350.0f;
 
 	/**
 	 * Gets the dynamically adjusted replication interval.

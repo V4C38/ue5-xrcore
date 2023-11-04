@@ -26,12 +26,17 @@ public:
     UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
     bool bEnablePhysics = true;
     /**
-    * Enable Replicated Physics.
-    * Actor MUST have a UStaticMeshComponent as the RootComponent.
+    * Optionally specify additional components in the actor with this tag that should be Physics enabled and replicated.
+    * Actor MUST have a UStaticMeshComponent as the RootComponent (this is cached even without the tag).
     */
     UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
     FName PhysicsTag = "XRPhysics";
 
+    /**
+    * Return the Component handling PhysicsReplication for this Interaction. If bEnablePhysics is true, this component will be spawned at BeginPlay().
+    */
+    UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Config")
+    UXRReplicatedPhysicsComponent* GetPhysicsReplicationComponent();
 
 protected:
     UPROPERTY()

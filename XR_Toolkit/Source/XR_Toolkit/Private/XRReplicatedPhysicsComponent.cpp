@@ -7,14 +7,23 @@ UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicated(true);
+
 }
 
 
 void UXRReplicatedPhysicsComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	CachePhysicsMeshComponents("physics");
+	CachePhysicsMeshComponents("");
 	UpdateClientPhysicsData();
+
+	FString PluginConfigPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("XRToolkit"), TEXT("Config"), TEXT("DefaultXRToolkit.ini"));
+	if (GConfig)
+	{
+		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("ReplicationIntervalMax"), ReplicationIntervalMax, PluginConfigPath);
+		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("ReplicationIntervalMin"), ReplicationIntervalMin, PluginConfigPath);
+		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("VelocityThreshold"), VelocityThreshold, PluginConfigPath);
+	}
 }
 
 void UXRReplicatedPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -62,9 +71,6 @@ void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 	}
 }
 
-
-
-
 void UXRReplicatedPhysicsComponent::OnRep_ServerReplicatePhysics()
 {
 	OnServerPhysicsReplicationStateChanged.Broadcast(this, IsServerReplicatingPhysics());
@@ -102,7 +108,7 @@ void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 	}
 	else
 	{
-		float VelocityFactor = FMath::Clamp(Velocity / VelocityTreshold, 0.0f, 1.0f);
+		float VelocityFactor = FMath::Clamp(Velocity / VelocityThreshold, 0.0f, 1.0f);
 		DynamicReplicationInterval = FMath::Lerp(ReplicationIntervalMax, ReplicationIntervalMin, VelocityFactor);
 	}
 	AccumulatedTime += DeltaTime;
@@ -146,26 +152,37 @@ float UXRReplicatedPhysicsComponent::GetDynamicReplicationInterval()
 	return DynamicReplicationInterval;
 }
 
-
 void UXRReplicatedPhysicsComponent::CachePhysicsMeshComponents(FName InComponentTag)
 {
-	PhysicsMeshComponents = {};
-	AActor* ParentActor = GetOwner();
-	TInlineComponentArray<UMeshComponent*> MeshComponents;
-	ParentActor->GetComponents(MeshComponents);
+	PhysicsMeshComponents.Empty();
 
-	TArray<UMeshComponent*> ValidComponents;
-	for (auto* MeshComponent : MeshComponents)
+	AActor* Owner = GetOwner();
+	if (!Owner)
 	{
-		if (MeshComponent)
+		return;
+	}
+
+	// Add root component if it's a StaticMeshComponent.
+	if (UStaticMeshComponent* RootStaticMesh = Cast<UStaticMeshComponent>(Owner->GetRootComponent()))
+	{
+		PhysicsMeshComponents.AddUnique(RootStaticMesh);
+	}
+
+	if (InComponentTag.IsNone())
+	{
+		return;
+	}
+
+	// Get all MeshComponents with the specified tag and add them to the list.
+	TInlineComponentArray<UMeshComponent*> MeshComponents;
+	Owner->GetComponents(MeshComponents);
+	for (UMeshComponent* MeshComponent : MeshComponents)
+	{
+		if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
 		{
-			if (MeshComponent->ComponentHasTag(InComponentTag))
-			{
-				ValidComponents.Add(MeshComponent);
-			}
+			PhysicsMeshComponents.AddUnique(MeshComponent);
 		}
 	}
-	PhysicsMeshComponents = ValidComponents;
 }
 
 TArray<UMeshComponent*> UXRReplicatedPhysicsComponent::GetPhysicsMeshComponents() const
