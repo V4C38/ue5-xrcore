@@ -23,39 +23,31 @@ public:
     void EndInteraction(UXRInteractorComponent* InInteractor) override;
     void HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState) override;
 
-    UPROPERTY(BlueprintAssignable, Category = "XRToolkit|XR Interaction|Trigger")
+    UPROPERTY(BlueprintAssignable, Category = "XR Interaction|Trigger")
     FOnTriggerStateChanged OnTriggerStateChanged;
 
     /**
     * Sets the state of the Trigger. Replicated, only executed when called on Server.
     */
-    UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Interaction|Trigger")
+    UFUNCTION(BlueprintCallable, Category = "XR Interaction|Trigger")
     void SetTriggerState(bool InTriggerState);
 
     /**
     * Get the state of the Trigger. Replicated.
     */
-    UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Interaction|Trigger")
+    UFUNCTION(BlueprintPure, Category = "XR Interaction|Trigger")
     bool GetTriggerState();
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 protected:
-
-    /**
-    * Only set Trigger state to true while the Interaction is held (iE. Continuous interaction is active). 
-    * If false, Trigger will function as a toggle.
-    */
-    UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
-    bool bResetAfterInteractionEnd = false;
-
     /**
     * Sets the TriggerState to HoverState.
     */
-    UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
     bool bTriggerOnHover = false;
 
-    UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
     float CooldownDuration = 0.05f;
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------

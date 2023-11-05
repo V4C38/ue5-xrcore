@@ -3,7 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
-#include "EXRHandType.h"
+#include "InputCoreTypes.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "XRInteractorComponent.generated.h"
 
@@ -103,12 +103,12 @@ public:
 	 * Set the HandType for this Interactor.
 	*/
 	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "XR Interaction|XR Interactor")
-	void Server_SetHandType(EXRHandType InHandType);
+	void Server_SetXRControllerHand(EControllerHand InXRControllerHand);
 	/**
 	 * Get the assigned HandType for this Interactor.
 	*/
 	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
-	EXRHandType GetHandType() const;
+	EControllerHand GetXRControllerHand() const;
 
 	/**
 	 * Returns true if this Interactor is part of an XRLaser. This can be useful to distinguish between Interactions
@@ -155,7 +155,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(Replicated, EditDefaultsOnly, Category="XR Interaction|XR Interactor")
-	EXRHandType HandType = EXRHandType::None;
+	EControllerHand XRControllerHand = EControllerHand::AnyHand;
 	
 	UPROPERTY(EditDefaultsOnly, Category="XR Interaction|XR Interactor")
 	bool bIsLaserInteractor = false;

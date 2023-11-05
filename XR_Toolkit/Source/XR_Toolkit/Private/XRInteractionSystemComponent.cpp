@@ -152,7 +152,15 @@ void UXRInteractionSystemComponent::RegisterXRInteractor(UXRInteractorComponent*
 // Retrieves the list of currently registered XRInteractors.
 TArray<UXRInteractorComponent*> UXRInteractionSystemComponent::GetRegisteredXRInteractors() const
 {
-	return RegisteredXRInteractors;
+	TArray<UXRInteractorComponent*> RawInteractors = {};
+	for (const TWeakObjectPtr<UXRInteractorComponent>& WeakInteractor : RegisteredXRInteractors)
+	{
+		if (WeakInteractor.IsValid())
+		{
+			RawInteractors.Add(WeakInteractor.Get());
+		}
+	}
+	return RawInteractors;
 }
 
 // Retrieves the list of currently active interactions.

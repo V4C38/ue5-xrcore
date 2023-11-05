@@ -183,9 +183,8 @@ protected:
 	// Config - General
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Interactions with a higher priority will be started first. Value must be > 0.
+	 * Lower Prio is better. Prioritized Interactions will be started first.
 	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
-	 * Lower Prio is better: 1 will be prioritized over 2 etc.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
 	int32 InteractionPriority = 1;
@@ -280,5 +279,5 @@ private:
 	TArray<UMeshComponent*> InteractionCollision = {nullptr};
 	
 	UPROPERTY()
-	UXRInteractorComponent* ActiveInteractor = nullptr;
+	TWeakObjectPtr<UXRInteractorComponent> ActiveInteractor;
 };

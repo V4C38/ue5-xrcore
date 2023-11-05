@@ -258,14 +258,14 @@ bool UXRInteractorComponent::IsInteracting() const
 	return !ActiveInteractionComponents.IsEmpty();
 }
 
-void UXRInteractorComponent::Server_SetHandType_Implementation(EXRHandType InHandType)
+void UXRInteractorComponent::Server_SetXRControllerHand_Implementation(EControllerHand InXRControllerHand)
 {
-	HandType = InHandType;
+	XRControllerHand = InXRControllerHand;
 }
 
-EXRHandType UXRInteractorComponent::GetHandType() const
+EControllerHand UXRInteractorComponent::GetXRControllerHand() const
 {
-	return HandType;
+	return XRControllerHand;
 }
 
 TArray<UXRInteractionComponent*> UXRInteractorComponent::GetActiveInteractions() const
@@ -317,5 +317,5 @@ void UXRInteractorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UXRInteractorComponent, ActiveInteractionComponents);
-	DOREPLIFETIME(UXRInteractorComponent, HandType);
+	DOREPLIFETIME(UXRInteractorComponent, XRControllerHand);
 }

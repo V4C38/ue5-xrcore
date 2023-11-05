@@ -97,6 +97,6 @@ private:
 	void InitiallyRegisterXRInteractors();
 
 	UPROPERTY()
-	TArray < UXRInteractorComponent*> RegisteredXRInteractors = {};
+	TArray<TWeakObjectPtr<UXRInteractorComponent>> RegisteredXRInteractors;
 
 };

@@ -9,6 +9,10 @@ UXRInteractionTrigger::UXRInteractionTrigger()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicated(true);
+
+	// Set default config values for this Interaction Type
+	bSnapXRLaserToActor = true; 
+	InteractionPriority = 2;
 }
 
 void UXRInteractionTrigger::BeginPlay()
@@ -30,7 +34,7 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 		return;
 	}
 	Super::StartInteraction(InInteractor);
-	SetTriggerState(!bTriggerState);
+	SetTriggerState(true);
 	if (!IsContinuousInteraction())
 	{
 		RequestCooldown();
@@ -45,10 +49,7 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 	}
 	Super::EndInteraction(InInteractor);
 	RequestCooldown();
-	if (bResetAfterInteractionEnd)
-	{
-		SetTriggerState(!bTriggerState);
-	}
+	SetTriggerState(false);
 }
 
 void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
@@ -81,7 +82,7 @@ void UXRInteractionTrigger::SetTriggerState(bool InTriggerState)
 		{
 			return;
 		}
-		bTriggerState = !bTriggerState;
+		bTriggerState = InTriggerState;
 	}
 }
 bool UXRInteractionTrigger::GetTriggerState()
@@ -89,6 +90,7 @@ bool UXRInteractionTrigger::GetTriggerState()
 	return bTriggerState;
 }
 
+// Disable the component until the started timer completes.
 void UXRInteractionTrigger::RequestCooldown()
 {
 	if (CooldownDuration > 0.0f)

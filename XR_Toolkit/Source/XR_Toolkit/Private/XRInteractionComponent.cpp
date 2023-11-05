@@ -115,10 +115,15 @@ void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::SetActiveInteractor(UXRInteractorComponent* InInteractor)
 {
-	if (IsContinuousInteraction())
+	if (InInteractor)
 	{
 		ActiveInteractor = InInteractor;
 	}
+	else
+	{
+		ActiveInteractor.Reset();
+	}
+
 }
 
 int32 UXRInteractionComponent::GetInteractionPriority() const
@@ -128,7 +133,7 @@ int32 UXRInteractionComponent::GetInteractionPriority() const
 
 UXRInteractorComponent* UXRInteractionComponent::GetActiveInteractor()
 {
-	return ActiveInteractor;
+	return ActiveInteractor.IsValid() ? ActiveInteractor.Get() : nullptr;
 }
 
 bool UXRInteractionComponent::IsInteractionActive() const
