@@ -31,7 +31,7 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 	}
 	Super::StartInteraction(InInteractor);
 	SetTriggerState(!bTriggerState);
-	if (!GetIsContinuousInteraction())
+	if (!IsContinuousInteraction())
 	{
 		RequestCooldown();
 	}
