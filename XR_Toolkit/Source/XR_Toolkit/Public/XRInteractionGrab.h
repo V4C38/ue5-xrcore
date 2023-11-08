@@ -53,6 +53,21 @@ protected:
     UFUNCTION()
     void PhysicsUngrab(UXRInteractorComponent* InInteractor);
 
+
+
+    /**
+    * This is used to ensure proper LateJoining for non-physics grab
+    */
+    UPROPERTY(ReplicatedUsing = OnRep_GrabActorTransform)
+    FTransform GrabActorTransform;
+    UFUNCTION()
+    void OnRep_GrabActorTransform(); 
+
+    UFUNCTION(Server, Reliable)
+    void Server_UpdateGrabActorTransform();
+
+    virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+
 private:
     UFUNCTION()
     void InitializePhysics();

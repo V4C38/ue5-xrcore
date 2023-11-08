@@ -2,6 +2,7 @@
 
 #include "XRInteractorComponent.h"
 #include "XRInteractionComponent.h"
+#include "XRToolsUtilityFunctions.h"
 #include "Net/UnrealNetwork.h"
 
 UXRInteractorComponent::UXRInteractorComponent()
@@ -37,7 +38,7 @@ void UXRInteractorComponent::RequestStartXRInteraction()
 	{
 		TArray<UXRInteractionComponent*> FoundXRInteractions = {};
 		LocalInteractedActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-		InteractionToStart = GetPrioritizedXRInteraction(FoundXRInteractions);
+		InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions);
 		CurrentInteractedActor = LocalInteractedActor;
 	}
 	else
@@ -48,7 +49,7 @@ void UXRInteractorComponent::RequestStartXRInteraction()
 			CurrentInteractedActor = ClosestInteractiveActor;
 			TArray<UXRInteractionComponent*> FoundXRInteractions = {};
 			ClosestInteractiveActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-			InteractionToStart = GetPrioritizedXRInteraction(FoundXRInteractions);
+			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions);
 		}
 	}
 	// If we found an interaction to start, set the current actor and broadcast the event
@@ -67,7 +68,7 @@ void UXRInteractorComponent::RequestStopXRInteraction()
 	{
 		TArray<UXRInteractionComponent*> FoundXRInteractions = {};
 		LocalInteractedActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-		InteractionToStop = GetPrioritizedXRInteraction(FoundXRInteractions, false, false);
+		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions, false, false);
 		if (ActiveInteractionComponents.Num() == 1)
 		{
 			LocalInteractedActor = nullptr;
@@ -75,7 +76,7 @@ void UXRInteractorComponent::RequestStopXRInteraction()
 	}
 	else
 	{
-		InteractionToStop = GetPrioritizedXRInteraction(ActiveInteractionComponents, false);
+		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, false);
 	}
 	// If we have an interaction to stop, broadcast the stop interaction event to XRInteractionSystemComponent.
 	if (InteractionToStop)
@@ -133,27 +134,6 @@ void UXRInteractorComponent::Multicast_StoppedInteracting_Implementation(UXRInte
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Determines the interaction with the highest or lowest priority, depending on SortByLowest
-UXRInteractionComponent* UXRInteractorComponent::GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, bool IgnoreActive, bool SortByLowest) const
-{
-	int32 Priority = SortByLowest ? INT_MAX : INT_MIN;
-	UXRInteractionComponent* OutXRInteraction = nullptr;
-	for (UXRInteractionComponent* XRInteraction : InInteractions)
-	{
-		if (IgnoreActive && XRInteraction->IsInteractionActive())
-		{
-			continue;
-		}
-		int32 CurrentPriority = XRInteraction->GetInteractionPriority();
-		bool ShouldUpdate = SortByLowest ? CurrentPriority < Priority : CurrentPriority > Priority;
-		if (ShouldUpdate)
-		{
-			Priority = CurrentPriority;
-			OutXRInteraction = XRInteraction;
-		}
-	}
-	return OutXRInteraction;
-}
 
 // Finds the closest actor that is interactable, based on distance and active interactions
 AActor* UXRInteractorComponent::GetClosestXRInteractionActor() const

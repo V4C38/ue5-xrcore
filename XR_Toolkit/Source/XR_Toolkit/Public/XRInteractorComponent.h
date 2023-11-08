@@ -88,12 +88,6 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
 	AActor* GetClosestXRInteractionActor() const;
-	/**
-	 * Returns XRInteractionComponents on the closest overlapping Actor (that has XRInteractions) for this XRInteractor.
-	 * Distance is calculated based on the Actors root, not the contained XRInteractionComponents location.
-	 */
-	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
-	UXRInteractionComponent* GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, bool IgnoreActive=true, bool SortByLowest=true) const;
 
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------

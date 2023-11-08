@@ -2,6 +2,7 @@
 #include "XRReplicatedPhysicsComponent.h"
 #include "XRInteractorComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "Net/UnrealNetwork.h"
 
 
 UXRInteractionGrab::UXRInteractionGrab()
@@ -20,6 +21,7 @@ void UXRInteractionGrab::BeginPlay()
 		InitializePhysics();
 	}
 }
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Interaction Events
@@ -47,6 +49,19 @@ void UXRInteractionGrab::EndInteraction(UXRInteractorComponent* InInteractor)
 	else
 	{
 		DetachOwningActorFromXRInteractor();
+	}
+
+	// Update GrabActorsLocation for LateJoiners when Physics is disabled
+	if (!bEnablePhysics)
+	{
+		AActor* Owner = GetOwner();
+		if (Owner)
+		{
+			if (Owner->HasAuthority())
+			{
+				Server_UpdateGrabActorTransform();
+			}
+		}
 	}
 }
 
@@ -142,8 +157,39 @@ void UXRInteractionGrab::InitializePhysics()
 	}
 }
 
-
 UXRReplicatedPhysicsComponent* UXRInteractionGrab::GetPhysicsReplicationComponent()
 {
 	return XRReplicatedPhysicsComponent;
+}
+
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Replication
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRInteractionGrab::OnRep_GrabActorTransform()
+{
+	if (!bEnablePhysics)
+	{
+		AActor* Owner = GetOwner();
+		if (Owner)
+		{
+			Owner->SetActorTransform(GrabActorTransform);
+		}
+	}
+}
+
+void UXRInteractionGrab::Server_UpdateGrabActorTransform_Implementation()
+{
+	AActor* Owner = GetOwner();
+	if (Owner)
+	{
+		GrabActorTransform = Owner->GetActorTransform();
+	}
+}
+
+void UXRInteractionGrab::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UXRInteractionGrab, GrabActorTransform);
 }
