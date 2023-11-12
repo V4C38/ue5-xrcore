@@ -88,6 +88,12 @@ void UXRInteractionGrab::DetachOwningActorFromXRInteractor()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Physics
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool UXRInteractionGrab::HasPhysicsEnabled() const
+{
+	return bEnablePhysics;
+}
+
 void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 {
 	if (InInteractor)

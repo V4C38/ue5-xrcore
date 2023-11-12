@@ -72,6 +72,12 @@ public:
 	// Utility
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
+	 * Returns if any InteractionComponent is available in proximity to this XRInteractor. Also returns the available XRInteractionComponent (prioritized).
+	 */
+	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
+	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction) const;
+
+	/**
 	 * Returns true if a valid InteractionComponent is assigned. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")

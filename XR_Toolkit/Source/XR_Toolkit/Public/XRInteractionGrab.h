@@ -35,8 +35,14 @@ public:
     /**
     * Return the Component handling PhysicsReplication for this Interaction. If bEnablePhysics is true, this component will be spawned at BeginPlay().
     */
-    UFUNCTION(BlueprintPure, Category = "XR Interaction|Config")
+    UFUNCTION(BlueprintPure, Category = "XR Interaction|Grab")
     UXRReplicatedPhysicsComponent* GetPhysicsReplicationComponent();
+
+    /**
+    * Does this XRInteractionGrab have Physics enabled. 
+    */
+    UFUNCTION(BlueprintPure, Category = "XR Interaction|Grab")
+    bool HasPhysicsEnabled() const;
 
 protected:
     UPROPERTY()

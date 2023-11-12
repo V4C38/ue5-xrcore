@@ -135,6 +135,19 @@ void UXRInteractorComponent::Multicast_StoppedInteracting_Implementation(UXRInte
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+bool UXRInteractorComponent::CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction) const
+{
+	AActor* ClosestInteractionActor = GetClosestXRInteractionActor();
+	if (ClosestInteractionActor)
+	{
+		TArray<UXRInteractionComponent*> FoundXRInteractions = {};
+		ClosestInteractionActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
+		OutPrioritizedXRInteraction = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions);
+		return true;
+	}
+	return false;
+}
+
 // Finds the closest actor that is interactable, based on distance and active interactions
 AActor* UXRInteractorComponent::GetClosestXRInteractionActor() const
 {
