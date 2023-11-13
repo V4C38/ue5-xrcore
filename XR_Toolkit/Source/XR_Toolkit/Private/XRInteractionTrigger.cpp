@@ -34,11 +34,13 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 		return;
 	}
 	Super::StartInteraction(InInteractor);
-	SetTriggerState(true);
 	if (!IsContinuousInteraction())
 	{
 		RequestCooldown();
+		Server_SetTriggerState(!GetTriggerState());
+		return;
 	}
+	Server_SetTriggerState(true);
 }
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
@@ -48,8 +50,7 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 		return;
 	}
 	Super::EndInteraction(InInteractor);
-	RequestCooldown();
-	SetTriggerState(false);
+	Server_SetTriggerState(false);
 }
 
 void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
@@ -62,19 +63,19 @@ void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteracto
 	if (bInHoverState)
 	{
 		Super::StartInteraction(InInteractor);
-		SetTriggerState(true);
+		Server_SetTriggerState(true);
 	}
 	else
 	{
 		Super::EndInteraction(InInteractor);
-		SetTriggerState(false);
+		Server_SetTriggerState(false);
 	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger State
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::SetTriggerState(bool InTriggerState)
+void UXRInteractionTrigger::Server_SetTriggerState(bool InTriggerState)
 {
 	if (GetOwner()->HasAuthority())
 	{

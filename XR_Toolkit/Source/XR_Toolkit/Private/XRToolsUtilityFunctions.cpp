@@ -1,5 +1,6 @@
 #include "XRToolsUtilityFunctions.h"
 #include "XRInteractionComponent.h"
+#include "XRInteractorComponent.h"
 
 
 
@@ -50,7 +51,8 @@ bool UXRToolsUtilityFunctions::IsActorInteractedWith(AActor* InActor, TArray<UXR
 }
 
 // Determines the interaction with the highest or lowest priority, depending on SortByLowest
-UXRInteractionComponent* UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, bool IgnoreActive, bool SortByLowest) 
+UXRInteractionComponent* UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor, 
+bool IgnoreActive, bool SortByLowest)
 {
     int32 Priority = SortByLowest ? INT_MAX : INT_MIN;
     UXRInteractionComponent* OutXRInteraction = nullptr;
@@ -58,7 +60,17 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(T
     {
         if (IgnoreActive && XRInteraction->IsInteractionActive())
         {
-            continue;
+            if (InXRInteractor == XRInteraction->GetActiveInteractor())
+            {
+                continue;
+            }
+            else
+            {
+                if (!XRInteraction->GetAllowTakeOver())
+                {
+                    continue;
+                }
+            }
         }
         int32 CurrentPriority = XRInteraction->GetInteractionPriority();
         bool ShouldUpdate = SortByLowest ? CurrentPriority < Priority : CurrentPriority > Priority;
@@ -69,4 +81,27 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(T
         }
     }
     return OutXRInteraction;
+}
+
+
+UXRInteractionComponent* UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(AActor* InActor, UXRInteractorComponent* InXRInteractor, bool IgnoreActive, bool SortByLowest)
+{
+    if (!InActor)
+    {
+        return nullptr;
+    }
+
+    TArray<UActorComponent*> Components;
+    InActor->GetComponents(Components);
+    TArray<UXRInteractionComponent*> InteractionComponents;
+
+    for (UActorComponent* Component : Components)
+    {
+        UXRInteractionComponent* InteractionComponent = Cast<UXRInteractionComponent>(Component);
+        if (InteractionComponent)
+        {
+            InteractionComponents.Add(InteractionComponent);
+        }
+    }
+    return GetPrioritizedXRInteraction(InteractionComponents, InXRInteractor, IgnoreActive, SortByLowest);
 }

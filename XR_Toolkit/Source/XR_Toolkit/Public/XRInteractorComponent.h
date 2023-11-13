@@ -34,7 +34,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor).
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
-	void RequestStartXRInteraction();
+	void RequestStartXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
 	UFUNCTION(Server, Reliable, Category = "XR Interaction|XR Interactor")
 	void Server_StartInteracting(UXRInteractionComponent* InInteractionComponent);
 
@@ -49,7 +49,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor). 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
-	void RequestStopXRInteraction();
+	void RequestStopXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
 	/**
 	 * Send a request to the XRInteractionSystemComponent this Interactor is assigned to stop all active interactions.
 	 */
@@ -159,6 +159,10 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category="XR Interaction|XR Interactor")
 	bool bIsLaserInteractor = false;
+
+
+	UFUNCTION()
+	void HoverActor(AActor* OtherActor, bool bHoverState);
 	
 	
 private:

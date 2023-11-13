@@ -30,7 +30,7 @@ public:
     * Sets the state of the Trigger. Replicated, only executed when called on Server.
     */
     UFUNCTION(BlueprintCallable, Category = "XR Interaction|Trigger")
-    void SetTriggerState(bool InTriggerState);
+    void Server_SetTriggerState(bool InTriggerState);
 
     /**
     * Get the state of the Trigger. Replicated.
