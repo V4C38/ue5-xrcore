@@ -1,9 +1,12 @@
 
 #include "XRInteractionComponent.h"
 #include "XRInteractorComponent.h"
+#include "XRHighlightComponent.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 UXRInteractionComponent::UXRInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -11,7 +14,6 @@ UXRInteractionComponent::UXRInteractionComponent()
 	bAutoActivate = true;
 	SetIsReplicated(true);
 }
-
 
 void UXRInteractionComponent::InitializeComponent()
 {
@@ -22,81 +24,106 @@ void UXRInteractionComponent::InitializeComponent()
 void UXRInteractionComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	CacheInteractionCollision();
+	if (bEnableHighlighting)
+	{
+		SpawnAndConfigureXRHighlight();
+	}
 }
 
-void UXRInteractionComponent::Client_StartInteraction(UXRInteractorComponent* InInteractor)
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Interaction Events
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInteractor)
 {
 	SetActiveInteractor(InInteractor);
-	OnLocalInteractionStart(InInteractor);
+	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
-	if (GetIsContinuousInteraction())
+	RequestAudioPlay(InteractionStartSound);
+	if (IsContinuousInteraction())
 	{
 		bIsInteractionActive = true;
+		if (XRHighlightComponent)
+		{
+			XRHighlightComponent->SetHighlighted(0.0f);
+		}
 	}
 }
-void UXRInteractionComponent::Client_EndInteraction(UXRInteractorComponent* InInteractor)
+
+void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteractor)
 {
-	OnLocalInteractionEnd(InInteractor);
+	OnInteractionEnd(InInteractor);
 	OnInteractionEnded.Broadcast(this, InInteractor);
 	SetActiveInteractor(nullptr);
-	
-	UXRInteractorComponent* HoveringInteractor = GetHoveringInteractor();
-	if (HoveringInteractor)
-	{
-		OnInteractionHovered.Broadcast(this, HoveringInteractor, true);
-	}
-	
+	RequestAudioPlay(InteractionEndSound);
 	bIsInteractionActive = false;
 }
 
-void UXRInteractionComponent::CacheInteractionCollision()
+void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
-	const AActor* ParentActor = GetOwner();
-	ParentActor->GetComponents(InteractionCollision);
-	
-	for (auto* Collider : InteractionCollision)
+	OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
+	OnInteractionHover(bInHoverState, InInteractor);
+	if (XRHighlightComponent && !bIsInteractionActive)
 	{
-		if (Collider)
-		{
-			Collider->OnComponentBeginOverlap.AddDynamic(this, &UXRInteractionComponent::OnOverlapBegin);
-			Collider->OnComponentEndOverlap.AddDynamic(this, &UXRInteractionComponent::OnOverlapEnd);
-		}
+		XRHighlightComponent->FadeXRHighlight(bInHoverState);
 	}
 }
 
-TArray<UMeshComponent*> UXRInteractionComponent::GetInteractionCollision() const
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Highlighting & Audio
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRInteractionComponent::SpawnAndConfigureXRHighlight()
 {
-	return InteractionCollision;
-}
-
-UXRInteractorComponent* UXRInteractionComponent::GetHoveringInteractor()
-{
-	UXRInteractorComponent* OverlappingInteractor = nullptr;
-	for (auto* Collider : GetInteractionCollision())
+	if (XRHighlightComponent)
 	{
-		if (Collider)
-		{
-			TArray<UPrimitiveComponent*> OverlappingComponents;
-			Collider->GetOverlappingComponents(OverlappingComponents);
-			for(auto* OverlappingComp : OverlappingComponents)
-			{
-				if (OverlappingComp->ComponentHasTag("Interactor"))
-				{
-					OverlappingInteractor = Cast<UXRInteractorComponent>(OverlappingComp);
-				}
-			}
-		}
+		return;
 	}
-	return OverlappingInteractor;
+	XRHighlightComponent = NewObject<UXRHighlightComponent>(this->GetOwner());
+	if (XRHighlightComponent)
+	{
+		XRHighlightComponent->RegisterComponent();
+		XRHighlightComponent->SetHighlightFadeCurve(HighlightFadeCurve);
+		XRHighlightComponent->SetHighlightIgnoreMeshTag(HighlightIgnoreMeshTag);
+		XRHighlightComponent->Activate();
+	}
 }
 
+UXRHighlightComponent* UXRInteractionComponent::GetXRHighlightComponent()
+{
+	return XRHighlightComponent;
+}
+
+
+void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
+{
+	if (CurrentAudioComponent && CurrentAudioComponent->IsPlaying())
+	{
+		CurrentAudioComponent->Stop();
+	}
+
+	if (InSound)
+	{
+		CurrentAudioComponent = UGameplayStatics::SpawnSoundAtLocation(
+			GetWorld(),
+			InSound,
+			this->GetComponentLocation()
+		);
+	}
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Utility
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::SetActiveInteractor(UXRInteractorComponent* InInteractor)
 {
-	if (GetIsContinuousInteraction())
+	if (InInteractor)
 	{
 		ActiveInteractor = InInteractor;
 	}
+	else
+	{
+		ActiveInteractor.Reset();
+	}
+
 }
 
 int32 UXRInteractionComponent::GetInteractionPriority() const
@@ -106,10 +133,10 @@ int32 UXRInteractionComponent::GetInteractionPriority() const
 
 UXRInteractorComponent* UXRInteractionComponent::GetActiveInteractor()
 {
-	return ActiveInteractor;
+	return ActiveInteractor.IsValid() ? ActiveInteractor.Get() : nullptr;
 }
 
-bool UXRInteractionComponent::GetIsInteractionActive() const
+bool UXRInteractionComponent::IsInteractionActive() const
 {
 	return bIsInteractionActive;
 }
@@ -124,8 +151,7 @@ void UXRInteractionComponent::SetAllowTakeOver(bool bInAllowTakeOver)
 	bAllowTakeOver = bInAllowTakeOver;
 }
 
-
-bool UXRInteractionComponent::GetIsContinuousInteraction() const
+bool UXRInteractionComponent::IsContinuousInteraction() const
 {
 	return bIsContinuousInteraction;
 }
@@ -155,31 +181,4 @@ void UXRInteractionComponent::SetSnapXRLaserToActor(bool InSnapXRLaserToActor)
 	bSnapXRLaserToActor = InSnapXRLaserToActor;
 }
 
-void UXRInteractionComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherComp->ComponentHasTag("Interactor"))
-	{
-		UXRInteractorComponent* XRInteractor = Cast<UXRInteractorComponent>(OtherComp);
-		if (XRInteractor)
-		{
-			OnInteractionHovered.Broadcast(this, XRInteractor,true);
-			OnLocalInteractionHovered(true, XRInteractor);
-		}
-	}
-}
-
-void UXRInteractionComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherComp->ComponentHasTag("Interactor"))
-	{
-		UXRInteractorComponent* XRInteractor = Cast<UXRInteractorComponent>(OtherComp);
-		if (XRInteractor)
-		{
-			OnInteractionHovered.Broadcast(this, XRInteractor,false);
-			OnLocalInteractionHovered(false, XRInteractor);
-		}
-	}
-}
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------

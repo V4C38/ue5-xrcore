@@ -9,8 +9,17 @@ UXRInteractionSystemComponent::UXRInteractionSystemComponent()
 	SetIsReplicated(true);
 }
 
-// =================================================================================================================================
-// Interaction Execution
+// Registers all XRInteractors found on the Owning Actor on component start.
+void UXRInteractionSystemComponent::BeginPlay()
+{
+	InitiallyRegisterXRInteractors();
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Interaction Events
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// Server: Starts interaction handling and sets owner for interaction authority.
 void UXRInteractionSystemComponent::Server_StartInteraction_Implementation(
 	UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InXRInteractor)
 {
@@ -28,226 +37,144 @@ void UXRInteractionSystemComponent::Server_StartInteraction_Implementation(
 			{
 				if (CurrentInteractor != InXRInteractor)
 				{
-					Server_StopInteracting(CurrentInteractor, 0);
+					Server_StopInteraction(InInteractionComponent, CurrentInteractor);
 				}
 			}
 
+			if (InXRInteractor)
+			{
+				InXRInteractor->Server_StartInteracting(InInteractionComponent);
+			}
 			// Cache Continuous XRInteraction 
-			if (InInteractionComponent->GetIsContinuousInteraction())
+			if (InInteractionComponent->IsContinuousInteraction())
 			{
 				ActiveInteractions.Add(InInteractionComponent);
-				
-				if (InXRInteractor)
-				{
-					InXRInteractor->Server_AddActiveInteractionComponent(InInteractionComponent);
-					InXRInteractor->OnRequestStopXRInteraction.AddDynamic(this, &UXRInteractionSystemComponent::OnRequestStopXRInteraction);
-				}
 			}
 			Multicast_StartInteraction(InInteractionComponent, InXRInteractor);
 		}
 	}
 }
 
+// Multicast: Notifies all clients that an interaction has started.
 void UXRInteractionSystemComponent::Multicast_StartInteraction_Implementation(
 	UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InXRInteractor)
 {
-	InInteractionComponent->Client_StartInteraction(InXRInteractor);
+	InInteractionComponent->StartInteraction(InXRInteractor);
 	OnInteractionStart.Broadcast(this, InInteractionComponent, InXRInteractor);
 }
-// =================================================================================================================================
+
+// Bound for each Registered XRInteractor 
+void UXRInteractionSystemComponent::OnInteractorRequestStartXRInteraction(UXRInteractorComponent* Sender, UXRInteractionComponent* InteractionToStart)
+{
+	if (Sender && InteractionToStart)
+	{
+		Server_StartInteraction(InteractionToStart, Sender);
+	}
+}
 
 
-// =================================================================================================================================
-// Stop Interaction Execution
+// Server: Stops interaction and updates server and client state.
 void UXRInteractionSystemComponent::Server_StopInteraction_Implementation(UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InInteractor)
 {
 	if(InInteractionComponent)
 	{
-		// Remove Cached Continuous XRInteraction 
-		if (InInteractionComponent->GetIsContinuousInteraction())
+		if (InInteractor)
 		{
-			ActiveInteractions.Remove(InInteractionComponent);
-			if(InInteractor)
-			{
-				InInteractor->Server_RemoveActiveInteractionComponent(InInteractionComponent);
-			}
+			InInteractor->Server_StopInteracting(InInteractionComponent);
 		}
+		// Remove Cached Continuous XRInteraction 
+		ActiveInteractions.Remove(InInteractionComponent);
 		Multicast_StopInteraction(InInteractionComponent, InInteractor);
 	}
 }
 
+// Multicast: Notifies all clients that an interaction has ended.
 void UXRInteractionSystemComponent::Multicast_StopInteraction_Implementation(
 	UXRInteractionComponent* InInteractionComponent, UXRInteractorComponent* InXRInteractor)
 {
-	InInteractionComponent->Client_EndInteraction(InXRInteractor);
+	InInteractionComponent->EndInteraction(InXRInteractor);
 	OnInteractionEnd.Broadcast(this, InInteractionComponent, InXRInteractor);
 }
-// =================================================================================================================================
 
-
-// =================================================================================================================================
-// Look for interactive objects
-void UXRInteractionSystemComponent::Server_StartInteracting_Implementation(UXRInteractorComponent* InXRInteractor, int32 InExclusivePriority)
+// Bound for each Registered XRInteractor 
+void UXRInteractionSystemComponent::OnInteractorRequestStopXRInteraction(UXRInteractorComponent* Sender, UXRInteractionComponent* InteractionToStop)
 {
-	if (InXRInteractor)
+	if (Sender && InteractionToStop)
 	{
-		TArray<UXRInteractionComponent*> XRInteractions = {};
-		// Get XRInteractionComponents from the closest Actor overlapping the XRInteractor
-		if (!InExclusivePriority)
-		{
-			XRInteractions.Add(GetPrioritizedXRInteraction(InXRInteractor->GetGetClosestXRInteractions(0), InXRInteractor));
-		}
-		// Get XRInteractionComponents with only the specified Priority Setting
-		else
-		{
-			XRInteractions = InXRInteractor->GetGetClosestXRInteractions(InExclusivePriority);
-		}
-
-		// Start Interaction on found / filtered Components 
-		for (auto* PrioritizedInteraction : XRInteractions)
-		{
-			if (PrioritizedInteraction)
-			{
-				if (InXRInteractor->IsLaserInteractor())
-				{
-					if(PrioritizedInteraction->IsLaserInteractionEnabled())
-					{
-						Server_StartInteraction(PrioritizedInteraction, InXRInteractor);
-					}
-				}
-				else
-				{
-					Server_StartInteraction(PrioritizedInteraction, InXRInteractor);
-				}
-			}
-		}
+		Server_StopInteraction(InteractionToStop, Sender);
 	}
 }
-// =================================================================================================================================
-
-
-// =================================================================================================================================
-void UXRInteractionSystemComponent::Server_StopInteracting_Implementation(UXRInteractorComponent* InXRInteractor, int32 InExclusivePriority)
+// Bound for each Registered XRInteractor 
+void UXRInteractionSystemComponent::OnInteractorRequestStopAllXRInteractions(UXRInteractorComponent* Sender)
 {
-	if (InXRInteractor)
+	TArray<UXRInteractionComponent*> SenderActiveInteractions = Sender->GetActiveInteractions();
+	for (UXRInteractionComponent* ActiveInteraction : SenderActiveInteractions)
 	{
-		TArray<UXRInteractionComponent*> XRInteractionsToStop = {};
-		// Cache only XRInteractions with the specified Priority
-		// There is no support for a range - just a single value. Might result in having to call this function multiple times...
-		if (InExclusivePriority)
-		{
-			for (auto* ActiveInteraction : InXRInteractor->GetActiveInteractionComponents())
-			{
-				if (ActiveInteraction)
-				{
-					if (ActiveInteraction->GetInteractionPriority() == InExclusivePriority)
-					{
-						XRInteractionsToStop.Add(ActiveInteraction);
-					}
-				}
-			}
-		}
-		// Cache all XRInteractions
-		else
-		{
-			XRInteractionsToStop = InXRInteractor->GetActiveInteractionComponents();
-		}
-
-		// Stop Cached Interactions
-		for (auto* XRInteractionToStop : XRInteractionsToStop)
-		{
-			if (XRInteractionToStop)
-			{
-				Server_StopInteraction(XRInteractionToStop, InXRInteractor);
-			}
-		}
+		Server_StopInteraction(ActiveInteraction, Sender);
 	}
 }
-// =================================================================================================================================
 
-
-// =================================================================================================================================
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Utility
-void UXRInteractionSystemComponent::Server_RestartAllActiveInteractions_Implementation()
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRInteractionSystemComponent::InitiallyRegisterXRInteractors()
 {
-	for (auto* ActiveInteraction : ActiveInteractions)
+	AActor* Owner = GetOwner();
+	if (!Owner)
 	{
-		if (ActiveInteraction)
+		return;
+	}
+
+	// Iterate over all components and find XRInteractorComponents.
+	TArray<UActorComponent*> Components;
+	Owner->GetComponents(UXRInteractorComponent::StaticClass(), Components);
+	for (UActorComponent* Component : Components)
+	{
+		UXRInteractorComponent* InteractorComponent = Cast<UXRInteractorComponent>(Component);
+		if (InteractorComponent)
 		{
-			Multicast_StartInteraction(ActiveInteraction, ActiveInteraction->GetActiveInteractor());
+			RegisterXRInteractor(InteractorComponent);
 		}
 	}
 }
 
-void UXRInteractionSystemComponent::Server_StopAllActiveInteractions_Implementation()
+// Registers a single XRInteractor with the system.
+void UXRInteractionSystemComponent::RegisterXRInteractor(UXRInteractorComponent* InInteractor) 
 {
-	for (auto* ActiveInteraction : ActiveInteractions)
+	if (InInteractor)
 	{
-		if (ActiveInteraction)
-		{
-			Multicast_StopInteraction(ActiveInteraction, ActiveInteraction->GetActiveInteractor());
-		}
+		RegisteredXRInteractors.AddUnique(InInteractor);
+		InInteractor->OnRequestStartXRInteraction.AddDynamic(this, &UXRInteractionSystemComponent::OnInteractorRequestStartXRInteraction);
+		InInteractor->OnRequestStopXRInteraction.AddDynamic(this, &UXRInteractionSystemComponent::OnInteractorRequestStopXRInteraction);
+		InInteractor->OnRequestStopAllXRInteractions.AddDynamic(this, &UXRInteractionSystemComponent::OnInteractorRequestStopAllXRInteractions);
 	}
 }
+// Retrieves the list of currently registered XRInteractors.
+TArray<UXRInteractorComponent*> UXRInteractionSystemComponent::GetRegisteredXRInteractors() const
+{
+	TArray<UXRInteractorComponent*> RawInteractors = {};
+	for (const TWeakObjectPtr<UXRInteractorComponent>& WeakInteractor : RegisteredXRInteractors)
+	{
+		if (WeakInteractor.IsValid())
+		{
+			RawInteractors.Add(WeakInteractor.Get());
+		}
+	}
+	return RawInteractors;
+}
 
-
-TArray<UXRInteractionComponent*> UXRInteractionSystemComponent::GetActiveInteractions() const
+// Retrieves the list of currently active interactions.
+TArray<UXRInteractionComponent*> UXRInteractionSystemComponent::GetActiveXRInteractions() const
 {
 	return ActiveInteractions;
 }
 
-UXRInteractionComponent* UXRInteractionSystemComponent::GetPrioritizedXRInteraction(
-	TArray<UXRInteractionComponent*> InXRInteractions, UXRInteractorComponent* InXRInteractor) const
-{
-	UXRInteractionComponent* PrioritizedInteraction = nullptr;
-	int HighestPriority = -1;
-	
-	for(auto* CurrentXRInteraction : InXRInteractions)
-	{
-		if (CurrentXRInteraction)
-		{
-			const int CurrentPriority = CurrentXRInteraction->GetInteractionPriority();
-			if (CurrentPriority > HighestPriority)
-			{
-				// Active Interactions are only considered when explicitly enabled in the XRInteraction Config
-				if (CurrentXRInteraction->GetIsInteractionActive())
-				{
-					UXRInteractorComponent* CurrentInteractor = CurrentXRInteraction->GetActiveInteractor();
-					if (CurrentInteractor && InXRInteractor)
-					{
-						// TakeOver Mechanic 
-						if (CurrentInteractor != InXRInteractor && CurrentXRInteraction->GetAllowTakeOver())
-						{
-							HighestPriority = CurrentPriority;
-							PrioritizedInteraction = CurrentXRInteraction;
-						}
-					}
-				}
-				// InActive / Non-Continuous Interactions are always considered for prioritization
-				else
-				{
-					HighestPriority = CurrentPriority;
-					PrioritizedInteraction = CurrentXRInteraction;
-				}
-			}
-		}
-	}
-
-	return PrioritizedInteraction;
-}
-
-void UXRInteractionSystemComponent::OnRequestStopXRInteraction(UXRInteractorComponent* Sender)
-{
-		GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Yellow, TEXT("Bound to Stop"));
-	Server_StopInteracting(Sender, 0);
-}
-// =================================================================================================================================
 
 
-// =================================================================================================================================
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionSystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UXRInteractionSystemComponent, ActiveInteractions);
 }
-// =================================================================================================================================
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
