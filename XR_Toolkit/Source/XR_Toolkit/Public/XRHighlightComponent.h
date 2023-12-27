@@ -27,13 +27,13 @@ public:
 	 * NOTE: Material based approach, Material must have "HighlightState" MaterialParameter.
 	 * @param InHighlightState <= 0 off, >= 0 on, > 1 hovered (special state based on Material Setup)
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Highlight")
 	void SetHighlighted(float InHighlightState);
 
 	/**
 	 * Returns the current HighlightState. 0 - off, 1 - on, 2 - on, special state
 	 */
-	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintPure, Category = "XRCore|Highlight")
 	float GetHighlightState();
 
 	/**
@@ -41,7 +41,7 @@ public:
 	 * HighlightState will be applied instantly if no HighlightFadeCurve is provided.
 	 * @param bFadeIn Switch between FadeIn / FadeOut.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Highlight")
 	void FadeXRHighlight(bool bFadeIn);
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,7 +49,7 @@ public:
 	/**
 	 * Tag used to determine which MeshComponents to cache on the Owning Actor
 	 */
-	UPROPERTY(EditAnywhere, Category = "XRToolkit|XR Highlight Component")
+	UPROPERTY(EditAnywhere, Category = "XRCore|Highlight")
 	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
 
 	/**
@@ -57,30 +57,30 @@ public:
 	* This is called on BeginPlay with tag "highlight".
 	* @param InHighlightMeshTag All UMeshComponents with this tag will be cached for highlighting. 
 	*/
-	UFUNCTION(BlueprintCallable, Category="XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintCallable, Category="XRCore|Highlight")
 	void SetHighlightIgnoreMeshTag(FName InHighlightIgnoreMeshTag);
 
 	/**
 	* Returns the currently assigned HighlightTag.
 	*/
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintPure, Category="XRCore|Highlight")
 	FName GetHighlightIgnoreMeshTag() const;
 
 	/**
 	* Returns the currently cached UMeshComponents that are considered for Highlighting. 
 	*/
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintPure, Category="XRCore|Highlight")
 	TArray<UMeshComponent*> GetHighlightMeshes() const;
 
 	/**
 	 * Required to drive the Fade behavior. If none is set, HighlightState will be set instantly, even if FadeXRHighlight() is called.
 	 */
-	UPROPERTY(EditAnywhere, Category="XRToolkit|XR Highlight Component")
+	UPROPERTY(EditAnywhere, Category="XRCore|Highlight")
 	UCurveFloat* HighlightFadeCurve = nullptr;
 	/**
 	 * Set the Curve to be used for Highlight fading. Will initialize a timeline and configre the fading functionality.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XRToolkit|XR Highlight Component")
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Highlight")
 	void SetHighlightFadeCurve(UCurveFloat* InHighlightFadeCurve);
 
 protected:

@@ -23,25 +23,25 @@ public:
     * Enable Replicated Physics. 
     * Actor MUST have a UStaticMeshComponent as the RootComponent. 
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     bool bEnablePhysics = true;
     /**
     * Optionally specify additional components in the actor with this tag that should be Physics enabled and replicated.
     * Actor MUST have a UStaticMeshComponent as the RootComponent (this is cached even without the tag).
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     FName PhysicsTag = "XRPhysics";
 
     /**
     * Return the Component handling PhysicsReplication for this Interaction. If bEnablePhysics is true, this component will be spawned at BeginPlay().
     */
-    UFUNCTION(BlueprintPure, Category = "XR Interaction|Grab")
+    UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
     UXRReplicatedPhysicsComponent* GetPhysicsReplicationComponent();
 
     /**
     * Does this XRInteractionGrab have Physics enabled. 
     */
-    UFUNCTION(BlueprintPure, Category = "XR Interaction|Grab")
+    UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
     bool HasPhysicsEnabled() const;
 
 protected:

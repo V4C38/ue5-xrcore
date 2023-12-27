@@ -31,27 +31,27 @@ protected:
     /**
     * Determine whether to move the Actor owning this component, or this component only.
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     EAxialMoveTarget ObjectToMove = EAxialMoveTarget::OwningActor;
 
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove|AxisConstraints")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|AxisConstraints")
     bool bConstrainX = false;
 
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove|AxisConstraints")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|AxisConstraints")
     bool bConstrainY = false;
 
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove|AxisConstraints")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|AxisConstraints")
     bool bConstrainZ = false;
 
     /**
     * The maximum Distance allowed to travel from the origin location.
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     float DistanceLimit = 1.0f;
     /**
     * Movement Speed.
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|AxialMove")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     float MovementSpeed = 1.0f;
 
 

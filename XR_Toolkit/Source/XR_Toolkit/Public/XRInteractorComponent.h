@@ -10,12 +10,9 @@
 class UXRInteractionComponent;
 class UXRInteractorComponent;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStopInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartedInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStoppedInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHoverStateChanged, UXRInteractorComponent*, Sender, UXRInteractionComponent*, HoveredXRInteractionComponent, bool, bHoverState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRequestStartXRInteraction, UXRInteractorComponent*, Sender, UXRInteractionComponent*, InteractionToStart);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnRequestStopXRInteraction, UXRInteractorComponent*, Sender, UXRInteractionComponent*, InteractionToStop);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRequestStopAllXRInteractions, UXRInteractorComponent*, Sender);
 
 UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRInteractorComponent : public USphereComponent
@@ -28,44 +25,51 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Interaction Events
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 	/**
-	 * Send a request to the XRInteractionSystemComponent this Interactor is assigned to start interacting with the next available XRInteractionComponent. 
-	 * Will interact with the most prioritized interaction on the closest found actor with an XRInteractionComponent, or the most prioritized interaction on the actor 
+	 * Will start an Interaction (Replicated).
+	 * If the InteractionComponent is already interacted with, the current interaction will be terminated first.
+	 * Note: This is intended for manual interaction handling - consider using AutoStartXRInteraction().
+	 */
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void StartXRInteraction(UXRInteractionComponent* InInteractionComponent = nullptr);
+
+	/**
+	 * Start interacting with the next available XRInteractionComponent. 
+	 * Will interact with the most prioritized interaction on the closest found actor with an XRInteractionComponent OR the most prioritized interaction on the actor 
 	 * that is already being interacted with (using multiple interactions on one Actor).
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
-	void RequestStartXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
-	UFUNCTION(Server, Reliable, Category = "XR Interaction|XR Interactor")
-	void Server_StartInteracting(UXRInteractionComponent* InInteractionComponent);
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void AutoStartXRInteraction();
 
-	UPROPERTY()
-	FOnRequestStartXRInteraction OnRequestStartXRInteraction;
-	UPROPERTY(BlueprintAssignable, Category = "XR Interaction|XR Interactor|Delegates")
-	FOnStartInteracting OnStartInteracting;
+	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
+	FOnStartedInteracting OnStartedInteracting;
 
 	/**
-	 * Send a request to the XRInteractionSystemComponent this Interactor is assigned to stop interacting with the next available XRInteractionComponent. 
-	 * Will stop interacting with the least prioritized interaction on the closest found actor with an XRInteractionComponent, or the least prioritized interaction on the actor 
+	 * Will stop an Interaction. (Replicated).
+	 * If the InteractionComponent is not interacting, the command is discarded.
+	 * Note: This is intended for manual interaction handling - consider using AutoStopXRInteraction().
+	 */
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void StopXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
+
+	/**
+	 * Will stop interacting with the least prioritized interaction on the closest found actor with an XRInteractionComponent OR the least prioritized interaction on the actor 
 	 * that is already being interacted with (using multiple interactions on one Actor). 
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
-	void RequestStopXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
-	/**
-	 * Send a request to the XRInteractionSystemComponent this Interactor is assigned to stop all active interactions.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
-	void RequestStopAllXRInteractions();
-	UFUNCTION(Server, Reliable, Category = "XR Interaction|XR Interactor")
-	void Server_StopInteracting(UXRInteractionComponent* InInteractionComponent);
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void AutoStopXRInteraction();
 
-	UPROPERTY()
-	FOnRequestStopXRInteraction OnRequestStopXRInteraction;
-	UPROPERTY()
-	FOnRequestStopAllXRInteractions OnRequestStopAllXRInteractions;
-	UPROPERTY(BlueprintAssignable, Category = "XR Interaction|XR Interactor|Delegates")
-	FOnStopInteracting OnStopInteracting;
+	/**
+	 * Terminate all active Interactions.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void StopAllXRInteractions();
+
+	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
+	FOnStoppedInteracting OnStoppedInteracting;
 	
-	UPROPERTY(BlueprintAssignable, Category = "XR Interaction|XR Interactor|Delegates")
+	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
 	FOnHoverStateChanged OnHoverStateChanged;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,25 +78,25 @@ public:
 	/**
 	 * Returns if any InteractionComponent is available in proximity to this XRInteractor. Also returns the available XRInteractionComponent (prioritized).
 	 */
-	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
 	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction) const;
 
 	/**
 	 * Returns true if a valid InteractionComponent is assigned. 
 	 */
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	bool IsInteracting() const;
 	/**
 	 * Returns all active Interactions (iE. Continuous Interactions this Interactor is handling)
 	 */
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	TArray<UXRInteractionComponent*> GetActiveInteractions() const; 
 
 	/**
 	 * Returns XRInteractionComponents on the closest overlapping Actor (that has XRInteractions) for this XRInteractor.
 	 * Distance is calculated based on the Actors root, not the contained XRInteractionComponents location.
 	 */
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	AActor* GetClosestXRInteractionActor() const;
 
 
@@ -102,36 +106,36 @@ public:
 	/**
 	 * Set the HandType for this Interactor.
 	*/
-	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "XRCore|Interactor")
 	void Server_SetXRControllerHand(EControllerHand InXRControllerHand);
 	/**
 	 * Get the assigned HandType for this Interactor.
 	*/
-	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
 	EControllerHand GetXRControllerHand() const;
 
 	/**
 	 * Returns true if this Interactor is part of an XRLaser. This can be useful to distinguish between Interactions
 	 * coming from Hands or Lasers to allow for different behavior. (For example SnapToHand-grab via Laser) 
 	*/
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	bool IsLaserInteractor();
 
 	/**
 	 * Manually set the assochiated Pawn - this is useful for Actors that need a XRInteractor but are not an APawn like the XRLaser.
 	 * Is done automatically at BeginPlay if this XRInteractor is owned by an APawn.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
 	void SetOwningPawn(APawn* InOwningPawn);
 	/**
 	 * Return the assochiated Pawn. Useful for intermediaries that use XRInteractors like the XRLaser.
 	*/
-	UFUNCTION(BlueprintPure, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
 	APawn* GetOwningPawn() const;
 	/**
 	 * Is the Owner (Pawn) of this XRInteractor locally controlled?
 	*/
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	bool IsLocallyControlled() const;
 
 
@@ -139,13 +143,13 @@ public:
 	 * Required Physics-based Interactions. Not spawned automatically as manual assignment gives greater flexibility in configuration of the PhysicsConstraint.
 	 * @param InPhysicsConstraintComponent PhysicsConstraintComponent to assign to this XRInteractor.
 	*/
-	UFUNCTION(BlueprintCallable, Category = "XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
 	void SetAssignedPhysicsConstraint(UPhysicsConstraintComponent* InPhysicsConstraintComponent);
 	/**
 	 * Return the associated PhysicsConstraint.
 	 * NOTE: Must be assigned manually first. 
 	*/
-	UFUNCTION(BlueprintPure, Category="XR Interaction|XR Interactor")
+	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	UPhysicsConstraintComponent* GetAssignedPhysicsConstraint() const;
 	
 
@@ -154,23 +158,28 @@ protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
-	UPROPERTY(Replicated, EditDefaultsOnly, Category="XR Interaction|XR Interactor")
+	UPROPERTY(Replicated, EditDefaultsOnly, Category="XRCore|Interactor")
 	EControllerHand XRControllerHand = EControllerHand::AnyHand;
 	
-	UPROPERTY(EditDefaultsOnly, Category="XR Interaction|XR Interactor")
+	UPROPERTY(EditDefaultsOnly, Category="XRCore|Interactor")
 	bool bIsLaserInteractor = false;
 
 
 	UFUNCTION()
 	void HoverActor(AActor* OtherActor, bool bHoverState);
-	
+
+	UFUNCTION(Server, Reliable, Category = "XRCore|Interactor")
+	void Server_ExecuteInteraction(UXRInteractionComponent* InInteractionComponent);
+	UFUNCTION(NetMulticast, Reliable, Category = "XRCore|Interactor")
+	void Multicast_ExecuteInteraction(UXRInteractionComponent* InteractionComponent);
+
+
+	UFUNCTION(Server, Reliable, Category = "XRCore|Interactor")
+	void Server_TerminateInteraction(UXRInteractionComponent* InInteractionComponent);
+	UFUNCTION(NetMulticast, Reliable, Category = "XRCore|Interactor")
+	void Multicast_TerminateInteraction(UXRInteractionComponent* InteractionComponent);
 	
 private:
-	UFUNCTION(NetMulticast, Reliable, Category = "XR Interaction|XR Interactor")
-	void Multicast_StartedInteracting(UXRInteractionComponent* InteractionComponent);
-	UFUNCTION(NetMulticast, Reliable, Category = "XR Interaction|XR Interactor")
-	void Multicast_StoppedInteracting(UXRInteractionComponent* InteractionComponent);
-
 	UPROPERTY()
 	APawn* OwningPawn = nullptr;
 	UPROPERTY()
