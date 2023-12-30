@@ -126,3 +126,5 @@ XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractio
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionGrab.generated.h
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRToolsUtilityFunctions.gen.cpp
 XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRToolsUtilityFunctions.generated.h
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionAxialMove.generated.h
+XR_Toolkit/Intermediate/Build/Win64/UnrealEditor/Inc/XR_Toolkit/UHT/XRInteractionAxialMove.gen.cpp

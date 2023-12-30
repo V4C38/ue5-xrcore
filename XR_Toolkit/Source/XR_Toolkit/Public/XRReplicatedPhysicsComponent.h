@@ -37,9 +37,9 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	// Delegates for server physics replication state and data
-	UPROPERTY(BlueprintAssignable, Category = "XRToolkit|XR Physics System|Delegates")
+	UPROPERTY(BlueprintAssignable, Category = "XRCore|Physics System|Delegates")
 	FOnServerPhysicsReplicationStateChanged OnServerPhysicsReplicationStateChanged;
-	UPROPERTY(BlueprintAssignable, Category = "XRToolkit|XR Physics System|Delegates")
+	UPROPERTY(BlueprintAssignable, Category = "XRCore|Physics System|Delegates")
 	FOnServerReplicatedPhysicsData OnServerReplicatedPhysicsData;
 
 
@@ -49,7 +49,7 @@ public:
 	 *
 	 * @param bReplicatePhysics A boolean indicating whether to enable server-side replication.
 	 */
-	UFUNCTION(BlueprintCallable, Server, Reliable, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category="XRCore|Physics System")
 	void Server_SetServerReplicatePhysics(bool bReplicatePhysics);
 
 	/**
@@ -57,7 +57,7 @@ public:
 	 *
 	 * @return Boolean value indicating whether server-side replication is enabled.
 	 */
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	bool IsServerReplicatingPhysics() const;
 
 	/**
@@ -65,7 +65,7 @@ public:
 	 * Does not set Simulate Physics. Use SetSimulatePhysics() for this. 
 	 * @param InComponentTag Only components with this tag will be cached. 
 	 **/
-	UFUNCTION(BlueprintCallable, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintCallable, Category="XRCore|Physics System")
 	void CachePhysicsMeshComponents(FName InComponentTag);
 
 	/**
@@ -73,7 +73,7 @@ public:
 	 * Can return nullptr.
 	 * @return An array of mesh components.
 	 **/
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	TArray<UMeshComponent*> GetPhysicsMeshComponents() const;
 	
 	/**
@@ -82,7 +82,7 @@ public:
 	 * @param InSimulatePhysics Whether to enable or disable physics simulation.
 	
 	 **/
-	UFUNCTION(BlueprintCallable, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintCallable, Category="XRCore|Physics System")
 	void SetComponentsSimulatePhysics(bool InSimulatePhysics);
 
 
@@ -91,31 +91,31 @@ public:
 	 *
 	 * @return The latest physics replication data.
 	 */
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	FXRPhysicsReplicationData GetServerPhysicsData() const;
 	
 	/**
 	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
+	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
 	float ReplicationIntervalMax = 0.05f;
 	/**
 	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
+	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
 	float ReplicationIntervalMin = 0.02f;
 
 	/**
 	 * Disable the interpolation between the transforms received from the server on the client. This allows monitoring 
 	 * and adjusting the replication interval values directly.
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System|Debug")
+	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System|Debug")
 	bool bDisableClientInterpolation = false;
 
 	/**
 	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRToolkit|XR Physics System")
+	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
 	float VelocityThreshold = 350.0f;
 
 	/**
@@ -123,7 +123,7 @@ public:
 	 *
 	 * @return The current dynamic replication interval.
 	 */
-	UFUNCTION(BlueprintPure, Category="XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	float GetDynamicReplicationInterval();
 
 
@@ -132,18 +132,18 @@ protected:
 
 private:
 
-	UFUNCTION(Category = "XRToolkit|XR Physics System")
+	UFUNCTION(Category = "XRCore|Physics System")
 	void ServerTick(float DeltaTime);
-	UFUNCTION(Category = "XRToolkit|XR Physics System")
+	UFUNCTION(Category = "XRCore|Physics System")
 	void ClientTick(float DeltaTime);
 	
-	UFUNCTION(Server, Unreliable, Category="XRToolkit|XR Physics System")
+	UFUNCTION(Server, Unreliable, Category="XRCore|Physics System")
 	void Server_SetServerPhysicsData(FXRPhysicsReplicationData NewPhysicsData);
 
-	UFUNCTION(Category = "XRToolkit|XR Physics System")
+	UFUNCTION(Category = "XRCore|Physics System")
 	void UpdateClientPhysicsData();
 
-	UFUNCTION(BlueprintPure, Category = "XRToolkit|XR Physics System")
+	UFUNCTION(BlueprintPure, Category = "XRCore|Physics System")
 	float GetActorVelocity() const;
 	
 	float AccumulatedTime = 0.0f;

@@ -23,19 +23,19 @@ public:
     void EndInteraction(UXRInteractorComponent* InInteractor) override;
     void HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState) override;
 
-    UPROPERTY(BlueprintAssignable, Category = "XR Interaction|Trigger")
+    UPROPERTY(BlueprintAssignable, Category = "XRCore|Interaction")
     FOnTriggerStateChanged OnTriggerStateChanged;
 
     /**
     * Sets the state of the Trigger. Replicated, only executed when called on Server.
     */
-    UFUNCTION(BlueprintCallable, Category = "XR Interaction|Trigger")
+    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
     void Server_SetTriggerState(bool InTriggerState);
 
     /**
     * Get the state of the Trigger. Replicated.
     */
-    UFUNCTION(BlueprintPure, Category = "XR Interaction|Trigger")
+    UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
     bool GetTriggerState();
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,10 +44,10 @@ protected:
     /**
     * Sets the TriggerState to HoverState.
     */
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     bool bTriggerOnHover = false;
 
-    UPROPERTY(EditAnywhere, Category = "XR Interaction|Config")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     float CooldownDuration = 0.05f;
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -58,14 +58,12 @@ protected:
     UFUNCTION()
     void OnRep_TriggerState();
 
+    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
+    void RequestCooldown();
+    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
+    void EnableComponent();
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
-    UFUNCTION(BlueprintCallable, Category = "Cooldown")
-    void RequestCooldown();
     FTimerHandle CooldownTimerHandle;
-
-    UFUNCTION(BlueprintCallable, Category = "Cooldown")
-    void EnableComponent();
-
 };

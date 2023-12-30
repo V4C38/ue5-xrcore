@@ -30,15 +30,10 @@ void UXRInteractorComponent::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Interaction Events
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractorComponent::RequestStartXRInteraction(UXRInteractionComponent* InXRInteraction)
+void UXRInteractorComponent::AutoStartXRInteraction()
 {
-	if (InXRInteraction) // Start specified XRInteraction instead of searching for the next available one
-	{
-		OnRequestStartXRInteraction.Broadcast(this, InXRInteraction);
-		return;
-	}
-
 	UXRInteractionComponent* InteractionToStart = nullptr;
+
 	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and start next available Interaction
 	{
 		AActor* CurrentInteractedActor = ActiveInteractionComponents[0]->GetOwner();
@@ -55,41 +50,39 @@ void UXRInteractorComponent::RequestStartXRInteraction(UXRInteractionComponent* 
 			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(ClosestInteractiveActor);
 		}
 	}
-	// If we found an interaction to start, set the current actor and broadcast the event
+
 	if (InteractionToStart)
 	{
-		// Broadcasting to XRInteractionSystemComponent (which will evaluate and start this interaction if valid)
-		OnRequestStartXRInteraction.Broadcast(this, InteractionToStart);
+		StartXRInteraction(InteractionToStart);
 	}
 }
 
-void UXRInteractorComponent::RequestStopXRInteraction(UXRInteractionComponent* InXRInteraction)
+void UXRInteractorComponent::StartXRInteraction(UXRInteractionComponent* InInteractionComponent)
 {
-	if (InXRInteraction) // Stop specified XRInteraction instead of searching for the next available one
+	if (!InInteractionComponent)
 	{
-		OnRequestStopXRInteraction.Broadcast(this, InXRInteraction);
 		return;
 	}
 
-	UXRInteractionComponent* InteractionToStop = nullptr;
-	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and stop next available Interaction
+	if (InInteractionComponent->IsActive())
 	{
-		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false, false);
+		UXRInteractorComponent* CurrentInteractor = InInteractionComponent->GetActiveInteractor();
+		if (CurrentInteractor)
+		{
+			if (CurrentInteractor != this)
+			{
+				if (CurrentInteractor)
+				{
+					CurrentInteractor->Server_TerminateInteraction(InInteractionComponent);
+				}
+			}
+		}
+		Server_ExecuteInteraction(InInteractionComponent);
 	}
-	if (InteractionToStop)
-	{
-		OnRequestStopXRInteraction.Broadcast(this, InteractionToStop);
-	}
-}
-
-void UXRInteractorComponent::RequestStopAllXRInteractions()
-{
-	// Broadcasting to XRInteractionSystemComponent
-	OnRequestStopAllXRInteractions.Broadcast(this);
 }
 
 // [Server] Implementation for starting interaction with a component, adds to active interactions if continuous
-void UXRInteractorComponent::Server_StartInteracting_Implementation(UXRInteractionComponent* InInteractionComponent)
+void UXRInteractorComponent::Server_ExecuteInteraction_Implementation(UXRInteractionComponent* InInteractionComponent)
 {
 	if (!InInteractionComponent)
 	{
@@ -100,28 +93,71 @@ void UXRInteractorComponent::Server_StartInteracting_Implementation(UXRInteracti
 	{
 		ActiveInteractionComponents.AddUnique(InInteractionComponent);
 	}
-	Multicast_StartedInteracting_Implementation(InInteractionComponent);
+	Multicast_ExecuteInteraction(InInteractionComponent);
 }
 
-void UXRInteractorComponent::Multicast_StartedInteracting_Implementation(UXRInteractionComponent* InteractionComponent)
+void UXRInteractorComponent::Multicast_ExecuteInteraction_Implementation(UXRInteractionComponent* InteractionComponent)
 {
-	OnStartInteracting.Broadcast(this, InteractionComponent);
+	if (!InteractionComponent)
+	{
+		return;
+	}
+	InteractionComponent->StartInteraction(this);
+	OnStartedInteracting.Broadcast(this, InteractionComponent);
 }
+
+
+
+
+void UXRInteractorComponent::AutoStopXRInteraction()
+{
+	UXRInteractionComponent* InteractionToStop = nullptr;
+	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and stop next available Interaction
+	{
+		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false, false);
+	}
+	if (InteractionToStop)
+	{
+		StopXRInteraction(InteractionToStop);
+	}
+
+}
+
+void UXRInteractorComponent::StopAllXRInteractions()
+{
+	for (UXRInteractionComponent* ActiveInteraction : ActiveInteractionComponents) {
+		Server_TerminateInteraction(ActiveInteraction);
+	}
+}
+
+void UXRInteractorComponent::StopXRInteraction(UXRInteractionComponent* InXRInteraction)
+{
+	if (!InXRInteraction)
+	{
+		return;
+	}
+	Server_TerminateInteraction(InXRInteraction);
+}
+
 
 
 // [Server] Implementation for stopping interaction with a component, removes from active interactions if continuous
-void UXRInteractorComponent::Server_StopInteracting_Implementation(UXRInteractionComponent* InInteractionComponent)
+void UXRInteractorComponent::Server_TerminateInteraction_Implementation(UXRInteractionComponent* InInteractionComponent)
 {
-	if (InInteractionComponent)
+	if (!InInteractionComponent)
 	{
-		ActiveInteractionComponents.Remove(InInteractionComponent);
+		return;
 	}
-	Multicast_StoppedInteracting_Implementation(InInteractionComponent);
+	ActiveInteractionComponents.Remove(InInteractionComponent);
+	Multicast_TerminateInteraction(InInteractionComponent);
 }
 
-void UXRInteractorComponent::Multicast_StoppedInteracting_Implementation(UXRInteractionComponent* InteractionComponent)
+void UXRInteractorComponent::Multicast_TerminateInteraction_Implementation(UXRInteractionComponent* InteractionComponent)
 {
-	OnStopInteracting.Broadcast(this, InteractionComponent);
+	InteractionComponent->EndInteraction(this);
+	OnStoppedInteracting.Broadcast(this, InteractionComponent);
+
+	// Force restart hovering after Interaction Ended.
 	TArray<AActor*> OverlappingActors;
 	this->GetOverlappingActors(OverlappingActors);
 	for (AActor* Actor : OverlappingActors)
@@ -129,6 +165,8 @@ void UXRInteractorComponent::Multicast_StoppedInteracting_Implementation(UXRInte
 		HoverActor(Actor, true);
 	}
 }
+
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Utility
