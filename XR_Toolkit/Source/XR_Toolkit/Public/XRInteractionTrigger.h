@@ -6,6 +6,15 @@
 
 class UXRInteractionTrigger;
 
+UENUM(BlueprintType)
+enum class EXRTriggerType : uint8
+{
+    Hold UMETA(DisplayName = "Hold Interaction"),
+    HoverHold UMETA(DisplayName = "Hover - Hold Interaction"),
+    OneShot UMETA(DisplayName = "One Shot Interaction"),
+    HoverOneShot UMETA(DisplayName = "Hover - One Shot Interaction"),
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, State);
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
@@ -30,7 +39,7 @@ public:
     * Sets the state of the Trigger. Replicated, only executed when called on Server.
     */
     UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-    void Server_SetTriggerState(bool InTriggerState);
+    void SetTriggerState(bool InTriggerState);
 
     /**
     * Get the state of the Trigger. Replicated.
@@ -42,14 +51,21 @@ public:
 
 protected:
     /**
-    * Sets the TriggerState to HoverState.
+    * Trigger Behaviors.
     */
     UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
-    bool bTriggerOnHover = false;
 
+    EXRTriggerType TriggerType = EXRTriggerType::Hold;
+
+
+    UFUNCTION(Server, Reliable)
+    void Server_SetTriggerState(bool InTriggerState);
+
+    /**
+    * If this is a OneShot Trigger, the Interaction will be terminated after this duration (in seconds).
+    */
     UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
-    float CooldownDuration = 0.05f;
-
+    float InteractionDuration = 0.1f;
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     UPROPERTY(ReplicatedUsing = OnRep_TriggerState)
@@ -59,9 +75,9 @@ protected:
     void OnRep_TriggerState();
 
     UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-    void RequestCooldown();
+    void EndInteractionTimer();
     UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-    void EnableComponent();
+    void RequestInteractionTermination();
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:

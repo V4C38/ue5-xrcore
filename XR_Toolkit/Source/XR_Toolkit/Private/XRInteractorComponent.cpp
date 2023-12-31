@@ -81,12 +81,16 @@ void UXRInteractorComponent::StartXRInteraction(UXRInteractionComponent* InInter
 	}
 }
 
-// [Server] Implementation for starting interaction with a component, adds to active interactions if continuous
+// [Server] Implementation for starting interaction with a component, adds to active interactions and sets the Owner of the Interacted Actor to this Components Owner (to grant Authority)
 void UXRInteractorComponent::Server_ExecuteInteraction_Implementation(UXRInteractionComponent* InInteractionComponent)
 {
 	if (!InInteractionComponent)
 	{
 		return;
+	}
+	if (InInteractionComponent->GetOwner() && GetOwner())
+	{
+		InInteractionComponent->GetOwner()->SetOwner(GetOwner());
 	}
 	ActiveInteractionComponents.AddUnique(InInteractionComponent);
 	Multicast_ExecuteInteraction(InInteractionComponent);
