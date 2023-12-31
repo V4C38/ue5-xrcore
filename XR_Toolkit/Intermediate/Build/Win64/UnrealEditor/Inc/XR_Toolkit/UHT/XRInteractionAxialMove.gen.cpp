@@ -156,6 +156,10 @@ void EmptyLinkFunctionForGeneratedCodeXRInteractionAxialMove() {}
 		static const UECodeGen_Private::FMetaDataPairParam NewProp_Origin_MetaData[];
 #endif
 		static const UECodeGen_Private::FStructPropertyParams NewProp_Origin;
+#if WITH_METADATA
+		static const UECodeGen_Private::FMetaDataPairParam NewProp_InteractorOrigin_MetaData[];
+#endif
+		static const UECodeGen_Private::FStructPropertyParams NewProp_InteractorOrigin;
 		static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 		static const FCppClassTypeInfoStatic StaticCppClassTypeInfo;
 		static const UECodeGen_Private::FClassParams ClassParams;
@@ -263,6 +267,12 @@ void EmptyLinkFunctionForGeneratedCodeXRInteractionAxialMove() {}
 	};
 #endif
 	const UECodeGen_Private::FStructPropertyParams Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_Origin = { "Origin", nullptr, (EPropertyFlags)0x0020080000000020, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UXRInteractionAxialMove, Origin), Z_Construct_UScriptStruct_FTransform, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_Origin_MetaData), Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_Origin_MetaData) };
+#if WITH_METADATA
+	const UECodeGen_Private::FMetaDataPairParam Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_InteractorOrigin_MetaData[] = {
+		{ "ModuleRelativePath", "Public/XRInteractionAxialMove.h" },
+	};
+#endif
+	const UECodeGen_Private::FStructPropertyParams Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_InteractorOrigin = { "InteractorOrigin", nullptr, (EPropertyFlags)0x0020080000000000, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UXRInteractionAxialMove, InteractorOrigin), Z_Construct_UScriptStruct_FTransform, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_InteractorOrigin_MetaData), Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_InteractorOrigin_MetaData) };
 	const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UXRInteractionAxialMove_Statics::PropPointers[] = {
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_ObjectToMove_Underlying,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_ObjectToMove,
@@ -273,6 +283,7 @@ void EmptyLinkFunctionForGeneratedCodeXRInteractionAxialMove() {}
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_MovementSpeed,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_AxialMoveResult,
 		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_Origin,
+		(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UXRInteractionAxialMove_Statics::NewProp_InteractorOrigin,
 	};
 	const FCppClassTypeInfoStatic Z_Construct_UClass_UXRInteractionAxialMove_Statics::StaticCppClassTypeInfo = {
 		TCppClassTypeTraits<UXRInteractionAxialMove>::IsAbstract,
@@ -328,9 +339,9 @@ void EmptyLinkFunctionForGeneratedCodeXRInteractionAxialMove() {}
 		{ EAxialMoveTarget_StaticEnum, TEXT("EAxialMoveTarget"), &Z_Registration_Info_UEnum_EAxialMoveTarget, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 3304269770U) },
 	};
 	const FClassRegisterCompiledInInfo Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_Statics::ClassInfo[] = {
-		{ Z_Construct_UClass_UXRInteractionAxialMove, UXRInteractionAxialMove::StaticClass, TEXT("UXRInteractionAxialMove"), &Z_Registration_Info_UClass_UXRInteractionAxialMove, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UXRInteractionAxialMove), 1631162467U) },
+		{ Z_Construct_UClass_UXRInteractionAxialMove, UXRInteractionAxialMove::StaticClass, TEXT("UXRInteractionAxialMove"), &Z_Registration_Info_UClass_UXRInteractionAxialMove, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UXRInteractionAxialMove), 4229785525U) },
 	};
-	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_16806752(TEXT("/Script/XR_Toolkit"),
+	static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_260143115(TEXT("/Script/XR_Toolkit"),
 		Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_Statics::ClassInfo),
 		nullptr, 0,
 		Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_XR_Testground_Plugins_XR_Toolkit_XR_Toolkit_Source_XR_Toolkit_Public_XRInteractionAxialMove_h_Statics::EnumInfo));

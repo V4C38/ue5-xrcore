@@ -11,12 +11,19 @@ class UXRInteractorComponent;
 class UXRInteractionComponent;
 class UXRInteractionHighlightComponent;
 
-
+UENUM(BlueprintType)
+enum class EXRLaserBehavior : uint8
+{
+	Disabled UMETA(DisplayName = "Disabled"),
+	Supress UMETA(DisplayName = "Supress while Interacting"),
+	Enabled UMETA(DisplayName = "Enabled"),
+	Snap UMETA(DisplayName = "Snap to Interaction Start"),
+	SnapMove UMETA(DisplayName = "Snap to Interaction Start - allow movement"),
+};
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionStarted, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionEnded, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnInteractionHovered, UXRInteractionComponent*, Sender, UXRInteractorComponent*, HoveringXRInteractor, bool, bHovered);
-
 
 UCLASS(Blueprintable, ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRInteractionComponent : public USceneComponent
@@ -71,13 +78,13 @@ public:
 	// Utility
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Returns true if this is a continuous interaction and it is currently ongoing. 
+	 * Returns true if this interaction is currently ongoing. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
 	bool IsInteractionActive() const;
 
 	/**
-	 * Sets the Active Interactor if this is a ContinuousInteraction. (Replicated)
+	 * Sets the Active Interactor. (Replicated)
 	 * @param InInteractor Set to nullptr if you are unassigning an Interactor.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
@@ -95,23 +102,35 @@ public:
 	int32 GetInteractionPriority() const;
 
 	/**
-	 * Is the interaction finished instantly or must it be ended manually.
-	*/
-	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|General")
-	bool IsContinuousInteraction() const;
-
-	/**
-	* Can this Continuous Interaction be taken over by another XRInteractor while it is active?
+	* Can this Interaction be taken over by another XRInteractor while it is active?
 	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
 	void SetAllowTakeOver(bool bInAllowTakeOver);
 	/**
-	* Can this Continuous Interaction be taken over by another XRInteractor while it is active?
+	* Can this Interaction be taken over by another XRInteractor while it is active?
 	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
 	bool GetAllowTakeOver() const;
+
+	/**
+	 * Return the assigned XRInteractionHighlightComponent. Only valid if bEnableHighlighting is true on BeginPlay.
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|Highlight")
+	UXRHighlightComponent* GetXRHighlightComponent();
+
+	/**
+	 * Return the assigned XRLaser behavior.
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|Laser")
+	EXRLaserBehavior GetLaserBehavior() const;
+
+	/**
+	 * Set the XRLaser behavior.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction|Laser")
+	void SetLaserBehavior(EXRLaserBehavior InLaserBehavior);
 
 	/**
 	 * Enables / Disables this Interaction to be triggered via the LaserComponent. Will also disable Highlighting via the Laser. 
@@ -120,33 +139,6 @@ public:
 	UFUNCTION(Blueprintpure, Category="XRCore|Interaction|Laser")
 	bool IsLaserInteractionEnabled() const;
 
-	/**
-	 * Set if this XRInteraction disables the XRLaser while the Interaction is active.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction|Laser")
-	void SetSupressLaserWhenInteracting(bool InSupressLaser);
-	/**
-	 * Should this XRInteraction disable the XRLaser while the Interaction is active.
-	 */
-	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|Laser")
-	bool GetSupressLaserWhenInteracting() const;
-
-	/**
-	 * Should this XRInteraction force the XRLaser to snap to the owning Actor.
-	 */
-	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|Laser")
-	bool GetSnapXRLaserToActor() const;
-	/**
-	 * Set if this XRInteraction forces the XRLaser to snap to the owning Actor.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction|Laser")
-	void SetSnapXRLaserToActor(bool InSnapXRLaserToActor);
-
-	/**
-	 * Return the assigned XRInteractionHighlightComponent. Only valid if bEnableHighlighting is true on BeginPlay.
-	 */
-	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction|Highlight")
-	UXRHighlightComponent* GetXRHighlightComponent();
 
 protected:
 	virtual void InitializeComponent() override;
@@ -190,40 +182,21 @@ protected:
 	int32 InteractionPriority = 1;
 
 	/**
-	 * Determines if the interaction is finished instantly or must be ended manually.
-	 * Enables In-Progress Late-Joining.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	bool bIsContinuousInteraction = true;
-
-	/**
-	* Can this Continuous Interaction be taken over by another XRInteractor while it is active?
+	* Can this Interaction be taken over by another XRInteractor while it is active?
 	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
 	bool bAllowTakeOver = true;
 
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-	// Config - Laser
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Enables / Disables this Interaction to be triggered via the LaserComponent. Will also disable Highlighting via the Laser.
-	 * The Actor will be ignored during the collision checks in the InteractionSystemComponent.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Laser")
-	bool bEnableLaserInteraction = true;
-
-	/**
-	 * Should this XRInteraction disable the XRLaser while the Interaction is active.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Laser")
-	bool bSupressLaserWhenInteracting = false;
-
-	/**
-	 * Should this XRInteraction force the XRLaser to snap to the OwningActor.
-	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Laser")
-	bool bSnapXRLaserToActor = false;
+	* Disabled - No Laser Interaction.
+	* Supress while Interacting - Will disable the Laser upon Interaction Start.
+	* Enabled - Laser Interaction enabled.
+	* Snap to Interaction Start - Will snap the Laser tip to the position on the interacted actor when the interaction starts.
+	* Snap to Interaction Start - allow movement - Same as normal, but will also allow the Laser Tip to move slightly.
+	*/
+	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
+	EXRLaserBehavior LaserBehavior = EXRLaserBehavior::Enabled;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - Highlighting

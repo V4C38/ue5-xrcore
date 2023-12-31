@@ -39,13 +39,10 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
 	RequestAudioPlay(InteractionStartSound);
-	if (IsContinuousInteraction())
+	bIsInteractionActive = true;
+	if (XRHighlightComponent)
 	{
-		bIsInteractionActive = true;
-		if (XRHighlightComponent)
-		{
-			XRHighlightComponent->SetHighlighted(0.0f);
-		}
+		XRHighlightComponent->SetHighlighted(0.0f);
 	}
 }
 
@@ -151,34 +148,28 @@ void UXRInteractionComponent::SetAllowTakeOver(bool bInAllowTakeOver)
 	bAllowTakeOver = bInAllowTakeOver;
 }
 
-bool UXRInteractionComponent::IsContinuousInteraction() const
+EXRLaserBehavior UXRInteractionComponent::GetLaserBehavior() const
 {
-	return bIsContinuousInteraction;
+	return LaserBehavior;
+}
+
+
+void UXRInteractionComponent::SetLaserBehavior(EXRLaserBehavior InLaserBehavior)
+{
+	LaserBehavior = InLaserBehavior;
 }
 
 bool UXRInteractionComponent::IsLaserInteractionEnabled() const
 {
-	return bEnableLaserInteraction;
-}
-
-bool UXRInteractionComponent::GetSupressLaserWhenInteracting() const
-{
-	return bSupressLaserWhenInteracting;
-}
-
-void UXRInteractionComponent::SetSupressLaserWhenInteracting(bool InSupressLaser)
-{
-	bSupressLaserWhenInteracting = InSupressLaser;
-}
-
-bool UXRInteractionComponent::GetSnapXRLaserToActor() const
-{
-	return bSnapXRLaserToActor;
-}
-
-void UXRInteractionComponent::SetSnapXRLaserToActor(bool InSnapXRLaserToActor)
-{
-	bSnapXRLaserToActor = InSnapXRLaserToActor;
+	if (LaserBehavior == EXRLaserBehavior::Disabled)
+	{
+		return false;
+	}
+	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractionActive())
+	{
+		return false;
+	}
+	return true;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------

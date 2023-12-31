@@ -88,11 +88,7 @@ void UXRInteractorComponent::Server_ExecuteInteraction_Implementation(UXRInterac
 	{
 		return;
 	}
-	// Ensuring we only add to active interactions for continuous interactions
-	if (InInteractionComponent->IsContinuousInteraction())
-	{
-		ActiveInteractionComponents.AddUnique(InInteractionComponent);
-	}
+	ActiveInteractionComponents.AddUnique(InInteractionComponent);
 	Multicast_ExecuteInteraction(InInteractionComponent);
 }
 

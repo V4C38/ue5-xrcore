@@ -10,18 +10,13 @@ UXRInteractionTrigger::UXRInteractionTrigger()
 	bAutoActivate = true;
 	SetIsReplicated(true);
 
-	// Set default config values for this Interaction Type
-	bSnapXRLaserToActor = true; 
 	InteractionPriority = 2;
+	bTriggerOnHover ? LaserBehavior = EXRLaserBehavior::Enabled : LaserBehavior = EXRLaserBehavior::Snap;
 }
 
 void UXRInteractionTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	if (bTriggerOnHover)
-	{
-		bSnapXRLaserToActor = false;
-	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,13 +29,8 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 		return;
 	}
 	Super::StartInteraction(InInteractor);
-	if (!IsContinuousInteraction())
-	{
-		RequestCooldown();
-		Server_SetTriggerState(!GetTriggerState());
-		return;
-	}
-	Server_SetTriggerState(true);
+	RequestCooldown();
+	Server_SetTriggerState(!GetTriggerState());
 }
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
