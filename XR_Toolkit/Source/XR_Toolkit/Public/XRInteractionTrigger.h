@@ -15,7 +15,7 @@ enum class EXRTriggerType : uint8
     HoverOneShot UMETA(DisplayName = "Hover - One Shot Interaction"),
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, State);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, TriggerState);
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
 class XR_TOOLKIT_API UXRInteractionTrigger : public UXRInteractionComponent
@@ -34,12 +34,6 @@ public:
 
     UPROPERTY(BlueprintAssignable, Category = "XRCore|Interaction")
     FOnTriggerStateChanged OnTriggerStateChanged;
-
-    /**
-    * Sets the state of the Trigger. Replicated, only executed when called on Server.
-    */
-    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-    void SetTriggerState(bool InTriggerState);
 
     /**
     * Get the state of the Trigger. Replicated.

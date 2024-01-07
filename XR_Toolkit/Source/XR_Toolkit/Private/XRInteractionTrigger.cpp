@@ -1,6 +1,7 @@
 #include "XRInteractionTrigger.h"
 #include "XRInteractorComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
 
 
 
@@ -34,7 +35,7 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 	{
 		EndInteractionTimer();
 	}
-	SetTriggerState(!GetTriggerState());
+	Server_SetTriggerState(!GetTriggerState());
 }
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
@@ -44,7 +45,7 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 		return;
 	}
 	Super::EndInteraction(InInteractor);
-	SetTriggerState(false);
+	Server_SetTriggerState(false);
 }
 
 void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
@@ -57,28 +58,18 @@ void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteracto
 	if (bInHoverState)
 	{
 		Super::StartInteraction(InInteractor);
-		SetTriggerState(true);
+		Server_SetTriggerState(true);
 	}
 	else
 	{
 		Super::EndInteraction(InInteractor);
-		SetTriggerState(false);
+		Server_SetTriggerState(false);
 	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger State
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::SetTriggerState(bool InTriggerState)
-{
-	// For Standalone
-	bTriggerState = InTriggerState;
-	if (InTriggerState == bTriggerState)
-	{
-		return;
-	}
-	Server_SetTriggerState(InTriggerState);
-}
 
 void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTriggerState)
 {
@@ -87,6 +78,10 @@ void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTrigger
 		return;
 	}
 	bTriggerState = InTriggerState;
+	if (GetWorld()->GetNetMode() == NM_Standalone)
+	{
+		OnTriggerStateChanged.Broadcast(this, bTriggerState);
+	}
 }
 bool UXRInteractionTrigger::GetTriggerState()
 {
