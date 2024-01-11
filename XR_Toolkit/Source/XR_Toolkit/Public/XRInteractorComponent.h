@@ -138,19 +138,35 @@ public:
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	bool IsLocallyControlled() const;
 
-
 	/**
 	 * Required Physics-based Interactions. Not spawned automatically as manual assignment gives greater flexibility in configuration of the PhysicsConstraint.
 	 * @param InPhysicsConstraintComponent PhysicsConstraintComponent to assign to this XRInteractor.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void SetAssignedPhysicsConstraint(UPhysicsConstraintComponent* InPhysicsConstraintComponent);
+	void SetPhysicsConstraint(UPhysicsConstraintComponent* InPhysicsConstraintComponent);
+
+	/**
+	 * Set the Colliders which this Interactor will listen to for Overlap events. Will override and unbind from pre-existing colliders.
+	 * Also used for AutoStartXRInteraction and AutoStopXRInteraction methods.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	void SetAdditionalColliders(TArray<UPrimitiveComponent*> InColliders);
+
+	/**
+	 * Get the Colliders which this Interactor listens to for Overlap events.
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
+	TArray<UPrimitiveComponent*> GetAdditionalColliders() const;
+
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
+	TArray<AActor*> GetAllOverlappingActors() const;
+
 	/**
 	 * Return the associated PhysicsConstraint.
 	 * NOTE: Must be assigned manually first. 
 	*/
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
-	UPhysicsConstraintComponent* GetAssignedPhysicsConstraint() const;
+	UPhysicsConstraintComponent* GetPhysicsConstraint() const;
 	
 
 	
@@ -158,12 +174,15 @@ protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
+
+	UPROPERTY()
+	TArray<UPrimitiveComponent*> AdditionalColliders = {};
+
 	UPROPERTY(Replicated, EditDefaultsOnly, Category="XRCore|Interactor")
 	EControllerHand XRControllerHand = EControllerHand::AnyHand;
 	
 	UPROPERTY(EditDefaultsOnly, Category="XRCore|Interactor")
 	bool bIsLaserInteractor = false;
-
 
 	UFUNCTION()
 	void HoverActor(AActor* OtherActor, bool bHoverState);
@@ -183,9 +202,11 @@ private:
 	UPROPERTY()
 	APawn* OwningPawn = nullptr;
 	UPROPERTY()
-	UPhysicsConstraintComponent* AssignedPhysicsConstraint;
+	UPhysicsConstraintComponent* PhysicsConstraint;
 	UPROPERTY()
 	AActor* LocalInteractedActor = nullptr;
+	UPROPERTY()
+	TArray<UXRInteractionComponent*> LocalHoveredInteractions = {};
 	UPROPERTY(Replicated)
 	TArray<UXRInteractionComponent*> ActiveInteractionComponents = {};
 	UPROPERTY()

@@ -110,7 +110,7 @@ void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 		if (MeshComponents.Num() > 0)
 		{
 			UMeshComponent* PhysicsEnabledMesh = MeshComponents[0];
-			UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetAssignedPhysicsConstraint();
+			UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetPhysicsConstraint();
 
 			if (ActivePhysicsConstraint && PhysicsEnabledMesh)
 			{
@@ -124,7 +124,7 @@ void UXRInteractionGrab::PhysicsUngrab(UXRInteractorComponent* InInteractor)
 {
 	if (InInteractor)
 	{
-		UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetAssignedPhysicsConstraint();
+		UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetPhysicsConstraint();
 		if (ActivePhysicsConstraint)
 		{
 			ActivePhysicsConstraint->BreakConstraint();
