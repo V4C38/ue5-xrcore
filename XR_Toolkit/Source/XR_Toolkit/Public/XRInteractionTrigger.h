@@ -9,10 +9,12 @@ class UXRInteractionTrigger;
 UENUM(BlueprintType)
 enum class EXRTriggerType : uint8
 {
-    Hold UMETA(DisplayName = "Hold Interaction"),
-    HoverHold UMETA(DisplayName = "Hover - Hold Interaction"),
-    OneShot UMETA(DisplayName = "One Shot Interaction"),
-    HoverOneShot UMETA(DisplayName = "Hover - One Shot Interaction"),
+    Single UMETA(DisplayName = "Single Activation"),
+    SingleHover UMETA(DisplayName = "Single Trigger using hover"),
+    Toggle UMETA(DisplayName = "Toggle - Single Activation"),
+    ToggleHover UMETA(DisplayName = "Toggle using hover"),
+    Hold UMETA(DisplayName = "Hold"),
+    HoverHold UMETA(DisplayName = "Hold Interaction using hover"),
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, TriggerState);
@@ -40,6 +42,9 @@ public:
     */
     UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
     bool GetTriggerState();
+
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
+    bool DefaultTriggerState = false;
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,7 +74,7 @@ protected:
     void OnRep_TriggerState();
 
     UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-    void EndInteractionTimer();
+    void EndInteractionAfterTimer();
     UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
     void RequestInteractionTermination();
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
