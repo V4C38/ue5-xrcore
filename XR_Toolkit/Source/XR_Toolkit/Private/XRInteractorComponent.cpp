@@ -10,7 +10,7 @@ UXRInteractorComponent::UXRInteractorComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
-	SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 }
 
 void UXRInteractorComponent::InitializeComponent()
