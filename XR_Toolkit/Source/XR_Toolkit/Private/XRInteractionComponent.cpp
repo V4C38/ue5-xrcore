@@ -57,11 +57,38 @@ void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteracto
 
 void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
-	OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
-	OnInteractionHover(bInHoverState, InInteractor);
-	if (XRHighlightComponent && !bIsInteractionActive)
+	if (!InInteractor)
 	{
-		XRHighlightComponent->FadeXRHighlight(bInHoverState);
+		OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
+		OnInteractionHover(bInHoverState, InInteractor);
+		return;
+	}
+
+	if (bInHoverState)
+	{
+		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+		if (HoveringInteractors.Num() == 1 && !bIsInteractionActive)
+		{
+			OnInteractionHover(true, InInteractor);
+			OnInteractionHovered.Broadcast(this, InInteractor, true);
+			if (XRHighlightComponent)
+			{
+				XRHighlightComponent->FadeXRHighlight(true);
+			}
+		}
+	}
+	else
+	{
+		HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+		if (HoveringInteractors.Num() == 0 && !bIsInteractionActive)
+		{
+			OnInteractionHover(false, InInteractor);
+			OnInteractionHovered.Broadcast(this, InInteractor, false);
+			if (XRHighlightComponent)
+			{
+				XRHighlightComponent->FadeXRHighlight(false);
+			}
+		}
 	}
 }
 

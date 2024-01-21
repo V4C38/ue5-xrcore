@@ -253,4 +253,7 @@ private:
 	
 	UPROPERTY()
 	TWeakObjectPtr<UXRInteractorComponent> ActiveInteractor;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UXRInteractorComponent>> HoveringInteractors = {};
 };
