@@ -57,13 +57,16 @@ protected:
 
 
     UPROPERTY(ReplicatedUsing = OnRep_AxialMoveResult)
-    FTransform AxialMoveResult;
+    FTransform AxialMoveResult = FTransform();
 
     UFUNCTION()
     void OnRep_AxialMoveResult();
 
     UPROPERTY(Replicated)
-    FTransform Origin;
+    FTransform Origin = FTransform();
+
+    UPROPERTY()
+    FTransform InteractorOrigin = FTransform();
 
 private:
     virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;

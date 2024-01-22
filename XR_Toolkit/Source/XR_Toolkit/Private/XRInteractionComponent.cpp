@@ -12,7 +12,7 @@ UXRInteractionComponent::UXRInteractionComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
-	SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 }
 
 void UXRInteractionComponent::InitializeComponent()
@@ -39,13 +39,10 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
 	RequestAudioPlay(InteractionStartSound);
-	if (IsContinuousInteraction())
+	bIsInteractionActive = true;
+	if (XRHighlightComponent)
 	{
-		bIsInteractionActive = true;
-		if (XRHighlightComponent)
-		{
-			XRHighlightComponent->SetHighlighted(0.0f);
-		}
+		XRHighlightComponent->SetHighlighted(0.0f);
 	}
 }
 
@@ -60,11 +57,38 @@ void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteracto
 
 void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
-	OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
-	OnInteractionHover(bInHoverState, InInteractor);
-	if (XRHighlightComponent && !bIsInteractionActive)
+	if (!InInteractor)
 	{
-		XRHighlightComponent->FadeXRHighlight(bInHoverState);
+		OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
+		OnInteractionHover(bInHoverState, InInteractor);
+		return;
+	}
+
+	if (bInHoverState)
+	{
+		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+		if (HoveringInteractors.Num() == 1 && !bIsInteractionActive)
+		{
+			OnInteractionHover(true, InInteractor);
+			OnInteractionHovered.Broadcast(this, InInteractor, true);
+			if (XRHighlightComponent)
+			{
+				XRHighlightComponent->FadeXRHighlight(true);
+			}
+		}
+	}
+	else
+	{
+		HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+		if (HoveringInteractors.Num() == 0 && !bIsInteractionActive)
+		{
+			OnInteractionHover(false, InInteractor);
+			OnInteractionHovered.Broadcast(this, InInteractor, false);
+			if (XRHighlightComponent)
+			{
+				XRHighlightComponent->FadeXRHighlight(false);
+			}
+		}
 	}
 }
 
@@ -151,34 +175,28 @@ void UXRInteractionComponent::SetAllowTakeOver(bool bInAllowTakeOver)
 	bAllowTakeOver = bInAllowTakeOver;
 }
 
-bool UXRInteractionComponent::IsContinuousInteraction() const
+EXRLaserBehavior UXRInteractionComponent::GetLaserBehavior() const
 {
-	return bIsContinuousInteraction;
+	return LaserBehavior;
+}
+
+
+void UXRInteractionComponent::SetLaserBehavior(EXRLaserBehavior InLaserBehavior)
+{
+	LaserBehavior = InLaserBehavior;
 }
 
 bool UXRInteractionComponent::IsLaserInteractionEnabled() const
 {
-	return bEnableLaserInteraction;
-}
-
-bool UXRInteractionComponent::GetSupressLaserWhenInteracting() const
-{
-	return bSupressLaserWhenInteracting;
-}
-
-void UXRInteractionComponent::SetSupressLaserWhenInteracting(bool InSupressLaser)
-{
-	bSupressLaserWhenInteracting = InSupressLaser;
-}
-
-bool UXRInteractionComponent::GetSnapXRLaserToActor() const
-{
-	return bSnapXRLaserToActor;
-}
-
-void UXRInteractionComponent::SetSnapXRLaserToActor(bool InSnapXRLaserToActor)
-{
-	bSnapXRLaserToActor = InSnapXRLaserToActor;
+	if (LaserBehavior == EXRLaserBehavior::Disabled)
+	{
+		return false;
+	}
+	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractionActive())
+	{
+		return false;
+	}
+	return true;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 #include "XRInteractionTrigger.h"
+#include "XRInteractorComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
 
 
 
@@ -10,17 +12,16 @@ UXRInteractionTrigger::UXRInteractionTrigger()
 	bAutoActivate = true;
 	SetIsReplicated(true);
 
-	// Set default config values for this Interaction Type
-	bSnapXRLaserToActor = true; 
 	InteractionPriority = 2;
+	LaserBehavior = EXRLaserBehavior::Snap;
 }
 
 void UXRInteractionTrigger::BeginPlay()
 {
 	Super::BeginPlay();
-	if (bTriggerOnHover)
+	if (GetTriggerState() != DefaultTriggerState)
 	{
-		bSnapXRLaserToActor = false;
+		Server_SetTriggerState(DefaultTriggerState);
 	}
 }
 
@@ -29,61 +30,104 @@ void UXRInteractionTrigger::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteractor)
 {
-	if (bTriggerOnHover)
+	switch (TriggerType)
 	{
-		return;
+		case EXRTriggerType::SingleHover:
+			return;
+		case EXRTriggerType::ToggleHover:
+			return;
+		case EXRTriggerType::HoverHold:
+			return;
+		case EXRTriggerType::Single:
+			Super::StartInteraction(InInteractor);
+			Server_SetTriggerState(!DefaultTriggerState);
+			EndInteractionAfterTimer();
+			break;
+		case EXRTriggerType::Toggle:
+			Super::StartInteraction(InInteractor);
+			Server_SetTriggerState(!GetTriggerState());
+			EndInteractionAfterTimer();
+			break;
+		case EXRTriggerType::Hold:
+			Super::StartInteraction(InInteractor);
+			Server_SetTriggerState(!DefaultTriggerState);
+			break;
 	}
-	Super::StartInteraction(InInteractor);
-	if (!IsContinuousInteraction())
-	{
-		RequestCooldown();
-		Server_SetTriggerState(!GetTriggerState());
-		return;
-	}
-	Server_SetTriggerState(true);
 }
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 {
-	if (bTriggerOnHover)
+	switch (TriggerType)
 	{
-		return;
+
+		case EXRTriggerType::SingleHover:
+			return;
+		case EXRTriggerType::ToggleHover:
+			return;
+		case EXRTriggerType::HoverHold:
+			return;
+		case EXRTriggerType::Toggle:
+			Super::EndInteraction(InInteractor);
+			break;
+		default:
+			Super::EndInteraction(InInteractor);
+			Server_SetTriggerState(DefaultTriggerState);
+			break;
 	}
-	Super::EndInteraction(InInteractor);
-	Server_SetTriggerState(false);
 }
 
 void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
 	Super::HoverInteraction(InInteractor, bInHoverState);
-	if (!bTriggerOnHover)
+	switch (TriggerType)
 	{
+	case EXRTriggerType::Single:
 		return;
-	}
-	if (bInHoverState)
-	{
-		Super::StartInteraction(InInteractor);
-		Server_SetTriggerState(true);
-	}
-	else
-	{
-		Super::EndInteraction(InInteractor);
-		Server_SetTriggerState(false);
+	case EXRTriggerType::Toggle:
+		return;
+	case EXRTriggerType::Hold:
+		return;
+	case EXRTriggerType::ToggleHover:
+		if (bInHoverState)
+		{
+			Super::StartInteraction(InInteractor);
+		}
+		else
+		{
+			Super::EndInteraction(InInteractor);
+		}
+		Server_SetTriggerState(!GetTriggerState());
+		break;
+
+	default:
+		if (bInHoverState)
+		{
+			Super::StartInteraction(InInteractor);
+			Server_SetTriggerState(true);
+		}
+		else
+		{
+			Super::EndInteraction(InInteractor);
+			Server_SetTriggerState(false);
+		}
+		break;
 	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger State
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::Server_SetTriggerState(bool InTriggerState)
+
+void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTriggerState)
 {
-	if (GetOwner()->HasAuthority())
+	if (InTriggerState == bTriggerState)
 	{
-		if (InTriggerState == bTriggerState)
-		{
-			return;
-		}
-		bTriggerState = InTriggerState;
+		return;
+	}
+	bTriggerState = InTriggerState;
+	if (GetWorld()->GetNetMode() == NM_Standalone)
+	{
+		OnTriggerStateChanged.Broadcast(this, bTriggerState);
 	}
 }
 bool UXRInteractionTrigger::GetTriggerState()
@@ -92,19 +136,21 @@ bool UXRInteractionTrigger::GetTriggerState()
 }
 
 // Disable the component until the started timer completes.
-void UXRInteractionTrigger::RequestCooldown()
+void UXRInteractionTrigger::EndInteractionAfterTimer()
 {
-	if (CooldownDuration > 0.0f)
+	if (InteractionDuration > 0.0f)
 	{
-		SetActive(false, false);
 		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-		TimerManager.SetTimer(CooldownTimerHandle, this, &UXRInteractionTrigger::EnableComponent, CooldownDuration, false);
+		TimerManager.SetTimer(CooldownTimerHandle, this, &UXRInteractionTrigger::RequestInteractionTermination, InteractionDuration, false);
 	}
 }
 
-void UXRInteractionTrigger::EnableComponent()
+void UXRInteractionTrigger::RequestInteractionTermination()
 {
-	SetActive(true, false);
+	if (GetActiveInteractor())
+	{
+		GetActiveInteractor()->StopXRInteraction(this);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------

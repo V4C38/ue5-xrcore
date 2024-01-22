@@ -6,7 +6,7 @@ UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
-	SetIsReplicated(true);
+	SetIsReplicatedByDefault(true);
 
 }
 

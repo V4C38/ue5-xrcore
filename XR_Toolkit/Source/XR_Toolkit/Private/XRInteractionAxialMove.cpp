@@ -7,6 +7,7 @@ UXRInteractionAxialMove::UXRInteractionAxialMove()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
+	LaserBehavior = EXRLaserBehavior::SnapMove;
 }
 
 
@@ -73,7 +74,12 @@ void UXRInteractionAxialMove::TickComponent(float DeltaTime, ELevelTick TickType
 
 void UXRInteractionAxialMove::StartInteraction(UXRInteractorComponent* InInteractor)
 {
+	if (!InInteractor)
+	{
+		return;
+	}
 	Super::StartInteraction(InInteractor);
+	InteractorOrigin = InInteractor->GetComponentTransform();
 	SetComponentTickEnabled(true);
 }
 
