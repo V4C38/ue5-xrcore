@@ -14,6 +14,19 @@ UXRInteractionAxialMove::UXRInteractionAxialMove()
 void UXRInteractionAxialMove::BeginPlay()
 {
 	Super::BeginPlay();
+	if (!GetOwner())
+	{
+		return;
+	}
+	switch (ObjectToMove)
+	{
+		case EAxialMoveTarget::OwningActor:
+			RootTransform = GetOwner()->GetActorTransform();
+			break;
+		case EAxialMoveTarget::ThisComponent:
+			RootTransform = GetComponentTransform();
+			break;
+	}
 }
 
 void UXRInteractionAxialMove::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -22,54 +35,81 @@ void UXRInteractionAxialMove::TickComponent(float DeltaTime, ELevelTick TickType
 	if (!GetOwner() || !GetActiveInteractor())
 	{
 		return;
-	}
+	} 
 
-	AActor* Owner = GetOwner();
-	FVector CurrentWorldLocation = FVector();
-	FTransform CurrentWorldTransform = FTransform();
 	FVector TargetWorldLocation = GetActiveInteractor()->GetComponentLocation();
-	FVector TargetLocalLocation = FVector();  
+	FVector MoveDirection = {};
 
 	switch (ObjectToMove)
 	{
 		case EAxialMoveTarget::OwningActor:
-			CurrentWorldLocation = Owner->GetActorLocation();
-			CurrentWorldTransform = Owner->GetActorTransform();
-			TargetLocalLocation = CurrentWorldTransform.InverseTransformPosition(TargetWorldLocation);
-			// Apply local axis constraints
-			TargetLocalLocation.X = bConstrainX ? 0 : TargetLocalLocation.X;
-			TargetLocalLocation.Y = bConstrainY ? 0 : TargetLocalLocation.Y;
-			TargetLocalLocation.Z = bConstrainZ ? 0 : TargetLocalLocation.Z;
-			TargetWorldLocation = CurrentWorldTransform.TransformPosition(TargetLocalLocation);
-			Owner->SetActorLocation(TargetWorldLocation);
-			if (MovementSpeed)
+		{
+			AActor* Owner = GetOwner();
+			MoveDirection = GetActiveInteractor()->GetComponentLocation() - Owner->GetActorLocation();
+			Owner->SetActorLocation(RootTransform.GetLocation() + MoveDirection);
+			break;
+		}
+
+		case EAxialMoveTarget::ThisComponent:
+		{
+			MoveDirection = GetActiveInteractor()->GetComponentLocation() - this->GetComponentLocation();
+			this->SetWorldLocation(RootTransform.GetLocation() + MoveDirection);
+			break;
+		}
+	}
+
+
+
+
+
+
+	/*
+
+
+	FVector CurrentWorldLocation = TargetActor ? TargetActor->GetActorLocation() : TargetComponent->GetComponentLocation();
+	FTransform CurrentWorldTransform = TargetActor ? TargetActor->GetActorTransform() : TargetComponent->GetComponentTransform();
+	FVector TargetWorldLocation = GetActiveInteractor()->GetComponentLocation();
+
+	// Apply Axis constraints in local space
+	FVector TargetLocalLocation = CurrentWorldTransform.InverseTransformPosition(TargetWorldLocation);
+	TargetLocalLocation.X = bConstrainX ? 0 : TargetLocalLocation.X;
+	TargetLocalLocation.Y = bConstrainY ? 0 : TargetLocalLocation.Y;
+	TargetLocalLocation.Z = bConstrainZ ? 0 : TargetLocalLocation.Z;
+	TargetWorldLocation = CurrentWorldTransform.TransformPosition(TargetLocalLocation);
+
+	// Distance Check
+	switch (ObjectToMove)
+	{
+		case EAxialMoveTarget::OwningActor:
+			if (FVector::Dist(TargetWorldLocation, RootTransform.GetLocation()) > DistanceLimit)
 			{
-				Owner->SetActorLocation(FMath::VInterpTo(CurrentWorldLocation, TargetWorldLocation, DeltaTime, MovementSpeed));
-			}
-			else
-			{
-				Owner->SetActorLocation(TargetWorldLocation);
+				OnMovementLimitReached.Broadcast(this);
+				return;
 			}
 			break;
 		case EAxialMoveTarget::ThisComponent:
-			CurrentWorldLocation = GetComponentLocation();
-			CurrentWorldTransform = GetComponentTransform();
-			TargetLocalLocation = CurrentWorldTransform.InverseTransformPosition(TargetWorldLocation);
-			// Apply Axis constraints in local space for this component
-			TargetLocalLocation.X = bConstrainX ? 0 : TargetLocalLocation.X;
-			TargetLocalLocation.Y = bConstrainY ? 0 : TargetLocalLocation.Y;
-			TargetLocalLocation.Z = bConstrainZ ? 0 : TargetLocalLocation.Z;
-			TargetWorldLocation = CurrentWorldTransform.TransformPosition(TargetLocalLocation);
-			if (MovementSpeed)
+			FVector WorldTarget = GetOwner()->GetActorTransform().InverseTransformPosition(TargetWorldLocation);
+			if (FVector::Dist(WorldTarget, RootTransform.GetLocation()) > DistanceLimit)
 			{
-				SetWorldLocation(FMath::VInterpTo(CurrentWorldLocation, TargetWorldLocation, DeltaTime, MovementSpeed));
-			}
-			else
-			{
-				SetWorldLocation(TargetWorldLocation);
+				OnMovementLimitReached.Broadcast(this);
+				return;
 			}
 			break;
 	}
+
+	// Move the target
+	FVector NewLocation = MovementSpeed ? FMath::VInterpTo(CurrentWorldLocation, TargetWorldLocation, DeltaTime, MovementSpeed) : TargetWorldLocation;
+	if (TargetActor)
+	{
+		TargetActor->SetActorLocation(NewLocation);
+	}
+	else if (TargetComponent)
+	{
+		TargetComponent->SetWorldLocation(NewLocation);
+	}
+	OnMovementUpdate.Broadcast(this, GetMovementProgress());
+
+	*/
 }
 
 void UXRInteractionAxialMove::StartInteraction(UXRInteractorComponent* InInteractor)
@@ -107,6 +147,29 @@ void UXRInteractionAxialMove::EndInteraction(UXRInteractorComponent* InInteracto
 	}
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Utility
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+float UXRInteractionAxialMove::GetMovementProgress() const
+{
+	if (!GetOwner())
+	{
+		return -1.0f;
+	}
+	float OutProgress = 0.0f;
+	FVector CurrentLocation = FVector::ZeroVector;
+	switch (ObjectToMove)
+	{
+	case EAxialMoveTarget::OwningActor:
+		CurrentLocation = GetOwner()->GetActorLocation();
+		break;
+	case EAxialMoveTarget::ThisComponent:
+		CurrentLocation = GetRelativeLocation();
+		break;
+	}
+	OutProgress = FVector::Dist(CurrentLocation, RootTransform.GetLocation()) / DistanceLimit;
+	return FMath::Clamp(OutProgress, 0.0f, 1.0f);
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Replication
@@ -122,7 +185,7 @@ void UXRInteractionAxialMove::OnRep_AxialMoveResult()
 			}
 			break;
 		case EAxialMoveTarget::ThisComponent:
-			SetWorldTransform(AxialMoveResult);
+			SetRelativeTransform(AxialMoveResult);
 			break;
 	}
 }
@@ -131,5 +194,5 @@ void UXRInteractionAxialMove::GetLifetimeReplicatedProps(TArray< FLifetimeProper
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UXRInteractionAxialMove, AxialMoveResult);
-	DOREPLIFETIME(UXRInteractionAxialMove, Origin);
+	DOREPLIFETIME(UXRInteractionAxialMove, RootTransform);
 }
