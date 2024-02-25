@@ -103,7 +103,7 @@ void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 		{
 			XRReplicatedPhysicsComponent->Server_SetServerReplicatePhysics(false);
 		}
-		AttachOwningActorToXRInteractor(InInteractor);
+		// AttachOwningActorToXRInteractor(InInteractor);
 		XRReplicatedPhysicsComponent->SetComponentsSimulatePhysics(true);
 
 		TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetPhysicsMeshComponents();

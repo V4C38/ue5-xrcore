@@ -62,22 +62,33 @@ void UXRInteractorComponent::StartXRInteraction(UXRInteractionComponent* InInter
 	{
 		return;
 	}
-
-	if (InInteractionComponent->IsActive())
+	if (!InInteractionComponent->IsActive())
 	{
-		UXRInteractorComponent* CurrentInteractor = InInteractionComponent->GetActiveInteractor();
-		if (CurrentInteractor)
-		{
-			if (CurrentInteractor != this)
-			{
-				if (CurrentInteractor)
-				{
-					CurrentInteractor->Server_TerminateInteraction(InInteractionComponent);
-				}
-			}
-		}
-		Server_ExecuteInteraction(InInteractionComponent);
+		return;
 	}
+
+	// Stop other Interaction if TakeOver, return if Blocked, Start Interaction if Allowed
+	auto ActiveInteractors = InInteractionComponent->GetActiveInteractors();
+	if (ActiveInteractors.Num() > 0)
+	{
+		switch (InInteractionComponent->GetMultiInteractorBehavior())
+		{
+			case EXRMultiInteractorBehavior::TakeOver:
+				for (auto Interactor : ActiveInteractors)
+				{
+					if (Interactor != this)
+					{
+						Interactor->Server_TerminateInteraction(InInteractionComponent);
+					}
+				}
+				break;
+			case EXRMultiInteractorBehavior::Disabled:
+				return;
+			default:
+				break;
+		}
+	}
+	Server_ExecuteInteraction(InInteractionComponent);
 }
 
 // [Server] Implementation for starting interaction with a component, adds to active interactions and sets the Owner of the Interacted Actor to this Components Owner (to grant Authority)
@@ -113,7 +124,7 @@ void UXRInteractorComponent::AutoStopXRInteraction()
 	UXRInteractionComponent* InteractionToStop = nullptr;
 	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and stop next available Interaction
 	{
-		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false, false);
+		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false);
 	}
 	if (InteractionToStop)
 	{
@@ -223,9 +234,9 @@ AActor* UXRInteractorComponent::GetClosestXRInteractionActor() const
 			TArray<UXRInteractionComponent*> FoundXRInteractions = {};
 			OverlappingActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
 			bool AvailableInteraction = false;
-			for (UXRInteractionComponent* FoundInteraction : FoundXRInteractions)
+			for (UXRInteractionComponent* FoundInteractionComponent : FoundXRInteractions)
 			{
-				if (!FoundInteraction->IsInteractionActive() || FoundInteraction->GetAllowTakeOver())
+				if (!FoundInteractionComponent->IsInteractionActive() || FoundInteractionComponent->GetMultiInteractorBehavior() != EXRMultiInteractorBehavior::Disabled)
 				{
 					AvailableInteraction = true;
 					break;

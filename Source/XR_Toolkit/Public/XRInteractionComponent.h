@@ -12,6 +12,14 @@ class UXRInteractionComponent;
 class UXRInteractionHighlightComponent;
 
 UENUM(BlueprintType)
+enum class EXRInteractionPriority : uint8
+{
+	Primary UMETA(DisplayName = "Primary"),
+	Secondary UMETA(DisplayName = "Secondary"),
+	Custom UMETA(DisplayName = "Custom"),
+};
+
+UENUM(BlueprintType)
 enum class EXRLaserBehavior : uint8
 {
 	Disabled UMETA(DisplayName = "Disabled"),
@@ -19,6 +27,15 @@ enum class EXRLaserBehavior : uint8
 	Enabled UMETA(DisplayName = "Enabled"),
 	Snap UMETA(DisplayName = "Snap to Interaction Start"),
 	SnapMove UMETA(DisplayName = "Snap to Interaction Start - allow movement"),
+};
+
+UENUM(BlueprintType)
+enum class EXRMultiInteractorBehavior : uint8
+{
+	TakeOver UMETA(DisplayName = "Take over from current Interactor"),
+	Disabled UMETA(DisplayName = "Block secondary Interactors."),
+	Forward UMETA(DisplayName = "Forward secondary Interactors."),
+	Allow UMETA(DisplayName = "Allow multiple Interactors"),
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionStarted, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
@@ -84,35 +101,26 @@ public:
 	bool IsInteractionActive() const;
 
 	/**
-	 * Sets the Active Interactor. (Replicated)
-	 * @param InInteractor Set to nullptr if you are unassigning an Interactor.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-	void SetActiveInteractor(UXRInteractorComponent* InInteractor);
-	/**
 	 * Return associated XRInteractorComponent. Can be nullptr. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	UXRInteractorComponent* GetActiveInteractor();
+	TArray<UXRInteractorComponent*> GetActiveInteractors() const;
+
+	/**
+	* Return what happens when this interaction is active and a second XRInteractor starts interacting.
+	* TakeOver: Take over from current Interactor
+	* Block: Block secondary Interactors
+	* Forward: Forward secondary Interactors to other Interactions (Pass Through)
+	* Allow: Allow multiple Interactors
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
+	EXRMultiInteractorBehavior GetMultiInteractorBehavior() const;
 
 	/**
 	 * Return the Priority value for this XRInteractionComponent.
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	int32 GetInteractionPriority() const;
-
-	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-	void SetAllowTakeOver(bool bInAllowTakeOver);
-	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another. 
-	 */
-	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	bool GetAllowTakeOver() const;
+	int32 GetInteractionPriority();
 
 	/**
 	 * Return the assigned XRInteractionHighlightComponent. Only valid if bEnableHighlighting is true on BeginPlay.
@@ -144,9 +152,6 @@ protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	bool bIsInteractionActive = false;
-
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Abstract Interaction Events 
 	// Override in derived classes to implement Interaction specific logic.
@@ -175,18 +180,34 @@ protected:
 	// Config - General
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Lower Prio is better. Prioritized Interactions will be started first.
-	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
+	 * Primary Interactions will always be started first. Secondary Interactions, are only started while a primary Interaction is active on the same actor.
+	 * Custom allows to specify this as an integer value if larger stacks are required.
+	 * See GetPrioritizedXRInteraction() in XRCoreUtilityFunctions for reference.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	int32 InteractionPriority = 1;
+	EXRInteractionPriority InteractionPriority = EXRInteractionPriority::Primary;
+
+	UPROPERTY()
+	bool bUsingCustomPriorityValue = false;
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	/**
+	 * Lower Value is better. Prioritized Interactions will be started first.
+	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (EditCondition = "bUsingCustomPriorityValue"))
+	int32 AbsolouteInteractionPriority = 1;
+	UFUNCTION()
+	void UpdateAbsolouteInteractionPriority();
 
 	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
+	* Determine what happens when this interaction is active and a second XRInteractor starts interacting. 
+	* TakeOver: Take over from current Interactor
+	* Block: Block secondary Interactors
+	* Forward: Forward secondary Interactors to other Interactions (Pass Through)
+	* Allow: Allow multiple Interactors
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	bool bAllowTakeOver = true;
+	EXRMultiInteractorBehavior MultiInteractorBehavior = EXRMultiInteractorBehavior::TakeOver;
 
 	/**
 	* Disabled - No Laser Interaction.
@@ -252,7 +273,7 @@ private:
 	TArray<UMeshComponent*> InteractionCollision = {nullptr};
 	
 	UPROPERTY()
-	TWeakObjectPtr<UXRInteractorComponent> ActiveInteractor;
+	TArray<TWeakObjectPtr<UXRInteractorComponent>> ActiveInteractors = {};
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UXRInteractorComponent>> HoveringInteractors = {};

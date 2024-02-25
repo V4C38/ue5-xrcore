@@ -7,12 +7,6 @@
 
 UXRInteractionTrigger::UXRInteractionTrigger()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.bStartWithTickEnabled = false;
-	bAutoActivate = true;
-	SetIsReplicated(true);
-
-	InteractionPriority = 2;
 	LaserBehavior = EXRLaserBehavior::Snap;
 }
 
@@ -117,7 +111,6 @@ void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteracto
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger State
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTriggerState)
 {
 	if (InTriggerState == bTriggerState)
@@ -147,14 +140,32 @@ void UXRInteractionTrigger::EndInteractionAfterTimer()
 
 void UXRInteractionTrigger::RequestInteractionTermination()
 {
-	if (GetActiveInteractor())
+	if (GetActiveInteractors().Num() > 0)
 	{
-		GetActiveInteractor()->StopXRInteraction(this);
+		for (auto Interactor : GetActiveInteractors())
+		{
+			Interactor->StopXRInteraction(this);
+		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// UI / Utility
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRInteractionTrigger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionTrigger, TriggerType))
+	{
+		bInteractionDurationVisible = (TriggerType != EXRTriggerType::Hold) && (TriggerType != EXRTriggerType::HoverHold);
+	}
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Replication
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::OnRep_TriggerState()
 {
 	OnTriggerStateChanged.Broadcast(this, bTriggerState);

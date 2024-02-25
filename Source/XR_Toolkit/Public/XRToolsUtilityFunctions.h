@@ -31,13 +31,11 @@ public:
 	 * Returns XRInteractionComponent with the highest Priority from an Array of InteractionComponents.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, 
-		bool IgnoreActive = true, bool SortByLowest = true);
+	static UXRInteractionComponent* GetPrioritizedXRInteraction(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, bool SortByLowest = true);
 
 	/**
 	 * Returns XRInteractionComponent with the highest Priority on an AActor*.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetPrioritizedXRInteractionOnActor(AActor* InActor, UXRInteractorComponent* InXRInteractor = nullptr, 
-		bool IgnoreActive = true, bool SortByLowest = true);
+	static UXRInteractionComponent* GetPrioritizedXRInteractionOnActor(AActor* InActor, UXRInteractorComponent* InXRInteractor = nullptr, bool SortByLowest = true);
 };
