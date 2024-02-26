@@ -53,7 +53,6 @@ protected:
     * Trigger Behaviors.
     */
     UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
-
     EXRTriggerType TriggerType = EXRTriggerType::Hold;
 
 
@@ -63,8 +62,12 @@ protected:
     /**
     * If this is a OneShot Trigger, the Interaction will be terminated after this duration (in seconds).
     */
-    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction", meta = (EditCondition = "bInteractionDurationVisible"))
     float InteractionDuration = 0.1f;
+    UPROPERTY()
+    bool bInteractionDurationVisible = false;
+    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     UPROPERTY(ReplicatedUsing = OnRep_TriggerState)
