@@ -8,6 +8,7 @@
 UXRInteractionTrigger::UXRInteractionTrigger()
 {
 	LaserBehavior = EXRLaserBehavior::Snap;
+	MultiInteractorBehavior = EXRMultiInteractorBehavior::Allow;
 }
 
 void UXRInteractionTrigger::BeginPlay()
@@ -24,26 +25,25 @@ void UXRInteractionTrigger::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteractor)
 {
-	switch (TriggerType)
+	// Only Interact for the first Interactor (if multiple)
+	if (GetActiveInteractors().Num() > 0)
 	{
-		case EXRTriggerType::SingleHover:
-			return;
-		case EXRTriggerType::ToggleHover:
-			return;
-		case EXRTriggerType::HoverHold:
-			return;
-		case EXRTriggerType::Single:
-			Super::StartInteraction(InInteractor);
+		Super::StartInteraction(InInteractor);
+		return;
+	}
+
+	Super::StartInteraction(InInteractor);
+	switch (TriggerBehavior)
+	{
+		case EXRInteractionTriggerBehavior::Trigger:
 			Server_SetTriggerState(!DefaultTriggerState);
 			EndInteractionAfterTimer();
 			break;
-		case EXRTriggerType::Toggle:
-			Super::StartInteraction(InInteractor);
+		case EXRInteractionTriggerBehavior::Toggle:
 			Server_SetTriggerState(!GetTriggerState());
 			EndInteractionAfterTimer();
 			break;
-		case EXRTriggerType::Hold:
-			Super::StartInteraction(InInteractor);
+		case EXRInteractionTriggerBehavior::Hold:
 			Server_SetTriggerState(!DefaultTriggerState);
 			break;
 	}
@@ -51,60 +51,24 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 
 void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 {
-	switch (TriggerType)
+	// Only set TriggerState when last Interactor stops interacting 
+	if (GetActiveInteractors().Num() > 1)
 	{
+		Super::EndInteraction(InInteractor);
+		return;
+	}
 
-		case EXRTriggerType::SingleHover:
-			return;
-		case EXRTriggerType::ToggleHover:
-			return;
-		case EXRTriggerType::HoverHold:
-			return;
-		case EXRTriggerType::Toggle:
-			Super::EndInteraction(InInteractor);
-			break;
-		default:
-			Super::EndInteraction(InInteractor);
+	Super::EndInteraction(InInteractor);
+	switch (TriggerBehavior)
+	{
+		case EXRInteractionTriggerBehavior::Trigger:
 			Server_SetTriggerState(DefaultTriggerState);
 			break;
-	}
-}
-
-void UXRInteractionTrigger::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
-{
-	Super::HoverInteraction(InInteractor, bInHoverState);
-	switch (TriggerType)
-	{
-	case EXRTriggerType::Single:
-		return;
-	case EXRTriggerType::Toggle:
-		return;
-	case EXRTriggerType::Hold:
-		return;
-	case EXRTriggerType::ToggleHover:
-		if (bInHoverState)
-		{
-			Super::StartInteraction(InInteractor);
-		}
-		else
-		{
-			Super::EndInteraction(InInteractor);
-		}
-		Server_SetTriggerState(!GetTriggerState());
-		break;
-
-	default:
-		if (bInHoverState)
-		{
-			Super::StartInteraction(InInteractor);
-			Server_SetTriggerState(true);
-		}
-		else
-		{
-			Super::EndInteraction(InInteractor);
-			Server_SetTriggerState(false);
-		}
-		break;
+		case EXRInteractionTriggerBehavior::Toggle:
+			break;
+		case EXRInteractionTriggerBehavior::Hold:
+			Server_SetTriggerState(DefaultTriggerState);
+			break;
 	}
 }
 
@@ -123,11 +87,15 @@ void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTrigger
 		OnTriggerStateChanged.Broadcast(this, bTriggerState);
 	}
 }
-bool UXRInteractionTrigger::GetTriggerState()
+bool UXRInteractionTrigger::GetTriggerState() const
 {
 	return bTriggerState;
 }
 
+EXRInteractionTriggerBehavior UXRInteractionTrigger::GetTriggerBehavior() const
+{
+	return TriggerBehavior;
+}
 // Disable the component until the started timer completes.
 void UXRInteractionTrigger::EndInteractionAfterTimer()
 {
@@ -150,16 +118,16 @@ void UXRInteractionTrigger::RequestInteractionTermination()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-// UI / Utility
+// Editor UI
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionTrigger, TriggerType))
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionTrigger, TriggerBehavior))
 	{
-		bInteractionDurationVisible = (TriggerType != EXRTriggerType::Hold) && (TriggerType != EXRTriggerType::HoverHold);
+		bInteractionDurationVisible = (TriggerBehavior != EXRInteractionTriggerBehavior::Hold);
 	}
 }
 
