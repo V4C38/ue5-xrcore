@@ -32,10 +32,9 @@ enum class EXRLaserBehavior : uint8
 UENUM(BlueprintType)
 enum class EXRMultiInteractorBehavior : uint8
 {
+	Enabled UMETA(DisplayName = "Allow multiple Interactors"),
+	Disabled UMETA(DisplayName = "Single Interactor"),
 	TakeOver UMETA(DisplayName = "Take over from current Interactor"),
-	Disabled UMETA(DisplayName = "Block secondary Interactors."),
-	Forward UMETA(DisplayName = "Forward secondary Interactors."),
-	Allow UMETA(DisplayName = "Allow multiple Interactors"),
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionStarted, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
@@ -95,10 +94,10 @@ public:
 	// Utility
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Returns true if this interaction is currently ongoing. 
+	 * Returns true if this interaction is currently interacted with by one or more XRInteractors. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	bool IsInteractionActive() const;
+	bool IsInteractedWith() const;
 
 	/**
 	 * Return associated XRInteractorComponent. Can be nullptr. 
@@ -108,10 +107,9 @@ public:
 
 	/**
 	* Return what happens when this interaction is active and a second XRInteractor starts interacting.
-	* TakeOver: Take over from current Interactor
-	* Block: Block secondary Interactors
-	* Forward: Forward secondary Interactors to other Interactions (Pass Through)
 	* Allow: Allow multiple Interactors
+	* Single: Ignore secondary Interactors
+	* TakeOver: Take over from current Interactor
 	*/
 	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
 	EXRMultiInteractorBehavior GetMultiInteractorBehavior() const;
@@ -180,9 +178,9 @@ protected:
 	// Config - General
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Primary Interactions will always be started first. Secondary Interactions, are only started while a primary Interaction is active on the same actor.
-	 * Custom allows to specify this as an integer value if larger stacks are required.
-	 * See GetPrioritizedXRInteraction() in XRCoreUtilityFunctions for reference.
+	 * Determines how this interaction is addressed by the XRInteractor. 
+	 * Generally, Interactions are started/stopped by priority values that correspond to Input mappings like Primary or Secondary Input.
+	 * Custom allows to specify this as an integer value for custom implementations of start/stop.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
 	EXRInteractionPriority InteractionPriority = EXRInteractionPriority::Primary;
@@ -191,20 +189,19 @@ protected:
 	bool bUsingCustomPriorityValue = false;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	/**
-	 * Lower Value is better. Prioritized Interactions will be started first.
+	 * Lower Value gives higher Priority. Prioritized Interactions will be started first.
 	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
 	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (EditCondition = "bUsingCustomPriorityValue"))
+	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (EditCondition = "bUsingCustomPriorityValue", ClampMin = "0"))
 	int32 AbsolouteInteractionPriority = 1;
 	UFUNCTION()
 	void UpdateAbsolouteInteractionPriority();
 
 	/**
-	* Determine what happens when this interaction is active and a second XRInteractor starts interacting. 
-	* TakeOver: Take over from current Interactor
-	* Block: Block secondary Interactors
-	* Forward: Forward secondary Interactors to other Interactions (Pass Through)
+	* Determine what happens when this interaction is active and a second XRInteractor tries to start interacting. 
 	* Allow: Allow multiple Interactors
+	* Single: Ignore secondary Interactors
+	* TakeOver: Take over from current Interactor
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
 	EXRMultiInteractorBehavior MultiInteractorBehavior = EXRMultiInteractorBehavior::TakeOver;
@@ -223,20 +220,21 @@ protected:
 	// Config - Highlighting
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Ebanble Material based Highlighting for this Interaction.
+	 * Enable Material based Highlighting for this Interaction.
 	 * Spawn an XRInteractionHighlight on BeginPlay and set this interaction as it`s assigned Interaction if true at BeginPlay.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	bool bEnableHighlighting = true;
 
 	/**
-	 * Tag used to determine which MeshComponents to ignore for Highlighting.
+	 * Tag used to determine which MeshComponents to ignore for Highlighting - 
+	 * By default all UMeshComponents will be highlighted if a compatible material is assigned.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
 
 	/**
-	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be set instantly.
+	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be applied immediately.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	UCurveFloat* HighlightFadeCurve = nullptr;

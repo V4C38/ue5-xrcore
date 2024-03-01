@@ -40,7 +40,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor).
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void AutoStartXRInteraction();
+	void StartXRInteractionByPriority(int32 InPriority = 1);
 
 	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
 	FOnStartedInteracting OnStartedInteracting;
@@ -58,7 +58,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor). 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void AutoStopXRInteraction();
+	void StopXRInteractionByPriority(int32 InPriority = 1);
 
 	/**
 	 * Terminate all active Interactions.

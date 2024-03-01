@@ -8,7 +8,7 @@
 UXRInteractionTrigger::UXRInteractionTrigger()
 {
 	LaserBehavior = EXRLaserBehavior::Snap;
-	MultiInteractorBehavior = EXRMultiInteractorBehavior::Allow;
+	MultiInteractorBehavior = EXRMultiInteractorBehavior::Enabled;
 }
 
 void UXRInteractionTrigger::BeginPlay()

@@ -29,7 +29,7 @@ void UXRInteractorComponent::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Interaction Events
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractorComponent::AutoStartXRInteraction()
+void UXRInteractorComponent::StartXRInteractionByPriority(int32 InPriority)
 {
 	UXRInteractionComponent* InteractionToStart = nullptr;
 
@@ -38,7 +38,7 @@ void UXRInteractorComponent::AutoStartXRInteraction()
 		AActor* CurrentInteractedActor = ActiveInteractionComponents[0]->GetOwner();
 		if (CurrentInteractedActor)
 		{
-			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(CurrentInteractedActor, this);
+			InteractionToStart = UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(CurrentInteractedActor, this, InPriority);
 		}
 	}
 	else // Search next available Interactive Actor and start highest priority Interaction
@@ -46,7 +46,7 @@ void UXRInteractorComponent::AutoStartXRInteraction()
 		AActor* ClosestInteractiveActor = GetClosestXRInteractionActor();
 		if (ClosestInteractiveActor)
 		{
-			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(ClosestInteractiveActor);
+			InteractionToStart = UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(ClosestInteractiveActor, this, InPriority);
 		}
 	}
 
@@ -82,8 +82,6 @@ void UXRInteractorComponent::StartXRInteraction(UXRInteractionComponent* InInter
 					}
 				}
 				break;
-			case EXRMultiInteractorBehavior::Disabled:
-				return;
 			default:
 				break;
 		}
@@ -117,14 +115,12 @@ void UXRInteractorComponent::Multicast_ExecuteInteraction_Implementation(UXRInte
 }
 
 
-
-
-void UXRInteractorComponent::AutoStopXRInteraction()
+void UXRInteractorComponent::StopXRInteractionByPriority(int32 InPriority)
 {
 	UXRInteractionComponent* InteractionToStop = nullptr;
-	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and stop next available Interaction
+	if (ActiveInteractionComponents.Num() > 0)
 	{
-		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false);
+		InteractionToStop = UXRToolsUtilityFunctions::GetXRInteractionByPriority(ActiveInteractionComponents, nullptr, InPriority);
 	}
 	if (InteractionToStop)
 	{
@@ -186,10 +182,10 @@ bool UXRInteractorComponent::CanInteract(UXRInteractionComponent*& OutPrioritize
 	AActor* ClosestInteractionActor = GetClosestXRInteractionActor();
 	if (ClosestInteractionActor)
 	{
-		TArray<UXRInteractionComponent*> FoundXRInteractions = {};
-		ClosestInteractionActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-		OutPrioritizedXRInteraction = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions);
-		return true;
+		if (UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(ClosestInteractionActor, nullptr, 1))
+		{
+			return true;
+		}
 	}
 	return false;
 }
@@ -236,7 +232,7 @@ AActor* UXRInteractorComponent::GetClosestXRInteractionActor() const
 			bool AvailableInteraction = false;
 			for (UXRInteractionComponent* FoundInteractionComponent : FoundXRInteractions)
 			{
-				if (!FoundInteractionComponent->IsInteractionActive() || FoundInteractionComponent->GetMultiInteractorBehavior() != EXRMultiInteractorBehavior::Disabled)
+				if (!FoundInteractionComponent->IsInteractedWith() || FoundInteractionComponent->GetMultiInteractorBehavior() != EXRMultiInteractorBehavior::Disabled)
 				{
 					AvailableInteraction = true;
 					break;

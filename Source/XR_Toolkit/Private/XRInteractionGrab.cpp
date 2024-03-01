@@ -12,6 +12,7 @@ UXRInteractionGrab::UXRInteractionGrab()
 	bAutoActivate = true;
 	SetIsReplicated(true);
 	LaserBehavior = EXRLaserBehavior::Enabled;
+	MultiInteractorBehavior = EXRMultiInteractorBehavior::Enabled;
 }
 
 void UXRInteractionGrab::BeginPlay()

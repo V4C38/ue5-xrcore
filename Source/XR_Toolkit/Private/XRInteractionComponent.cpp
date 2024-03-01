@@ -189,7 +189,7 @@ EXRMultiInteractorBehavior UXRInteractionComponent::GetMultiInteractorBehavior()
 }
 
 
-bool UXRInteractionComponent::IsInteractionActive() const
+bool UXRInteractionComponent::IsInteractedWith() const
 {
 	return GetActiveInteractors().Num() > 0;
 }
@@ -211,7 +211,7 @@ bool UXRInteractionComponent::IsLaserInteractionEnabled() const
 	{
 		return false;
 	}
-	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractionActive())
+	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractedWith())
 	{
 		return false;
 	}
