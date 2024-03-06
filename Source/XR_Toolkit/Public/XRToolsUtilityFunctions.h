@@ -7,6 +7,13 @@
 class UXRInteractionComponent;
 class UXRInteractorComponent;
 
+UENUM(BlueprintType)
+enum class EXRInteractionPrioritySelection : uint8
+{
+	Equal UMETA(DisplayName = "Exactly this priority"),
+	HigherEqual UMETA(DisplayName = "This priority, then higher"),
+	LowerEqual UMETA(DisplayName = "This priority, then lower"),
+};
 
 UCLASS()
 class XR_TOOLKIT_API UXRToolsUtilityFunctions : public UBlueprintFunctionLibrary
@@ -26,25 +33,21 @@ public:
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
 	static bool IsActorInteractedWith(AActor* InActor, TArray<UXRInteractionComponent*>& OutActiveXRInteractions);
 
-
 	/**
-	 * Returns XRInteractionComponent with the highest Priority from an Array of InteractionComponents.
+	 * Returns the first XRInteractionComponent with provided Priority Value. 
+	 * If specified by InPrioritySelectionCondition, returns either the next highest, or next lowest priority Interaction if no exactly matching priority interaction is found.
 	 * @param InXRInteractor Optional, provide to validate the interaction for this XRInteractor specifically
+	 * @InPrioritySelectionCondition Determine whether only exactly matching priorities should be returned.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetHighestPrioriyXRInteraction(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr);
-
-	/**
-	 * Returns the first XRInteractionComponent with provided Priority Value.
-	 * @param InXRInteractor Optional, provide to validate the interaction for this XRInteractor specifically
-	 */
-	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetXRInteractionByPriority(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0);
+	static UXRInteractionComponent* GetXRInteractionByPriority(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
+		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal, int32 MaxSecondaryPriority = 5);
 
 	/**
 	 * Returns true if this Actor has an XRInteractorComponent
 	 * @param InXRInteractor Optional, provide to validate if the interaction are avilable to this XRInteractor specifically
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetXRInteractionOnActorByPriority(AActor* InActor, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0);
+	static UXRInteractionComponent* GetXRInteractionOnActorByPriority(AActor* InActor, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
+		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
 };

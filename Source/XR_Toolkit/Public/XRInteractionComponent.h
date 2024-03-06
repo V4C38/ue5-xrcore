@@ -33,7 +33,7 @@ UENUM(BlueprintType)
 enum class EXRMultiInteractorBehavior : uint8
 {
 	Enabled UMETA(DisplayName = "Allow multiple Interactors"),
-	Disabled UMETA(DisplayName = "Single Interactor"),
+	Disabled UMETA(DisplayName = "Only Single Interactor"),
 	TakeOver UMETA(DisplayName = "Take over from current Interactor"),
 };
 
