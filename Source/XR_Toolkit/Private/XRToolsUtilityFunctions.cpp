@@ -5,24 +5,24 @@
 
 
 
-bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutActiveXRInteractions)
+bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutXRInteractions)
 {
     if (!InActor)
     {
         return false;
     }
 
-    OutActiveXRInteractions.Empty();
+    OutXRInteractions.Empty();
     TArray<UActorComponent*> Components;
     InActor->GetComponents(Components);
 
     for (UActorComponent* Component : Components)
     {
         UXRInteractionComponent* InteractionComponent = Cast<UXRInteractionComponent>(Component);
-        OutActiveXRInteractions.Add(InteractionComponent);
+        OutXRInteractions.Add(InteractionComponent);
     }
 
-    return OutActiveXRInteractions.Num() > 0;
+    return OutXRInteractions.Num() > 0;
 }
 
 
@@ -65,14 +65,24 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionByPriority(TA
         {
             continue;
         }
+        // Discard Disabled Components
         if (!XRInteraction->IsActive())
         {
             continue;
+        }
+        // Discard Interactions unavailable to Lasers
+        if (InXRInteractor)
+        {
+            if (InXRInteractor->IsLaserInteractor() && XRInteraction->GetLaserBehavior() == EXRLaserBehavior::Disabled)
+            {
+                continue;
+            }
         }
         if (XRInteraction->IsInteractedWith())
         {
             if (InXRInteractor)
             {
+                // This Interactor is already Interacting with this Interaction
                 if (XRInteraction->GetActiveInteractors().Contains(InXRInteractor))
                 {
                     continue;

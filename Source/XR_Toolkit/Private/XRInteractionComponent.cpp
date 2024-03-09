@@ -37,9 +37,10 @@ void UXRInteractionComponent::BeginPlay()
 void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInteractor)
 {
 	ActiveInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+	HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
-	RequestAudioPlay(InteractionStartSound);
+	RequestAudioPlay(InteractionStartSound);\
 	if (XRHighlightComponent)
 	{
 		XRHighlightComponent->SetHighlighted(0.0f);
@@ -57,15 +58,12 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 {
 	if (!InInteractor)
 	{
-		OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
-		OnInteractionHover(bInHoverState, InInteractor);
 		return;
 	}
-
 	if (bInHoverState)
-	{
-		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
-		if (HoveringInteractors.Num() == 1 && GetActiveInteractors().Num() == 0)
+	{	
+		TArray<UXRInteractorComponent*> CurrentHoveringInteractors = {};
+		if (!IsHovered(CurrentHoveringInteractors))
 		{
 			OnInteractionHover(true, InInteractor);
 			OnInteractionHovered.Broadcast(this, InInteractor, true);
@@ -74,11 +72,12 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 				XRHighlightComponent->FadeXRHighlight(true);
 			}
 		}
+		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	}
-	else
+	if (!bInHoverState)
 	{
-		HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
-		if (HoveringInteractors.Num() == 0 && GetActiveInteractors().Num() == 0)
+		TArray<UXRInteractorComponent*> CurrentHoveringInteractors = {};
+		if (IsHovered(CurrentHoveringInteractors))
 		{
 			OnInteractionHover(false, InInteractor);
 			OnInteractionHovered.Broadcast(this, InInteractor, false);
@@ -87,7 +86,22 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 				XRHighlightComponent->FadeXRHighlight(false);
 			}
 		}
+		HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	}
+}
+
+
+bool UXRInteractionComponent::IsHovered(TArray<UXRInteractorComponent*>& OutHoveringInteractors)
+{
+	for (auto HoveringInteractor : HoveringInteractors)
+	{
+		UXRInteractorComponent* ValidInteractor = HoveringInteractor.Get();
+		if (ValidInteractor)
+		{
+			OutHoveringInteractors.Add(ValidInteractor);
+		}
+	}
+	return OutHoveringInteractors.Num() > 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -25,7 +25,7 @@ public:
 	 Return if this Actor has an XRInteractionComponents any any XRInteractionComponents that were found.
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Utilities")
-	static bool IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutActiveXRInteractions);
+	static bool IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutXRInteractions);
 
 	/**
 	 Return if any XRInteractionComponent is present on this actor that is currently interacted with. Only applies to ContinuousInteractions.

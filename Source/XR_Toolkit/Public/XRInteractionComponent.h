@@ -100,6 +100,12 @@ public:
 	bool IsInteractedWith() const;
 
 	/**
+	 * Returns true if this interaction is currently interacted with by one or more XRInteractors.
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
+	bool IsHovered(TArray<UXRInteractorComponent*>& OutHoveringInteractors);
+
+	/**
 	 * Return associated XRInteractorComponent. Can be nullptr. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
@@ -241,6 +247,7 @@ protected:
 
 	UPROPERTY()
 	UXRHighlightComponent* XRHighlightComponent = nullptr;
+
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - Audio
