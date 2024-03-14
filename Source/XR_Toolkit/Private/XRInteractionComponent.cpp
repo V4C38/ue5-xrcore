@@ -19,6 +19,7 @@ void UXRInteractionComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
 	GetOwner()->SetReplicates(true);
+	UpdateAbsolouteInteractionPriority();
 }
 
 void UXRInteractionComponent::BeginPlay()
@@ -35,11 +36,11 @@ void UXRInteractionComponent::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInteractor)
 {
-	SetActiveInteractor(InInteractor);
+	ActiveInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
+	HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
-	RequestAudioPlay(InteractionStartSound);
-	bIsInteractionActive = true;
+	RequestAudioPlay(InteractionStartSound);\
 	if (XRHighlightComponent)
 	{
 		XRHighlightComponent->SetHighlighted(0.0f);
@@ -48,26 +49,21 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 
 void UXRInteractionComponent::EndInteraction(UXRInteractorComponent* InInteractor)
 {
-	OnInteractionEnd(InInteractor);
+	ActiveInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	OnInteractionEnded.Broadcast(this, InInteractor);
-	SetActiveInteractor(nullptr);
 	RequestAudioPlay(InteractionEndSound);
-	bIsInteractionActive = false;
 }
 
 void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInteractor, bool bInHoverState)
 {
 	if (!InInteractor)
 	{
-		OnInteractionHovered.Broadcast(this, InInteractor, bInHoverState);
-		OnInteractionHover(bInHoverState, InInteractor);
 		return;
 	}
-
 	if (bInHoverState)
-	{
-		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
-		if (HoveringInteractors.Num() == 1 && !bIsInteractionActive)
+	{	
+		TArray<UXRInteractorComponent*> CurrentHoveringInteractors = {};
+		if (!IsHovered(CurrentHoveringInteractors))
 		{
 			OnInteractionHover(true, InInteractor);
 			OnInteractionHovered.Broadcast(this, InInteractor, true);
@@ -76,11 +72,13 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 				XRHighlightComponent->FadeXRHighlight(true);
 			}
 		}
+		HoveringInteractors.AddUnique(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	}
-	else
+	if (!bInHoverState)
 	{
 		HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
-		if (HoveringInteractors.Num() == 0 && !bIsInteractionActive)
+		TArray<UXRInteractorComponent*> CurrentHoveringInteractors = {};
+		if (!IsHovered(CurrentHoveringInteractors))
 		{
 			OnInteractionHover(false, InInteractor);
 			OnInteractionHovered.Broadcast(this, InInteractor, false);
@@ -90,6 +88,20 @@ void UXRInteractionComponent::HoverInteraction(UXRInteractorComponent* InInterac
 			}
 		}
 	}
+}
+
+
+bool UXRInteractionComponent::IsHovered(TArray<UXRInteractorComponent*>& OutHoveringInteractors)
+{
+	for (auto HoveringInteractor : HoveringInteractors)
+	{
+		UXRInteractorComponent* ValidInteractor = HoveringInteractor.Get();
+		if (ValidInteractor)
+		{
+			OutHoveringInteractors.Add(ValidInteractor);
+		}
+	}
+	return OutHoveringInteractors.Num() > 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -137,42 +149,63 @@ void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionComponent::SetActiveInteractor(UXRInteractorComponent* InInteractor)
+int32 UXRInteractionComponent::GetInteractionPriority()
 {
-	if (InInteractor)
+	return AbsolouteInteractionPriority;
+}
+void UXRInteractionComponent::UpdateAbsolouteInteractionPriority()
+{
+	int32 OutInteractionPriority = 0;
+	switch (InteractionPriority)
 	{
-		ActiveInteractor = InInteractor;
+		case EXRInteractionPriority::Primary:
+			OutInteractionPriority = 1;
+			break;
+		case EXRInteractionPriority::Secondary:
+			OutInteractionPriority = 2;
+			break;
+		case EXRInteractionPriority::Custom:
+			OutInteractionPriority = AbsolouteInteractionPriority;
+			break;
 	}
-	else
+	AbsolouteInteractionPriority = OutInteractionPriority;
+}
+
+void UXRInteractionComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
+{
+	Super::PostEditChangeProperty(PropertyChangedEvent);
+	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionComponent, InteractionPriority))
 	{
-		ActiveInteractor.Reset();
+		bUsingCustomPriorityValue = InteractionPriority == EXRInteractionPriority::Custom;
+		UpdateAbsolouteInteractionPriority();
 	}
-
 }
 
-int32 UXRInteractionComponent::GetInteractionPriority() const
+TArray<UXRInteractorComponent*> UXRInteractionComponent::GetActiveInteractors() const
 {
-	return InteractionPriority;
+	TArray<UXRInteractorComponent*> OutInteractors = {};
+	for (auto Interactor : ActiveInteractors)
+	{
+		if (Interactor.IsValid())
+		{
+			OutInteractors.AddUnique(Interactor.Get());
+		}
+	}
+	return OutInteractors;
 }
 
-UXRInteractorComponent* UXRInteractionComponent::GetActiveInteractor()
+
+EXRMultiInteractorBehavior UXRInteractionComponent::GetMultiInteractorBehavior() const
 {
-	return ActiveInteractor.IsValid() ? ActiveInteractor.Get() : nullptr;
+	return MultiInteractorBehavior;
 }
 
-bool UXRInteractionComponent::IsInteractionActive() const
-{
-	return bIsInteractionActive;
-}
 
-bool UXRInteractionComponent::GetAllowTakeOver() const
+bool UXRInteractionComponent::IsInteractedWith() const
 {
-	return bAllowTakeOver;
-}
-
-void UXRInteractionComponent::SetAllowTakeOver(bool bInAllowTakeOver)
-{
-	bAllowTakeOver = bInAllowTakeOver;
+	return GetActiveInteractors().Num() > 0;
 }
 
 EXRLaserBehavior UXRInteractionComponent::GetLaserBehavior() const
@@ -192,7 +225,7 @@ bool UXRInteractionComponent::IsLaserInteractionEnabled() const
 	{
 		return false;
 	}
-	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractionActive())
+	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractedWith())
 	{
 		return false;
 	}

@@ -5,6 +5,7 @@
 #include "Components/SphereComponent.h"
 #include "InputCoreTypes.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "XRToolsUtilityFunctions.h"
 #include "XRInteractorComponent.generated.h"
 
 class UXRInteractionComponent;
@@ -27,9 +28,7 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * Will start an Interaction (Replicated).
-	 * If the InteractionComponent is already interacted with, the current interaction will be terminated first.
-	 * Note: This is intended for manual interaction handling - consider using AutoStartXRInteraction().
+	 * Will attempt this start this Interaction.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
 	void StartXRInteraction(UXRInteractionComponent* InInteractionComponent = nullptr);
@@ -40,15 +39,14 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor).
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void AutoStartXRInteraction();
+	void StartXRInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
 
 	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
 	FOnStartedInteracting OnStartedInteracting;
 
 	/**
-	 * Will stop an Interaction. (Replicated).
-	 * If the InteractionComponent is not interacting, the command is discarded.
-	 * Note: This is intended for manual interaction handling - consider using AutoStopXRInteraction().
+	 * Will stop the specified Interaction.
+	 * If the InteractionComponent is not interacting with this XRInteractor, the call is ignored.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
 	void StopXRInteraction(UXRInteractionComponent* InXRInteraction = nullptr);
@@ -58,7 +56,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor). 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void AutoStopXRInteraction();
+	void StopXRInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
 
 	/**
 	 * Terminate all active Interactions.
@@ -76,12 +74,6 @@ public:
 	// Utility
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Returns if any InteractionComponent is available in proximity to this XRInteractor. Also returns the available XRInteractionComponent (prioritized).
-	 */
-	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
-	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction) const;
-
-	/**
 	 * Returns true if a valid InteractionComponent is assigned. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
@@ -93,11 +85,19 @@ public:
 	TArray<UXRInteractionComponent*> GetActiveInteractions() const; 
 
 	/**
+	 * Returns true and the highest priority InteractionComponent on the provided Actor or, if no Actor is provided, on all Actors this Interactor is currently overlapping.
+	 * @param InActor - If provided, will for this Actor. Otherwise, the currently overlapped actors will be checked.
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
+	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction, AActor* InActor = nullptr, int32 InPriority = 0,
+		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
+
+	/**
 	 * Returns XRInteractionComponents on the closest overlapping Actor (that has XRInteractions) for this XRInteractor.
 	 * Distance is calculated based on the Actors root, not the contained XRInteractionComponents location.
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
-	AActor* GetClosestXRInteractionActor() const;
+	AActor* GetClosestXRInteractionActor(UXRInteractionComponent*& OutPrioritizedXRInteraction);
 
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -185,7 +185,10 @@ protected:
 	bool bIsLaserInteractor = false;
 
 	UFUNCTION()
-	void HoverActor(AActor* OtherActor, bool bHoverState);
+	void RequestHover(UXRInteractionComponent* InInteraction, bool bInHoverState);
+
+	UFUNCTION()
+	bool IsAnyColliderOverlappingActor(TArray<UPrimitiveComponent*> InCollidersToIgnore, AActor* InActor);
 
 	UFUNCTION(Server, Reliable, Category = "XRCore|Interactor")
 	void Server_ExecuteInteraction(UXRInteractionComponent* InInteractionComponent);
@@ -205,12 +208,10 @@ private:
 	UPhysicsConstraintComponent* PhysicsConstraint;
 	UPROPERTY()
 	AActor* LocalInteractedActor = nullptr;
-	UPROPERTY()
-	TArray<UXRInteractionComponent*> LocalHoveredInteractions = {};
 	UPROPERTY(Replicated)
-	TArray<UXRInteractionComponent*> ActiveInteractionComponents = {};
+	TArray<TWeakObjectPtr<UXRInteractionComponent>> ActiveInteractionComponents = {};
 	UPROPERTY()
-	TArray<UXRInteractionComponent*> HoveredInteractionComponents = {};
+	TArray<TWeakObjectPtr<UXRInteractionComponent>> HoveredInteractionComponents = {};
 
 	void CacheIsLocallyControlled();
 	bool bIsLocallyControlled = false;

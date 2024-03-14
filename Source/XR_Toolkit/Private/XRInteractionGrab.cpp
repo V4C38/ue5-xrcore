@@ -12,6 +12,7 @@ UXRInteractionGrab::UXRInteractionGrab()
 	bAutoActivate = true;
 	SetIsReplicated(true);
 	LaserBehavior = EXRLaserBehavior::Enabled;
+	MultiInteractorBehavior = EXRMultiInteractorBehavior::Enabled;
 }
 
 void UXRInteractionGrab::BeginPlay()
@@ -103,7 +104,6 @@ void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 		{
 			XRReplicatedPhysicsComponent->Server_SetServerReplicatePhysics(false);
 		}
-		AttachOwningActorToXRInteractor(InInteractor);
 		XRReplicatedPhysicsComponent->SetComponentsSimulatePhysics(true);
 
 		TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetPhysicsMeshComponents();
@@ -114,7 +114,7 @@ void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 
 			if (ActivePhysicsConstraint && PhysicsEnabledMesh)
 			{
-				ActivePhysicsConstraint->SetConstrainedComponents(InInteractor, "", PhysicsEnabledMesh, "");
+				ActivePhysicsConstraint->SetConstrainedComponents(PhysicsEnabledMesh, "", InInteractor, "");
 			}
 		}
 	}

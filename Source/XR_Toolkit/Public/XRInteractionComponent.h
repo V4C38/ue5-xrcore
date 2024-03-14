@@ -12,6 +12,14 @@ class UXRInteractionComponent;
 class UXRInteractionHighlightComponent;
 
 UENUM(BlueprintType)
+enum class EXRInteractionPriority : uint8
+{
+	Primary UMETA(DisplayName = "Primary"),
+	Secondary UMETA(DisplayName = "Secondary"),
+	Custom UMETA(DisplayName = "Custom"),
+};
+
+UENUM(BlueprintType)
 enum class EXRLaserBehavior : uint8
 {
 	Disabled UMETA(DisplayName = "Disabled"),
@@ -19,6 +27,14 @@ enum class EXRLaserBehavior : uint8
 	Enabled UMETA(DisplayName = "Enabled"),
 	Snap UMETA(DisplayName = "Snap to Interaction Start"),
 	SnapMove UMETA(DisplayName = "Snap to Interaction Start - allow movement"),
+};
+
+UENUM(BlueprintType)
+enum class EXRMultiInteractorBehavior : uint8
+{
+	Enabled UMETA(DisplayName = "Allow multiple Interactors"),
+	Disabled UMETA(DisplayName = "Only Single Interactor"),
+	TakeOver UMETA(DisplayName = "Take over from current Interactor"),
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionStarted, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
@@ -78,41 +94,37 @@ public:
 	// Utility
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Returns true if this interaction is currently ongoing. 
+	 * Returns true if this interaction is currently interacted with by one or more XRInteractors. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	bool IsInteractionActive() const;
+	bool IsInteractedWith() const;
 
 	/**
-	 * Sets the Active Interactor. (Replicated)
-	 * @param InInteractor Set to nullptr if you are unassigning an Interactor.
+	 * Returns true if this interaction is currently interacted with by one or more XRInteractors.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-	void SetActiveInteractor(UXRInteractorComponent* InInteractor);
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
+	bool IsHovered(TArray<UXRInteractorComponent*>& OutHoveringInteractors);
+
 	/**
 	 * Return associated XRInteractorComponent. Can be nullptr. 
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	UXRInteractorComponent* GetActiveInteractor();
+	TArray<UXRInteractorComponent*> GetActiveInteractors() const;
+
+	/**
+	* Return what happens when this interaction is active and a second XRInteractor starts interacting.
+	* Allow: Allow multiple Interactors
+	* Single: Ignore secondary Interactors
+	* TakeOver: Take over from current Interactor
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
+	EXRMultiInteractorBehavior GetMultiInteractorBehavior() const;
 
 	/**
 	 * Return the Priority value for this XRInteractionComponent.
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	int32 GetInteractionPriority() const;
-
-	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
-	 */
-	UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
-	void SetAllowTakeOver(bool bInAllowTakeOver);
-	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another. 
-	 */
-	UFUNCTION(BlueprintPure, Category="XRCore|Interaction")
-	bool GetAllowTakeOver() const;
+	int32 GetInteractionPriority();
 
 	/**
 	 * Return the assigned XRInteractionHighlightComponent. Only valid if bEnableHighlighting is true on BeginPlay.
@@ -144,9 +156,6 @@ protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	bool bIsInteractionActive = false;
-
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Abstract Interaction Events 
 	// Override in derived classes to implement Interaction specific logic.
@@ -175,18 +184,33 @@ protected:
 	// Config - General
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Lower Prio is better. Prioritized Interactions will be started first.
-	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
+	 * Determines how this interaction is addressed by the XRInteractor. 
+	 * Generally, Interactions are started/stopped by priority values that correspond to Input mappings like Primary or Secondary Input.
+	 * Custom allows to specify this as an integer value for custom implementations of start/stop.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	int32 InteractionPriority = 1;
+	EXRInteractionPriority InteractionPriority = EXRInteractionPriority::Primary;
+
+	UPROPERTY()
+	bool bUsingCustomPriorityValue = false;
+	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+	/**
+	 * Lower Value gives higher Priority. Prioritized Interactions will be started first.
+	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
+	 */
+	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (EditCondition = "bUsingCustomPriorityValue", ClampMin = "0"))
+	int32 AbsolouteInteractionPriority = 1;
+	UFUNCTION()
+	void UpdateAbsolouteInteractionPriority();
 
 	/**
-	* Can this Interaction be taken over by another XRInteractor while it is active?
-	* Example: GrabInteraction - an XRInteractor starts grabing even though the grab is already active on another.
+	* Determine what happens when this interaction is active and a second XRInteractor tries to start interacting. 
+	* Allow: Allow multiple Interactors
+	* Single: Ignore secondary Interactors
+	* TakeOver: Take over from current Interactor
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	bool bAllowTakeOver = true;
+	EXRMultiInteractorBehavior MultiInteractorBehavior = EXRMultiInteractorBehavior::TakeOver;
 
 	/**
 	* Disabled - No Laser Interaction.
@@ -202,26 +226,28 @@ protected:
 	// Config - Highlighting
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Ebanble Material based Highlighting for this Interaction.
+	 * Enable Material based Highlighting for this Interaction.
 	 * Spawn an XRInteractionHighlight on BeginPlay and set this interaction as it`s assigned Interaction if true at BeginPlay.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	bool bEnableHighlighting = true;
 
 	/**
-	 * Tag used to determine which MeshComponents to ignore for Highlighting.
+	 * Tag used to determine which MeshComponents to ignore for Highlighting - 
+	 * By default all UMeshComponents will be highlighted if a compatible material is assigned.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
 
 	/**
-	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be set instantly.
+	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be applied immediately.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
 	UCurveFloat* HighlightFadeCurve = nullptr;
 
 	UPROPERTY()
 	UXRHighlightComponent* XRHighlightComponent = nullptr;
+
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - Audio
@@ -252,7 +278,7 @@ private:
 	TArray<UMeshComponent*> InteractionCollision = {nullptr};
 	
 	UPROPERTY()
-	TWeakObjectPtr<UXRInteractorComponent> ActiveInteractor;
+	TArray<TWeakObjectPtr<UXRInteractorComponent>> ActiveInteractors = {};
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UXRInteractorComponent>> HoveringInteractors = {};

@@ -32,12 +32,12 @@ void UXRInteractionAxialMove::BeginPlay()
 void UXRInteractionAxialMove::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	if (!GetOwner() || !GetActiveInteractor())
+	if (!GetOwner() || GetActiveInteractors().Num() < 1)
 	{
 		return;
 	} 
 
-	FVector TargetWorldLocation = GetActiveInteractor()->GetComponentLocation();
+	FVector TargetWorldLocation = GetActiveInteractors()[0]->GetComponentLocation();
 	FVector MoveDirection = {};
 
 	switch (ObjectToMove)
@@ -45,14 +45,14 @@ void UXRInteractionAxialMove::TickComponent(float DeltaTime, ELevelTick TickType
 		case EAxialMoveTarget::OwningActor:
 		{
 			AActor* Owner = GetOwner();
-			MoveDirection = GetActiveInteractor()->GetComponentLocation() - Owner->GetActorLocation();
+			MoveDirection = GetActiveInteractors()[0]->GetComponentLocation() - Owner->GetActorLocation();
 			Owner->SetActorLocation(RootTransform.GetLocation() + MoveDirection);
 			break;
 		}
 
 		case EAxialMoveTarget::ThisComponent:
 		{
-			MoveDirection = GetActiveInteractor()->GetComponentLocation() - this->GetComponentLocation();
+			MoveDirection = GetActiveInteractors()[0]->GetComponentLocation() - this->GetComponentLocation();
 			this->SetWorldLocation(RootTransform.GetLocation() + MoveDirection);
 			break;
 		}

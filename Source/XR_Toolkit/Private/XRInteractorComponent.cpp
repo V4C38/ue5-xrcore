@@ -2,7 +2,6 @@
 
 #include "XRInteractorComponent.h"
 #include "XRInteractionComponent.h"
-#include "XRToolsUtilityFunctions.h"
 #include "Net/UnrealNetwork.h"
 
 UXRInteractorComponent::UXRInteractorComponent()
@@ -29,7 +28,7 @@ void UXRInteractorComponent::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Interaction Events
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractorComponent::AutoStartXRInteraction()
+void UXRInteractorComponent::StartXRInteractionByPriority(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
 {
 	UXRInteractionComponent* InteractionToStart = nullptr;
 
@@ -38,16 +37,12 @@ void UXRInteractorComponent::AutoStartXRInteraction()
 		AActor* CurrentInteractedActor = ActiveInteractionComponents[0]->GetOwner();
 		if (CurrentInteractedActor)
 		{
-			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(CurrentInteractedActor, this);
+			InteractionToStart = UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(CurrentInteractedActor, this, InPriority, InPrioritySelectionCondition);
 		}
 	}
-	else // Search next available Interactive Actor and start highest priority Interaction
+	else // Search next available Interactive Actor and get highest priority Interaction
 	{
-		AActor* ClosestInteractiveActor = GetClosestXRInteractionActor();
-		if (ClosestInteractiveActor)
-		{
-			InteractionToStart = UXRToolsUtilityFunctions::GetPrioritizedXRInteractionOnActor(ClosestInteractiveActor);
-		}
+		AActor* ClosestInteractiveActor = GetClosestXRInteractionActor(InteractionToStart);
 	}
 
 	if (InteractionToStart)
@@ -62,22 +57,31 @@ void UXRInteractorComponent::StartXRInteraction(UXRInteractionComponent* InInter
 	{
 		return;
 	}
-
-	if (InInteractionComponent->IsActive())
+	if (!InInteractionComponent->IsActive())
 	{
-		UXRInteractorComponent* CurrentInteractor = InInteractionComponent->GetActiveInteractor();
-		if (CurrentInteractor)
-		{
-			if (CurrentInteractor != this)
-			{
-				if (CurrentInteractor)
-				{
-					CurrentInteractor->Server_TerminateInteraction(InInteractionComponent);
-				}
-			}
-		}
-		Server_ExecuteInteraction(InInteractionComponent);
+		return;
 	}
+
+	// Stop other Interaction if TakeOver, return if Blocked, Start Interaction if Allowed
+	auto ActiveInteractors = InInteractionComponent->GetActiveInteractors();
+	if (ActiveInteractors.Num() > 0)
+	{
+		switch (InInteractionComponent->GetMultiInteractorBehavior())
+		{
+			case EXRMultiInteractorBehavior::TakeOver:
+				for (auto Interactor : ActiveInteractors)
+				{
+					if (Interactor != this)
+					{
+						Interactor->Server_TerminateInteraction(InInteractionComponent);
+					}
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	Server_ExecuteInteraction(InInteractionComponent);
 }
 
 // [Server] Implementation for starting interaction with a component, adds to active interactions and sets the Owner of the Interacted Actor to this Components Owner (to grant Authority)
@@ -103,17 +107,17 @@ void UXRInteractorComponent::Multicast_ExecuteInteraction_Implementation(UXRInte
 	}
 	InteractionComponent->StartInteraction(this);
 	OnStartedInteracting.Broadcast(this, InteractionComponent);
+	HoveredInteractionComponents.Remove(InteractionComponent);
 }
 
 
-
-
-void UXRInteractorComponent::AutoStopXRInteraction()
+void UXRInteractorComponent::StopXRInteractionByPriority(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
 {
 	UXRInteractionComponent* InteractionToStop = nullptr;
-	if (ActiveInteractionComponents.Num() > 0) // If already interacting, get Interacted Actor and stop next available Interaction
+	if (ActiveInteractionComponents.Num() > 0)
 	{
-		InteractionToStop = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(ActiveInteractionComponents, nullptr, false, false);
+		// Provide nullptr instead of this interactor to ensure Interactions that this Interactor is active on are not discarded
+		InteractionToStop = UXRToolsUtilityFunctions::GetXRInteractionByPriority(GetActiveInteractions(), nullptr, InPriority, InPrioritySelectionCondition);
 	}
 	if (InteractionToStop)
 	{
@@ -124,7 +128,8 @@ void UXRInteractorComponent::AutoStopXRInteraction()
 
 void UXRInteractorComponent::StopAllXRInteractions()
 {
-	for (UXRInteractionComponent* ActiveInteraction : ActiveInteractionComponents) {
+	auto ActiveInteractions = GetActiveInteractions();
+	for (UXRInteractionComponent* ActiveInteraction : ActiveInteractions) {
 		Server_TerminateInteraction(ActiveInteraction);
 	}
 }
@@ -137,8 +142,6 @@ void UXRInteractorComponent::StopXRInteraction(UXRInteractionComponent* InXRInte
 	}
 	Server_TerminateInteraction(InXRInteraction);
 }
-
-
 
 // [Server] Implementation for stopping interaction with a component, removes from active interactions if continuous
 void UXRInteractorComponent::Server_TerminateInteraction_Implementation(UXRInteractionComponent* InInteractionComponent)
@@ -153,34 +156,78 @@ void UXRInteractorComponent::Server_TerminateInteraction_Implementation(UXRInter
 
 void UXRInteractorComponent::Multicast_TerminateInteraction_Implementation(UXRInteractionComponent* InteractionComponent)
 {
+	if (!InteractionComponent)
+	{
+		return;
+	}
 	InteractionComponent->EndInteraction(this);
 	OnStoppedInteracting.Broadcast(this, InteractionComponent);
 
-	// Force restart hovering after Interaction Ended.
-	TArray<AActor*> OverlappingActors = GetAllOverlappingActors();
-	for (AActor* Actor : OverlappingActors)
+	// Restart Highlight after Interaction End (if hovering)
+	AActor* Owner = InteractionComponent->GetOwner();
+	if (Owner)
 	{
-		HoverActor(Actor, true);
+		if (IsAnyColliderOverlappingActor({}, Owner))
+		{
+			RequestHover(InteractionComponent, true);
+		}
 	}
 }
-
-
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool UXRInteractorComponent::CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction) const
+bool UXRInteractorComponent::CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction, AActor* InActor, int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
 {
-	AActor* ClosestInteractionActor = GetClosestXRInteractionActor();
-	if (ClosestInteractionActor)
+	if (!InActor)
 	{
-		TArray<UXRInteractionComponent*> FoundXRInteractions = {};
-		ClosestInteractionActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-		OutPrioritizedXRInteraction = UXRToolsUtilityFunctions::GetPrioritizedXRInteraction(FoundXRInteractions);
-		return true;
+		GetClosestXRInteractionActor(OutPrioritizedXRInteraction);
 	}
-	return false;
+	else
+	{
+		OutPrioritizedXRInteraction = UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(InActor, this, InPriority, InPrioritySelectionCondition);
+	}
+	return OutPrioritizedXRInteraction != nullptr;
+}
+
+// Finds the closest actor that is interactable, based on distance and active interactions
+AActor* UXRInteractorComponent::GetClosestXRInteractionActor(UXRInteractionComponent*& OutPrioritizedXRInteraction)
+{
+	TArray<AActor*> OverlappingActors = GetAllOverlappingActors();
+	TArray<AActor*> InteractiveActors = {};
+	AActor* PrioritizedActor = nullptr;
+	OutPrioritizedXRInteraction = nullptr;
+	float MinimumDistance = 0.0f;
+
+	for (auto* OverlappingActor : OverlappingActors)
+	{
+		if (!OverlappingActor)
+		{
+			return nullptr;
+		}
+		auto AvailableInteraction = UXRToolsUtilityFunctions::GetXRInteractionOnActorByPriority(OverlappingActor, this, 0, EXRInteractionPrioritySelection::LowerEqual);
+		if (AvailableInteraction)
+		{
+			const float DistanceToActor = (this->GetComponentLocation() - OverlappingActor->GetActorLocation()).Size();
+			if (PrioritizedActor)
+			{
+				if (DistanceToActor < MinimumDistance)
+				{
+					MinimumDistance = DistanceToActor;
+					PrioritizedActor = OverlappingActor;
+					OutPrioritizedXRInteraction = AvailableInteraction;
+				}
+			}
+			else
+			{
+				MinimumDistance = DistanceToActor;
+				PrioritizedActor = OverlappingActor;
+				OutPrioritizedXRInteraction = AvailableInteraction;
+			}
+		}
+	}
+	return PrioritizedActor;
 }
 
 TArray<AActor*> UXRInteractorComponent::GetAllOverlappingActors() const
@@ -194,7 +241,7 @@ TArray<AActor*> UXRInteractorComponent::GetAllOverlappingActors() const
 		if (AdditionalCollider)
 		{
 			TempActors.Empty();
-			AdditionalCollider->GetOverlappingActors(TempActors); 
+			AdditionalCollider->GetOverlappingActors(TempActors);
 			for (AActor* Actor : TempActors)
 			{
 				if (Actor && !OverlappingActors.Contains(Actor))
@@ -207,51 +254,6 @@ TArray<AActor*> UXRInteractorComponent::GetAllOverlappingActors() const
 	return OverlappingActors;
 }
 
-
-// Finds the closest actor that is interactable, based on distance and active interactions
-AActor* UXRInteractorComponent::GetClosestXRInteractionActor() const
-{
-	TArray<AActor*> OverlappingActors = GetAllOverlappingActors();
-	TArray<AActor*> InteractiveActors = {};
-	AActor* PrioritizedActor = nullptr;
-	float MinimumDistance = 0.0f;
-
-	for (auto* OverlappingActor : OverlappingActors)
-	{
-		if (OverlappingActor)
-		{
-			TArray<UXRInteractionComponent*> FoundXRInteractions = {};
-			OverlappingActor->GetComponents<UXRInteractionComponent>(FoundXRInteractions);
-			bool AvailableInteraction = false;
-			for (UXRInteractionComponent* FoundInteraction : FoundXRInteractions)
-			{
-				if (!FoundInteraction->IsInteractionActive() || FoundInteraction->GetAllowTakeOver())
-				{
-					AvailableInteraction = true;
-					break;
-				}
-			}
-			if (AvailableInteraction)
-			{
-				const float DistanceToActor = (this->GetComponentLocation() - OverlappingActor->GetActorLocation()).Size();
-				if (PrioritizedActor)
-				{
-					if (DistanceToActor < MinimumDistance)
-					{
-						MinimumDistance = DistanceToActor;
-						PrioritizedActor = OverlappingActor;
-					}
-				}
-				else
-				{
-					MinimumDistance = DistanceToActor;
-					PrioritizedActor = OverlappingActor;
-				}
-			}
-		}
-	}
-	return PrioritizedActor;
-}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Collisions
@@ -285,67 +287,85 @@ TArray<UPrimitiveComponent*> UXRInteractorComponent::GetAdditionalColliders() co
 	return AdditionalColliders;
 }
 
+bool UXRInteractorComponent::IsAnyColliderOverlappingActor(TArray<UPrimitiveComponent*> InCollidersToIgnore, AActor* InActor)
+{
+	TArray<UPrimitiveComponent*> RelevantColliders = AdditionalColliders;
+	RelevantColliders.Add(this);
+	for (auto IgnoreCollider : InCollidersToIgnore)
+	{
+		RelevantColliders.Remove(IgnoreCollider);
+	}
+	for (UPrimitiveComponent* Collider : RelevantColliders)
+	{
+		if (Collider->IsOverlappingActor(InActor))
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 void UXRInteractorComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!OtherActor)
+	if (!IsAnyColliderOverlappingActor({OverlappedComp}, OtherActor))
 	{
-		return;
+		UXRInteractionComponent* PrioritizedInteraction = nullptr;
+		bool bCanInteract = CanInteract(PrioritizedInteraction, OtherActor, 0, EXRInteractionPrioritySelection::LowerEqual);
+		if (!PrioritizedInteraction)
+		{
+			return;
+		}
+			RequestHover(PrioritizedInteraction, true);
 	}
-	HoverActor(OtherActor, true);
 }
-
 
 void UXRInteractorComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!OtherActor)
+	if (!IsAnyColliderOverlappingActor({OverlappedComp}, OtherActor))
 	{
-		return;
+		TArray<UXRInteractionComponent*> FoundInteractions = {};
+		if (UXRToolsUtilityFunctions::IsActorInteractive(OtherActor, FoundInteractions))
+		{
+			for (auto Interaction : FoundInteractions)
+			{
+				RequestHover(Interaction, false);
+			}
+		}
 	}
-	HoverActor(OtherActor, false);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Hovering
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractorComponent::HoverActor(AActor* OtherActor, bool bHoverState)
+void UXRInteractorComponent::RequestHover(UXRInteractionComponent* InInteraction, bool bInHoverState)
 {
-	TArray<UXRInteractionComponent*> TempInteractionComponents = {};
-	OtherActor->GetComponents<UXRInteractionComponent>(TempInteractionComponents);
-	for (UXRInteractionComponent* InteractionComp : TempInteractionComponents)
+	if (!InInteraction)
 	{
-		if (InteractionComp->IsActive())
+		return;
+	}
+	if (bInHoverState)
+	{
+		if (!HoveredInteractionComponents.Contains(InInteraction))
 		{
-			if (!IsLaserInteractor() || IsLaserInteractor() && InteractionComp->IsLaserInteractionEnabled())
-			{
-				if (bHoverState)
-				{
-					if (LocalHoveredInteractions.Contains(InteractionComp))
-					{
-						return;
-					}
-					LocalHoveredInteractions.Add(InteractionComp);
-					OnHoverStateChanged.Broadcast(this, InteractionComp, true);
-					HoveredInteractionComponents.AddUnique(InteractionComp);
-					InteractionComp->HoverInteraction(this, true);
-				}
-				else
-				{
-					if (!LocalHoveredInteractions.Contains(InteractionComp))
-					{
-						return;
-					}
-					LocalHoveredInteractions.Remove(InteractionComp);
-					OnHoverStateChanged.Broadcast(this, InteractionComp, false);
-					HoveredInteractionComponents.Remove(InteractionComp);
-					InteractionComp->HoverInteraction(this, false);
-				}
-			}
+			HoveredInteractionComponents.Add(InInteraction);
+			InInteraction->HoverInteraction(this, true);
+			OnHoverStateChanged.Broadcast(this, InInteraction, true);
+		}
+	}
+	if (!bInHoverState)
+	{
+		if (HoveredInteractionComponents.Contains(InInteraction))
+		{
+			HoveredInteractionComponents.Remove(InInteraction);
+			InInteraction->HoverInteraction(this, false);
+			OnHoverStateChanged.Broadcast(this, InInteraction, false);
 		}
 	}
 }
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Config
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -366,7 +386,15 @@ EControllerHand UXRInteractorComponent::GetXRControllerHand() const
 
 TArray<UXRInteractionComponent*> UXRInteractorComponent::GetActiveInteractions() const
 {
-	return ActiveInteractionComponents;
+	TArray<UXRInteractionComponent*> OutInteractions = {};
+	for (auto ActiveInteraction : ActiveInteractionComponents)
+	{
+		if (ActiveInteraction.IsValid())
+		{
+			OutInteractions.AddUnique(ActiveInteraction.Get());
+		}
+	}
+	return OutInteractions;
 }
 
 bool UXRInteractorComponent::IsLaserInteractor()
