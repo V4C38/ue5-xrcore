@@ -116,7 +116,8 @@ void UXRInteractorComponent::StopXRInteractionByPriority(int32 InPriority, EXRIn
 	UXRInteractionComponent* InteractionToStop = nullptr;
 	if (ActiveInteractionComponents.Num() > 0)
 	{
-		InteractionToStop = UXRToolsUtilityFunctions::GetXRInteractionByPriority(GetActiveInteractions(), this, InPriority, InPrioritySelectionCondition);
+		// Provide nullptr instead of this interactor to ensure Interactions that this Interactor is active on are not discarded
+		InteractionToStop = UXRToolsUtilityFunctions::GetXRInteractionByPriority(GetActiveInteractions(), nullptr, InPriority, InPrioritySelectionCondition);
 	}
 	if (InteractionToStop)
 	{

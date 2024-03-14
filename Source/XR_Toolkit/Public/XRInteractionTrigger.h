@@ -71,7 +71,7 @@ protected:
     * If this is a OneShot Trigger, the Interaction will be terminated after this duration (in seconds).
     */
     UPROPERTY(EditAnywhere, Category = "XRCore|Interaction", meta = (EditCondition = "bInteractionDurationVisible"))
-    float InteractionDuration = 0.1f;
+    float InteractionDuration = 0.25f;
     UPROPERTY()
     bool bInteractionDurationVisible = false;
     virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
