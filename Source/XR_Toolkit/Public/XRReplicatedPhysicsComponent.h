@@ -93,17 +93,6 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	FXRPhysicsReplicationData GetServerPhysicsData() const;
-	
-	/**
-	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
-	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
-	float ReplicationIntervalMax = 0.05f;
-	/**
-	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
-	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
-	float ReplicationIntervalMin = 0.02f;
 
 	/**
 	 * Disable the interpolation between the transforms received from the server on the client. This allows monitoring 
@@ -113,12 +102,6 @@ public:
 	bool bDisableClientInterpolation = false;
 
 	/**
-	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
-	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System")
-	float VelocityThreshold = 350.0f;
-
-	/**
 	 * Gets the dynamically adjusted replication interval.
 	 *
 	 * @return The current dynamic replication interval.
@@ -126,11 +109,31 @@ public:
 	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
 	float GetDynamicReplicationInterval();
 
+	/**
+	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
+	 **/
+	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
+	float ReplicationIntervalMax = 0.05f;
+	float GetDefaultReplicationIntervalMax() const;
+	/**
+	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
+	 **/
+	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
+	float ReplicationIntervalMin = 0.02f;
+	float GetDefaultReplicationIntervalMin() const;
+	/**
+	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
+	 **/
+	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
+	float VelocityThreshold = 350.0f;
+	float GetDefaultVelocityThreshold() const;
+
 
 protected:
 	virtual void BeginPlay() override;
 
 private:
+
 
 	UFUNCTION(Category = "XRCore|Physics System")
 	void ServerTick(float DeltaTime);

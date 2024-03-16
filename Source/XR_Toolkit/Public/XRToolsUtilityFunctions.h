@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "XRCoreSettings.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "XRToolsUtilityFunctions.generated.h"
 
@@ -21,6 +22,15 @@ class XR_TOOLKIT_API UXRToolsUtilityFunctions : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 	
 public:
+
+	/**
+	 Get the XRStandard used by this project. 
+     * Specifies whether if the default OpenXR plugin or MetaXR is used for this project.
+	 * See XRCore Plugin Settings. 
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
+	static EXRStandard GetXRStandard();
+
 	/**
 	 Return if this Actor has an XRInteractionComponents any any XRInteractionComponents that were found.
 	 */

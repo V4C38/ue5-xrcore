@@ -1,4 +1,5 @@
 #include "XRReplicatedPhysicsComponent.h"
+#include "XRCoreSettings.h"
 #include "Net/UnrealNetwork.h"
 
 UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()
@@ -8,6 +9,9 @@ UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()
 	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
 
+	ReplicationIntervalMax = GetDefaultReplicationIntervalMax();
+	ReplicationIntervalMin = GetDefaultReplicationIntervalMin();
+	VelocityThreshold = GetDefaultVelocityThreshold();
 }
 
 
@@ -16,14 +20,6 @@ void UXRReplicatedPhysicsComponent::BeginPlay()
 	Super::BeginPlay();
 	CachePhysicsMeshComponents("");
 	UpdateClientPhysicsData();
-
-	FString PluginConfigPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("XRToolkit"), TEXT("Config"), TEXT("DefaultXRToolkit.ini"));
-	if (GConfig)
-	{
-		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("ReplicationIntervalMax"), ReplicationIntervalMax, PluginConfigPath);
-		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("ReplicationIntervalMin"), ReplicationIntervalMin, PluginConfigPath);
-		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("VelocityThreshold"), VelocityThreshold, PluginConfigPath);
-	}
 }
 
 void UXRReplicatedPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -213,6 +209,25 @@ float UXRReplicatedPhysicsComponent::GetActorVelocity() const
 	return GetOwner()->GetVelocity().Size();
 }
 
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+// Utility
+// -----------------------------------------------------------------------------------------------------------------------------------
+float UXRReplicatedPhysicsComponent::GetDefaultReplicationIntervalMax() const
+{
+	const UXRCoreSettings* Settings = GetDefault<UXRCoreSettings>();
+	return Settings ? Settings->DefaultReplicationIntervalMax : ReplicationIntervalMax;
+}
+float UXRReplicatedPhysicsComponent::GetDefaultReplicationIntervalMin() const
+{
+	const UXRCoreSettings* Settings = GetDefault<UXRCoreSettings>();
+	return Settings ? Settings->DefaultReplicationIntervalMin : ReplicationIntervalMin;
+}
+float UXRReplicatedPhysicsComponent::GetDefaultVelocityThreshold() const
+{
+	const UXRCoreSettings* Settings = GetDefault<UXRCoreSettings>();
+	return Settings ? Settings->DefaultVelocityThreshold : VelocityThreshold;
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------------
 // Lifetime Reps

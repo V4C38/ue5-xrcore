@@ -1,9 +1,9 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "0.7",
-	"FriendlyName": "XR_Toolkit",
-	"Description": "Multiplayer VR Framework. Included networked interactions like grab and use. Replicated Locomotion System.",
+	"VersionName": "0.8",
+	"FriendlyName": "XR_Core",
+	"Description": "XR in Unreal Engine 5 - OpenXR based Multiplayer Interaction and Utilities ",
 	"Category": "Other",
 	"CreatedBy": "Johannes Tscharn",
 	"CreatedByURL": "",

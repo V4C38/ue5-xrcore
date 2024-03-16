@@ -3,6 +3,11 @@
 #include "XRInteractorComponent.h"
 
 
+EXRStandard UXRToolsUtilityFunctions::GetXRStandard()
+{
+    const UXRCoreSettings* Settings = GetDefault<UXRCoreSettings>();
+    return Settings->XRStandard;
+}
 
 
 bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutXRInteractions)
