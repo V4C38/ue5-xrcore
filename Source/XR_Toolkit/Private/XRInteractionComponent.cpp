@@ -40,7 +40,7 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 	HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
-	RequestAudioPlay(InteractionStartSound);\
+	RequestAudioPlay(InteractionStartSound);
 	if (XRHighlightComponent)
 	{
 		XRHighlightComponent->SetHighlighted(0.0f);
