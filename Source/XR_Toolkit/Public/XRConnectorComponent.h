@@ -72,14 +72,36 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, Category = "XRConnector")
 	void ShowHologram(UXRConnectorSocket* InSocket);
+
+	/*
+	* Shows a Hologram for each overlapped Socket.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRConnector")
+	void ShowAllAvailableHolograms();
+
 	/*
 	* Hides the Hologram for a specific Socket if it is visible.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "XRConnector")
 	void HideHologram(UXRConnectorSocket* InSocket);
 
+	/*
+	* Hides all Holograms.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRConnector")
+	void HideAllHolograms();
+
+	/*
+	* Set this Hologram to be Prioritized, affecting visual indicators only.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRConnector")
+	void SetHologramState(UXRConnectorSocket* InSocket, bool IsPrioritized);
+
+
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION(Server, Reliable, Category = "XRConnector")
 	void Server_SetConnectedSocket(UXRConnectorSocket* InSocket);
@@ -110,6 +132,7 @@ protected:
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector")
 	float MinDistanceToConnect = 25.0;
+	float MinDistanceToConnectSquared = 0.0f;
 
 	/*
 	* When enabled, shows a Hologram in the location of each Socket that the OwningActor is overlapping. Can also be triggered manually. 
@@ -121,27 +144,17 @@ protected:
 
 	/*
 	* Set the type of hologram that should be spawned.
+	* This must implement the Interface IXRHologramInterface. See XRConnectorHologram as an example.
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRConnector|Hologram")
-	TSubclassOf<AXRConnectorHologram> HologramClass;
+	TSubclassOf<AActor> HologramClass;
 
-	/*
-	* Time in Seconds it takes to Show/Hide a Hologram.
-	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
-	float HologramFadeDuration = 1.0f;
 	/*
 	* Define the StaticMesh that should be spawned as a Hologram in the location of available Sockets. 
 	* Scale is determined by the OwningActor.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
 	UStaticMesh* HologramMesh = {};
-	/*
-	* Material that is assigned to the Hologram.
-	* Needs to have a parameter "Opacity" for the fading to work. It is suggested to use MF_XRConnector_Opacity.
-	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
-	UMaterialInterface* HologramMaterial = {};
 
 
 private:	
@@ -159,6 +172,7 @@ private:
 	void InitializeOverlapBindings();
 	TArray<UPrimitiveComponent*> OwnerCollisions = {};
 	TArray<TWeakObjectPtr<UXRConnectorSocket>> OverlappedSockets = {};
+	TWeakObjectPtr<UXRConnectorSocket> ClosestSocket = {};
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
@@ -167,7 +181,7 @@ private:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Hologram
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-	TMap<TWeakObjectPtr<UXRConnectorSocket>, AXRConnectorHologram*> ActiveHologramData = {};
+	TMap<TWeakObjectPtr<UXRConnectorSocket>, TWeakObjectPtr<AActor>> AssignedHolograms = {};
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Interaction Mappings
