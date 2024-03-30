@@ -7,25 +7,23 @@
 
 
 USTRUCT(BlueprintType)
-struct FXRPhysicsReplicationData
+struct FXRPhysicsSnapshot
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
-	FVector Location;
+	UPROPERTY()
+	uint32 ID = 0;
 
 	UPROPERTY(BlueprintReadWrite)
-	FRotator Rotation;
+	uint8 bIsInteractedWith = false;
 
 	UPROPERTY(BlueprintReadWrite)
-	float ReplicationInterval;
+	FVector Location = {};
+
+	UPROPERTY(BlueprintReadWrite)
+	FRotator Rotation = {};
 };
 
-
-class UXRReplicatedPhysicsComponent;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnServerPhysicsReplicationStateChanged, UXRReplicatedPhysicsComponent*, Sender, bool, bServerIsReplicatingPhysics);
-class UXRReplicatedPhysicsComponent;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnServerReplicatedPhysicsData, UXRReplicatedPhysicsComponent*, Sender, FXRPhysicsReplicationData, ServerPhysicsData);
 
 UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRReplicatedPhysicsComponent : public UActorComponent
@@ -34,141 +32,124 @@ class XR_TOOLKIT_API UXRReplicatedPhysicsComponent : public UActorComponent
 
 public:	
 	UXRReplicatedPhysicsComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	// Delegates for server physics replication state and data
-	UPROPERTY(BlueprintAssignable, Category = "XRCore|Physics System|Delegates")
-	FOnServerPhysicsReplicationStateChanged OnServerPhysicsReplicationStateChanged;
-	UPROPERTY(BlueprintAssignable, Category = "XRCore|Physics System|Delegates")
-	FOnServerReplicatedPhysicsData OnServerReplicatedPhysicsData;
-
-
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// API
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
-	 * Enables or disables the server-side replication of the actor's transform to all clients.
-	 * Also sets clients to interpolate to this server transform.
-	 *
-	 * @param bReplicatePhysics A boolean indicating whether to enable server-side replication.
-	 */
-	UFUNCTION(BlueprintCallable, Server, Reliable, Category="XRCore|Physics System")
-	void Server_SetServerReplicatePhysics(bool bReplicatePhysics);
-
-	/**
-	 * Checks if the server is currently replicating its transform to clients.
-	 *
-	 * @return Boolean value indicating whether server-side replication is enabled.
-	 */
-	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
-	bool IsServerReplicatingPhysics() const;
-
-	/**
-	 * Find and Cache all UMeshComponents with the given tag - can be accessed with GetPhysicsMeshComponents.
-	 * Does not set Simulate Physics. Use SetSimulatePhysics() for this. 
-	 * @param InComponentTag Only components with this tag will be cached. 
+	 * Client: return the latest Snapshot that this Client received from the server. 
+	 * Server: return the Snapshot the server is currently replicating to the clients. 
 	 **/
-	UFUNCTION(BlueprintCallable, Category="XRCore|Physics System")
-	void CachePhysicsMeshComponents(FName InComponentTag);
+	UFUNCTION(BlueprintPure, Category = "XRCore|Physics Replication")
+	FXRPhysicsSnapshot GetLatestSnapshot() const;
+
+	/**
+	 * Marks the owner as InteractedWith, increasing/decreasing the replication interval. 
+	 * Only Relevant on the Server.
+	 * Set in XRCore Plugin Settings DefaultReplicationInterval and InteractedReplicationInterval
+	 **/
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Physics Replication")
+	void SetInteractedWith(bool bInInteracedWith);
+
+	/**
+	 * Is the owning actor marked as InteractedWith, increasing/decreasing the replication interval. 
+	 **/
+	UFUNCTION(BlueprintPure, Category = "XRCore|Physics Replication")
+	bool GetInteractedWith() const;
+
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Colliders/Sim on Owner
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	/**
+	 * Will set Simulate Physics on the Cached PhysicsMeshComponents.
+	 * Not Replicated - Can be used to set this on individual clients or the server.
+	 * @param InSimulatePhysics Whether to enable or disable physics simulation.
+	 **/
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Physics Replication")
+	void SetSimulatePhysicsOnOwner(bool InSimulatePhysics);
+
+	/**
+	 * Get the Owning Actors Velocity.
+	 **/
+	UFUNCTION(BlueprintPure, Category = "XRCore|Replicated Physics")
+	float GetActorVelocity() const;
+
+	/**
+	 * Default tag used to initially register all MeshComponents on the owning actor. 
+	 If the root component is a StaticMeshComponent, it will always be registered, even without any applied tag.
+	 **/
+	UPROPERTY(EditAnywhere, Category = "XRCore|Physics Replication")
+	FName RegisterMeshComponentsWithTag = "";
+
+	/**
+	 * Find and Cache all UMeshComponents with the given tag - can be accessed with GetRegisteredMeshComponents.
+	 * Does not set Simulate Physics. Use SetSimulatePhysics() for this.
+	 * @param InComponentTag Only components with this tag will be cached.
+	 **/
+	UFUNCTION(BlueprintCallable, Category = "XRCore|Physics Replication")
+	void RegisterPhysicsMeshComponents(FName InComponentTag);
 
 	/**
 	 * Return all cached UMeshComponents that are used for Physics calculations.
 	 * Can return nullptr.
 	 * @return An array of mesh components.
 	 **/
-	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
-	TArray<UMeshComponent*> GetPhysicsMeshComponents() const;
-	
-	/**
-	 * Will set Simulate Physics on the Cached PhysicsMeshComponents.
-	 * Not Replicated - Can be used to set this on individual clients or the server.  
-	 * @param InSimulatePhysics Whether to enable or disable physics simulation.
-	
-	 **/
-	UFUNCTION(BlueprintCallable, Category="XRCore|Physics System")
-	void SetComponentsSimulatePhysics(bool InSimulatePhysics);
-
+	UFUNCTION(BlueprintPure, Category = "XRCore|Physics Replication")
+	TArray<UMeshComponent*> GetRegisteredMeshComponents() const;
 
 	/**
-	 * Gets the latest server-side physics data for the owning actor.
-	 *
-	 * @return The latest physics replication data.
-	 */
-	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
-	FXRPhysicsReplicationData GetServerPhysicsData() const;
-
-	/**
-	 * Disable the interpolation between the transforms received from the server on the client. This allows monitoring 
+	 * Disable the interpolation between the transforms received from the server on the client. This allows monitoring
 	 * and adjusting the replication interval values directly.
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics System|Debug")
-	bool bDisableClientInterpolation = false;
-
-	/**
-	 * Gets the dynamically adjusted replication interval.
-	 *
-	 * @return The current dynamic replication interval.
-	 */
-	UFUNCTION(BlueprintPure, Category="XRCore|Physics System")
-	float GetDynamicReplicationInterval();
-
-	/**
-	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
-	 **/
-	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
-	float ReplicationIntervalMax = 0.05f;
-	float GetDefaultReplicationIntervalMax() const;
-	/**
-	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
-	 **/
-	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
-	float ReplicationIntervalMin = 0.02f;
-	float GetDefaultReplicationIntervalMin() const;
-	/**
-	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
-	 **/
-	UPROPERTY(EditAnywhere, Category = "XRCore|Physics System")
-	float VelocityThreshold = 350.0f;
-	float GetDefaultVelocityThreshold() const;
-
+	UPROPERTY(EditDefaultsOnly, Category = "XRCore|Physics Replication")
+	bool bDebugDisableClientInterpolation = false;
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION()
+	void ServerTick(float DeltaTime);
+	UFUNCTION()
+	void ClientTick(float DeltaTime);
+
+	virtual void OnRegister() override;
+	virtual void OnUnregister() override;
+	UFUNCTION()
+	void OnActivated(UActorComponent* Component, bool bReset);
+	UFUNCTION()
+	void OnDeactivated(UActorComponent* Component);
+
+	UFUNCTION()
+	void DelayedPhysicsSetup();
 
 private:
+	UFUNCTION(Server, Reliable)
+	void Server_SetCachedSnapshot(FXRPhysicsSnapshot InCachedSnapshot);
 
-
-	UFUNCTION(Category = "XRCore|Physics System")
-	void ServerTick(float DeltaTime);
-	UFUNCTION(Category = "XRCore|Physics System")
-	void ClientTick(float DeltaTime);
-	
-	UFUNCTION(Server, Unreliable, Category="XRCore|Physics System")
-	void Server_SetServerPhysicsData(FXRPhysicsReplicationData NewPhysicsData);
-
-	UFUNCTION(Category = "XRCore|Physics System")
-	void UpdateClientPhysicsData();
-
-	UFUNCTION(BlueprintPure, Category = "XRCore|Physics System")
-	float GetActorVelocity() const;
-	
 	float AccumulatedTime = 0.0f;
 	float InterpolationAlpha = 0.0f;
 
-	UPROPERTY()
-	float DynamicReplicationInterval;
+	bool bIsInteractedWith = false;
+	float DefaultReplicationInterval = 0.0f;
+	float InteractedReplicationInterval = 0.0f;
 
-	UPROPERTY()
-	FXRPhysicsReplicationData LastClientPhysicsData;
-	UPROPERTY(ReplicatedUsing = OnRep_ServerPhysicsData)
-	FXRPhysicsReplicationData ServerPhysicsData;
+	UPROPERTY(Replicated)
+	FXRPhysicsSnapshot LatestSnapshot = {};
+	UPROPERTY(ReplicatedUsing = OnRep_CachedSnapshot)
+	FXRPhysicsSnapshot CachedSnapshot = {};
+
+
+	FXRPhysicsSnapshot ClientActiveSnapshot = {};
+
 	UFUNCTION()
-	void OnRep_ServerPhysicsData();
+	bool IsSequenceIDNewer(uint32 InID1, uint32 InID2) const;
+
+	UFUNCTION()
+	void OnRep_CachedSnapshot();
 
 	UPROPERTY()
-	TArray<UMeshComponent*> PhysicsMeshComponents = {};
-
-	UPROPERTY(ReplicatedUsing = OnRep_ServerReplicatePhysics)
-	bool bServerReplicatePhysics = false;
-	UFUNCTION()
-	void OnRep_ServerReplicatePhysics();
+	TArray<UMeshComponent*> RegisteredMeshComponents = {};
 
 };
 

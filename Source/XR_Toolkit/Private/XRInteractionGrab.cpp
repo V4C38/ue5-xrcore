@@ -102,11 +102,10 @@ void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 	{
 		if (GetOwner()->HasAuthority())
 		{
-			XRReplicatedPhysicsComponent->Server_SetServerReplicatePhysics(false);
+			XRReplicatedPhysicsComponent->SetInteractedWith(true);
 		}
-		XRReplicatedPhysicsComponent->SetComponentsSimulatePhysics(true);
 
-		TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetPhysicsMeshComponents();
+		TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetRegisteredMeshComponents();
 		if (MeshComponents.Num() > 0)
 		{
 			UMeshComponent* PhysicsEnabledMesh = MeshComponents[0];
@@ -130,9 +129,9 @@ void UXRInteractionGrab::PhysicsUngrab(UXRInteractorComponent* InInteractor)
 			ActivePhysicsConstraint->BreakConstraint();
 		}
 	}
-	if (GetOwner()->HasAuthority())
+	if (GetOwner()->HasAuthority() && !IsInteractedWith())
 	{
-		XRReplicatedPhysicsComponent->Server_SetServerReplicatePhysics(true);
+		XRReplicatedPhysicsComponent->SetInteractedWith(false);
 	}
 }
 
@@ -154,11 +153,7 @@ void UXRInteractionGrab::InitializePhysics()
 			{
 				XRReplicatedPhysicsComponent->RegisterComponent();
 				XRReplicatedPhysicsComponent->Activate();
-				XRReplicatedPhysicsComponent->CachePhysicsMeshComponents(PhysicsTag);
-				if (Owner->HasAuthority())
-				{
-					XRReplicatedPhysicsComponent->Server_SetServerReplicatePhysics(true);
-				}
+				XRReplicatedPhysicsComponent->RegisterPhysicsMeshComponents(PhysicsTag);
 			}
 		}
 	}

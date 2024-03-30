@@ -13,6 +13,7 @@ class UXRConnectorComponent;
 class UXRConnectorSocket;
 class AXRConnectorHologram;
 class UXRInteractionComponent;
+class UXRInteractionGrab;
 class UXRInteractorComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnConnected, UXRConnectorComponent*, Sender, UXRConnectorSocket*, XRConnectorSocket);
@@ -169,6 +170,7 @@ private:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Overlap Logic
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	float LastOverlapUpdate = 0.0f;
 	void InitializeOverlapBindings();
 	TArray<UPrimitiveComponent*> OwnerCollisions = {};
 	TArray<TWeakObjectPtr<UXRConnectorSocket>> OverlappedSockets = {};
@@ -187,6 +189,7 @@ private:
 	// Interaction Mappings
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void InitializeInteractionBindings();
+	UXRInteractionGrab* BoundGrabComponent = nullptr;
 	UFUNCTION()
 	void OnInteractionStarted(UXRInteractionComponent* Sender, UXRInteractorComponent* XRInteractorComponent);
 	UFUNCTION()

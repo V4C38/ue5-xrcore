@@ -6,13 +6,13 @@
 #include "XRConnectorHologram.h"
 #include "XRToolsUtilityFunctions.h"
 #include "XRInteractionGrab.h"
+#include "XRReplicatedPhysicsComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UXRConnectorComponent::UXRConnectorComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	PrimaryComponentTick.TickInterval = 0.25f;
 	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
 	HologramClass = AXRConnectorHologram::StaticClass();
@@ -38,46 +38,63 @@ void UXRConnectorComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 		return;
 	}
 
-	float MinSqDistance = FLT_MAX;
-	UXRConnectorSocket* NewClosestSocket = nullptr;
-	TArray<TWeakObjectPtr<UXRConnectorSocket>> RemoveSockets = {};
-	for (auto OverlappedSocket : OverlappedSockets)
+	if (ConnectedSocket.IsValid())
 	{
-		if (!OverlappedSocket.IsValid())
+		auto Socket = ConnectedSocket.Get();
+		auto SocketLoc = Socket->GetComponentLocation();
+		auto SocketRot = Socket->GetComponentRotation();
+		if (!Owner->GetActorLocation().Equals(SocketLoc, 1.0f) || !Owner->GetActorRotation().Equals(SocketRot, 1.0f))
 		{
-			RemoveSockets.Add(OverlappedSocket);
-			continue;
-		}
-		float DistanceSquared = FVector::DistSquared(Owner->GetActorLocation(), OverlappedSocket.Get()->GetComponentLocation());
-		if (DistanceSquared < MinSqDistance && DistanceSquared <= MinDistanceToConnectSquared)
-		{
-			MinSqDistance = DistanceSquared;
-			NewClosestSocket = OverlappedSocket.Get();
+			Owner->SetActorLocationAndRotation(SocketLoc, SocketRot);
 		}
 	}
 
-	if (ClosestSocket.IsValid() && ClosestSocket.Get() != NewClosestSocket)
+	// Update Overlapped Socket Distances
+	LastOverlapUpdate += DeltaTime;
+	if (LastOverlapUpdate > 0.25f)
 	{
-		if (ClosestSocket.IsValid())
+		float MinSqDistance = FLT_MAX;
+		UXRConnectorSocket* NewClosestSocket = nullptr;
+		TArray<TWeakObjectPtr<UXRConnectorSocket>> RemoveSockets = {};
+		for (auto OverlappedSocket : OverlappedSockets)
 		{
-			SetHologramState(ClosestSocket.Get(), false);
+			if (!OverlappedSocket.IsValid())
+			{
+				RemoveSockets.Add(OverlappedSocket);
+				continue;
+			}
+			float DistanceSquared = FVector::DistSquared(Owner->GetActorLocation(), OverlappedSocket.Get()->GetComponentLocation());
+			if (DistanceSquared < MinSqDistance && DistanceSquared <= MinDistanceToConnectSquared)
+			{
+				MinSqDistance = DistanceSquared;
+				NewClosestSocket = OverlappedSocket.Get();
+			}
 		}
-		if (NewClosestSocket)
+
+		if (ClosestSocket.IsValid() && ClosestSocket.Get() != NewClosestSocket)
+		{
+			if (ClosestSocket.IsValid())
+			{
+				SetHologramState(ClosestSocket.Get(), false);
+			}
+			if (NewClosestSocket)
+			{
+				SetHologramState(NewClosestSocket, true);
+			}
+			ClosestSocket = NewClosestSocket;
+		}
+		// If there was no closest socket before, but now we have one, set its state and update ClosestSocket
+		else if (!ClosestSocket.IsValid() && NewClosestSocket)
 		{
 			SetHologramState(NewClosestSocket, true);
+			ClosestSocket = NewClosestSocket;
 		}
-		ClosestSocket = NewClosestSocket;
-	}
-	// If there was no closest socket before, but now we have one, set its state and update ClosestSocket
-	else if (!ClosestSocket.IsValid() && NewClosestSocket)
-	{
-		SetHologramState(NewClosestSocket, true);
-		ClosestSocket = NewClosestSocket;
-	}
 
-	for (auto Socket : RemoveSockets)
-	{
-		OverlappedSockets.Remove(Socket);
+		for (auto Socket : RemoveSockets)
+		{
+			OverlappedSockets.Remove(Socket);
+		}
+		LastOverlapUpdate = 0.0f;
 	}
 }
 
@@ -148,19 +165,28 @@ void UXRConnectorComponent::DisconnectFromSocket()
 
 void UXRConnectorComponent::SetupConnection()
 {
-	UXRConnectorSocket* CurrentlyConnectedSocket = {};
-	if (IsConnected(CurrentlyConnectedSocket))
+	UXRConnectorSocket* CurrentlyConnectedSocket;
+	if (!GetOwner())
 	{
-		// Connect
-		if (CurrentlyConnectedSocket)
+		return;
+	}
+
+	// Connect
+	if (IsConnected(CurrentlyConnectedSocket) && CurrentlyConnectedSocket)
+	{
+		// Disable Physics 
+		UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
+		if (XRPhysicsComponent)
 		{
-			LocalCachedConnectedSocket = CurrentlyConnectedSocket;
-			GetOwner()->AttachToComponent(CurrentlyConnectedSocket, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
-			CurrentlyConnectedSocket->RegisterConnection(this);
-			OnConnected.Broadcast(this, CurrentlyConnectedSocket);
-			SetComponentTickEnabled(false);
-			return;
+			XRPhysicsComponent->SetActive(false);
 		}
+
+		LocalCachedConnectedSocket = CurrentlyConnectedSocket;
+		GetOwner()->AttachToComponent(CurrentlyConnectedSocket, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
+		CurrentlyConnectedSocket->RegisterConnection(this);
+		OnConnected.Broadcast(this, CurrentlyConnectedSocket);
+		SetComponentTickEnabled(false);
+		return;
 	}
 
 	// Disconnect
@@ -172,6 +198,14 @@ void UXRConnectorComponent::SetupConnection()
 		DetachingSocket->DeregisterConnection(this);
 		OnDisconnected.Broadcast(this, DetachingSocket);
 		SetComponentTickEnabled(true);
+
+
+		// Re-Enable Physics 
+		UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
+		if (XRPhysicsComponent)
+		{
+			XRPhysicsComponent->SetActive(true);
+		}
 		return;
 	}
 }
@@ -253,7 +287,8 @@ void UXRConnectorComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComponen
 		}
 		OverlappedSockets.Remove(OverlappedSocket);
 		HideHologram(OverlappedSocket);
-		if (OverlappedSockets.Num() == 0 && IsComponentTickEnabled())
+		UXRConnectorSocket* OutSocket = nullptr;
+		if (OverlappedSockets.Num() == 0 && IsComponentTickEnabled() && !IsConnected(OutSocket))
 		{
 			SetComponentTickEnabled(false);
 		}
@@ -409,13 +444,12 @@ void UXRConnectorComponent::InitializeInteractionBindings()
 			InteractionComponents.Add(InteractionComponent);
 		}
 	}
-
-	UXRInteractionComponent* HighestPriorityComponent = UXRToolsUtilityFunctions::GetXRInteractionByPriority(InteractionComponents, nullptr, 0, EXRInteractionPrioritySelection::LowerEqual,5);
-
-	if (HighestPriorityComponent)
+	auto FoundInteractionComp = UXRToolsUtilityFunctions::GetXRInteractionByPriority(InteractionComponents, nullptr, 0, EXRInteractionPrioritySelection::LowerEqual,5);
+	if (FoundInteractionComp)
 	{
-		HighestPriorityComponent->OnInteractionStarted.AddDynamic(this, &UXRConnectorComponent::OnInteractionStarted);
-		HighestPriorityComponent->OnInteractionEnded.AddDynamic(this, &UXRConnectorComponent::OnInteractionEnded);
+		FoundInteractionComp->OnInteractionStarted.AddDynamic(this, &UXRConnectorComponent::OnInteractionStarted);
+		FoundInteractionComp->OnInteractionEnded.AddDynamic(this, &UXRConnectorComponent::OnInteractionEnded);
+		BoundGrabComponent = Cast<UXRInteractionGrab>(FoundInteractionComp);
 	}
 }
 

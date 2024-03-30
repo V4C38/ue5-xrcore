@@ -29,21 +29,15 @@ public:
     UPROPERTY(config, EditAnywhere)
     EXRStandard XRStandard = EXRStandard::OpenXR;
 
+	/**
+	 * The replication interval, in seconds, for sending snapshots from the server to all clients. 
+	**/
+	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
+	float DefaultReplicationInterval = 0.1f;
 
 	/**
-	 * The lowest update rate at which the server replicates the actors transform to all clients. In Seconds.
+	 * The replication interval, in seconds, for when the Actor is currently interacted with.
 	 **/
 	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
-	float DefaultReplicationIntervalMax = 0.05f;
-	/**
-	 * The highest update rate at which the server replicates the actors transform to all clients. In Seconds.
-	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
-	float DefaultReplicationIntervalMin = 0.02f;
-	/**
-	 * Whenever the Actors velocity is higher than this treshold, use the ShortestReplicationInterval
-	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
-	float DefaultVelocityThreshold = 350.0f;
-
+	float InteractedReplicationInterval = 0.01f;
 };
