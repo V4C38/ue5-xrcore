@@ -108,7 +108,14 @@ protected:
 	void Server_SetConnectedSocket(UXRConnectorSocket* InSocket);
 
 	UFUNCTION()
-	void SetupConnection();
+	void InternalRequestAttachToSocket();
+
+	UFUNCTION()
+	void InternalAttachToSocket();
+
+	UFUNCTION()
+	void InternalDetachFromSocket();
+
 
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,8 +139,15 @@ protected:
 	* Note: The OwningActor must be within the Collision of the Socket for this to work.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector")
-	float MinDistanceToConnect = 25.0;
+	float MinDistanceToConnect = 10.0;
 	float MinDistanceToConnectSquared = 0.0f;
+
+	/*
+	* Time in seconds the connector will interpolate towards the socket when a connection is established.
+	*/
+	UPROPERTY(Editanywhere, Category = "XRConnector")
+	float EstablishConnectionTime = 0.5f;
+	FTimerHandle EstablishConnectionTimer;
 
 	/*
 	* When enabled, shows a Hologram in the location of each Socket that the OwningActor is overlapping. Can also be triggered manually. 
@@ -161,7 +175,7 @@ protected:
 private:	
 	UPROPERTY(ReplicatedUsing = OnRep_ConnectedSocket)
 	TWeakObjectPtr<UXRConnectorSocket> ConnectedSocket = {};
-	TWeakObjectPtr<UXRConnectorSocket> LocalCachedConnectedSocket = {};
+	TWeakObjectPtr<UXRConnectorSocket> PreviouslyConnectedSocket = {};
 
 	UFUNCTION()
 	void OnRep_ConnectedSocket();

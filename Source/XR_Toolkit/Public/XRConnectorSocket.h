@@ -9,6 +9,14 @@
 class UXRConnectorComponent;
 class UXRConnectorSocket;
 
+
+UENUM(BlueprintType)
+enum class EXRConnectorSocketState : uint8
+{
+	Enabled UMETA(DisplayName = "Enabled"),
+	Disabled UMETA(DisplayName = "Disabled"),
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSocketConnected, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSocketDisconnected, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
 
@@ -28,6 +36,20 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// API
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	/*
+	* Return if this Socket currently enabled.
+	*/
+	UFUNCTION(BlueprintCallable, Category = "XRConnectorSocket")
+	void SetSocketState(EXRConnectorSocketState InSocketState);
+
+	/*
+	* Return the current state of this socket:
+	* Enabled: Accepts new connections
+	* Disabled: no new connections will be allowed
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRConnectorSocket")
+	EXRConnectorSocketState GetSocketState() const;
+
 	/*
 	* Return all currently connected Components. 
 	*/
@@ -67,11 +89,21 @@ protected:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	/*
+	* Socket State:
+	* Enabled: Accepts new connections
+	* Disabled: no new connections will be allowed
+	*/
+	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
+	EXRConnectorSocketState SocketState = EXRConnectorSocketState::Enabled;
+
 	/*
 	* Define compatible XRConnectorSockets via a Name ID.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
 	TArray<FName> CompatibleConnectorIDs = { "Default" };
+
 	/*
 	* Set how many XRConnectors are allowed to be connected simultaneously to this Socket.
 	*/

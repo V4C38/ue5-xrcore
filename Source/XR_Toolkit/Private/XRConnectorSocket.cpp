@@ -6,19 +6,29 @@
 
 UXRConnectorSocket::UXRConnectorSocket()
 {
-	PrimaryComponentTick.bCanEverTick = false;
-	bAutoActivate = true;
+    PrimaryComponentTick.bCanEverTick = false;
+    bAutoActivate = true;
 }
 
 void UXRConnectorSocket::BeginPlay()
 {
-	Super::BeginPlay();
+    Super::BeginPlay();
 }
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // API
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRConnectorSocket::SetSocketState(EXRConnectorSocketState InSocketState)
+{
+    SocketState = InSocketState;
+}
+
+EXRConnectorSocketState UXRConnectorSocket::GetSocketState() const
+{
+    return SocketState;
+}
+
 void UXRConnectorSocket::RegisterConnection(UXRConnectorComponent* InConnectorComponent)
 {
     if (!InConnectorComponent)
@@ -26,6 +36,10 @@ void UXRConnectorSocket::RegisterConnection(UXRConnectorComponent* InConnectorCo
         return;
     }
     AttachedXRConnectors.AddUnique(InConnectorComponent);
+    if (GetAttachedXRConnectors().Num() >= AllowedConnections)
+    {
+        SetSocketState(EXRConnectorSocketState::Disabled);
+    }
     OnSocketConnected.Broadcast(this, InConnectorComponent);
 }
 
@@ -36,6 +50,10 @@ void UXRConnectorSocket::DeregisterConnection(UXRConnectorComponent* InConnector
         return;
     }
     AttachedXRConnectors.Remove(InConnectorComponent);
+    if (GetAttachedXRConnectors().Num() < AllowedConnections)
+    {
+        SetSocketState(EXRConnectorSocketState::Enabled);
+    }
     OnSocketDisconnected.Broadcast(this, InConnectorComponent);
 }
 
@@ -68,7 +86,7 @@ bool UXRConnectorSocket::IsConnectionAllowed(UXRConnectorComponent* InXRConnecto
     {
         return false;
     }
-    if (GetAttachedXRConnectors().Num() >= AllowedConnections)
+    if (SocketState == EXRConnectorSocketState::Disabled)
     {
         return false;
     }

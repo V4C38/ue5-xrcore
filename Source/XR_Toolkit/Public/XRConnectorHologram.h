@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "GameFramework/Actor.h"
+#include "Components/StaticMeshComponent.h"
 #include "XRConnectorHologram.generated.h"
 
 class UXRConnectorComponent;
@@ -38,6 +39,7 @@ class XR_TOOLKIT_API AXRConnectorHologram : public AActor, public IXRHologramInt
 	
 public:	
 	AXRConnectorHologram();
+
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// API
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,6 +51,24 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION()
+	void RemoveHologram();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStaticMeshComponent* MeshComponent;
+
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Config
+	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+	/*
+	* Time in seconds after which a hidden Hologram will be destroyed.
+	* Note: if this becomes a performance issue in the future, an ObjectPool can be implemented instead.
+	*/
+	UPROPERTY(Editanywhere, Category = "XRConnector")
+	float DestroyAfterHiddenSeconds = 10.0f;
+	FTimerHandle DestroyActorTimer;
+
 
 private:	
 
