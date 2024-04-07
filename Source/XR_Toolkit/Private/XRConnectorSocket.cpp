@@ -29,6 +29,12 @@ EXRConnectorSocketState UXRConnectorSocket::GetSocketState() const
     return SocketState;
 }
 
+FString UXRConnectorSocket::GetSocketID() const
+{
+    return ID;
+}
+
+
 void UXRConnectorSocket::RegisterConnection(UXRConnectorComponent* InConnectorComponent)
 {
     if (!InConnectorComponent)

@@ -51,6 +51,12 @@ public:
 	EXRConnectorSocketState GetSocketState() const;
 
 	/*
+	* Return this sockets ID.
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRConnectorSocket")
+	FString GetSocketID() const;
+
+	/*
 	* Return all currently connected Components. 
 	*/
 	UFUNCTION(BlueprintPure, Category = "XRConnectorSocket")
@@ -89,7 +95,12 @@ protected:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-	
+	/*
+	* Define an ID for this socket to handle multiple sockets on one Actor. Used for identifying sockets throughout sessions for Persistence / SaveGame data.
+	*/
+	UPROPERTY(EditAnywhere, Category = "XRConnectorSocket")
+	FString ID = "ID";
+
 	/*
 	* Socket State:
 	* Enabled: Accepts new connections

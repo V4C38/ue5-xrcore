@@ -171,18 +171,6 @@ void UXRInteractionComponent::UpdateAbsolouteInteractionPriority()
 	AbsolouteInteractionPriority = OutInteractionPriority;
 }
 
-void UXRInteractionComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionComponent, InteractionPriority))
-	{
-		bUsingCustomPriorityValue = InteractionPriority == EXRInteractionPriority::Custom;
-		UpdateAbsolouteInteractionPriority();
-	}
-}
-
 TArray<UXRInteractorComponent*> UXRInteractionComponent::GetActiveInteractors() const
 {
 	TArray<UXRInteractorComponent*> OutInteractors = {};

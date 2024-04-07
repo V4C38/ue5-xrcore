@@ -120,14 +120,18 @@ bool UXRConnectorComponent::ConnectToSocket(UXRConnectorSocket* InSocket)
 	{
 		return false;
 	}
-	if (!InSocket->IsConnectionAllowed(this))
-	{
-		return false;
-	}
 	AActor* Owner = GetOwner();
 	if (!Owner)
 	{
 		return false;
+	}
+	if (InSocket->IsConnectionAllowed(this))
+	{
+		Server_SetConnectedSocket(nullptr);
+		if (GetWorld()->GetNetMode() == NM_Standalone)
+		{
+			InternalDetachFromSocket();
+		}
 	}
 	Server_SetConnectedSocket(InSocket);
 	if (GetWorld()->GetNetMode() == NM_Standalone)

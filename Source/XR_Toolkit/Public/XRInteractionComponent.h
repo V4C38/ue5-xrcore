@@ -191,14 +191,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
 	EXRInteractionPriority InteractionPriority = EXRInteractionPriority::Primary;
 
-	UPROPERTY()
-	bool bUsingCustomPriorityValue = false;
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	/**
 	 * Lower Value gives higher Priority. Prioritized Interactions will be started first.
 	 * This allows stacking multiple Interactions on one Actor and starting / stopping them independently from each other.
 	 */
-	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (EditCondition = "bUsingCustomPriorityValue", ClampMin = "0"))
+	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General", meta = (ClampMin = "0"))
 	int32 AbsolouteInteractionPriority = 1;
 	UFUNCTION()
 	void UpdateAbsolouteInteractionPriority();

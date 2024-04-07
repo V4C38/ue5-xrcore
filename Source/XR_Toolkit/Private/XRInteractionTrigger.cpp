@@ -135,20 +135,6 @@ void UXRInteractionTrigger::RequestInteractionTermination()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Editor UI
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionTrigger, TriggerBehavior))
-	{
-		bInteractionDurationVisible = (TriggerBehavior != EXRInteractionTriggerBehavior::Hold);
-	}
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Replication
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::OnRep_TriggerState()
