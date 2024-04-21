@@ -18,6 +18,8 @@ void FXR_ToolkitModule::StartupModule()
             GetMutableDefault<UXRCoreSettings>()
         );
     }
+
+    // GEngine->SetNetDriverClass(UXRCoreNetDriver::StaticClass());
 }
 
 void FXR_ToolkitModule::ShutdownModule()

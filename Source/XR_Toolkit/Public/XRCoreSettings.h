@@ -30,6 +30,14 @@ public:
     EXRStandard XRStandard = EXRStandard::OpenXR;
 
 	/**
+	 * This will automatically assign the XRCoreNetDriver as the NetDriver.
+	 * Allows to effectively call RPCs from any Client without authority.
+	 * Ignores the authority check for RPCs when an actor has the IXRBypassAuthorityCheck Interface applied. 
+	 */
+	UPROPERTY(config, EditAnywhere)
+	bool UseCustomNetDriver = true;
+
+	/**
 	 * The replication interval, in seconds, for sending snapshots from the server to all clients. 
 	**/
 	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")

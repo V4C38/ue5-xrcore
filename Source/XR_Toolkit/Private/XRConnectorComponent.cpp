@@ -18,7 +18,6 @@ UXRConnectorComponent::UXRConnectorComponent()
 	HologramClass = AXRConnectorHologram::StaticClass();
 }
 
-
 void UXRConnectorComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -26,7 +25,16 @@ void UXRConnectorComponent::BeginPlay()
 	InitializeInteractionBindings();
 	MinDistanceToConnectSquared = FMath::Square(MinDistanceToConnect);
 }
-// Rember to deinit connections on Destroy() of this Component
+
+void UXRConnectorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	if (ConnectedSocket.IsValid())
+	{
+		PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
+		HideAllHolograms();
+	}
+}
 
 
 void UXRConnectorComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
