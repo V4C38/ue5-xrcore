@@ -11,7 +11,7 @@ UXRInteractionGrab::UXRInteractionGrab()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicated(true);
-	LaserBehavior = EXRLaserBehavior::Enabled;
+	LaserBehavior = EXRLaserBehavior::Snap;
 	MultiInteractorBehavior = EXRMultiInteractorBehavior::Enabled;
 }
 

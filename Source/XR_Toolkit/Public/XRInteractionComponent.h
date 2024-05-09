@@ -24,9 +24,7 @@ enum class EXRLaserBehavior : uint8
 {
 	Disabled UMETA(DisplayName = "Disabled"),
 	Supress UMETA(DisplayName = "Supress while Interacting"),
-	Enabled UMETA(DisplayName = "Enabled"),
-	Snap UMETA(DisplayName = "Snap to Interaction Start"),
-	SnapMove UMETA(DisplayName = "Snap to Interaction Start - allow movement"),
+	Snap UMETA(DisplayName = "Snap to Interaction"),
 };
 
 UENUM(BlueprintType)
@@ -217,7 +215,7 @@ protected:
 	* Snap to Interaction Start - allow movement - Same as normal, but will also allow the Laser Tip to move slightly.
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
-	EXRLaserBehavior LaserBehavior = EXRLaserBehavior::Enabled;
+	EXRLaserBehavior LaserBehavior = EXRLaserBehavior::Snap;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - Highlighting

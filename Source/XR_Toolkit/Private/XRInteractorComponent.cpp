@@ -6,10 +6,11 @@
 
 UXRInteractorComponent::UXRInteractorComponent()
 {
+	SphereRadius = 1.0f;
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
+	bAutoActivate = true;
 }
 
 void UXRInteractorComponent::InitializeComponent()
