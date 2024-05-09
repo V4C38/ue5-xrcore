@@ -37,8 +37,10 @@ public class XR_Toolkit : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Slate",
+                "Settings",
+                "Slate",
 				"SlateCore",
+                "DeveloperSettings",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

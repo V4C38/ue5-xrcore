@@ -16,7 +16,7 @@ void UXRInteractionTrigger::BeginPlay()
 	Super::BeginPlay();
 	if (GetTriggerState() != DefaultTriggerState)
 	{
-		Server_SetTriggerState(DefaultTriggerState);
+		Server_SetTriggerState(DefaultTriggerState, nullptr);
 	}
 }
 
@@ -36,15 +36,15 @@ void UXRInteractionTrigger::StartInteraction(UXRInteractorComponent* InInteracto
 	switch (TriggerBehavior)
 	{
 		case EXRInteractionTriggerBehavior::Trigger:
-			Server_SetTriggerState(!DefaultTriggerState);
+			Server_SetTriggerState(!DefaultTriggerState, InInteractor);
 			EndInteractionAfterTimer();
 			break;
 		case EXRInteractionTriggerBehavior::Toggle:
-			Server_SetTriggerState(!GetTriggerState());
+			Server_SetTriggerState(!GetTriggerState(), InInteractor);
 			EndInteractionAfterTimer();
 			break;
 		case EXRInteractionTriggerBehavior::Hold:
-			Server_SetTriggerState(!DefaultTriggerState);
+			Server_SetTriggerState(!DefaultTriggerState, InInteractor);
 			break;
 	}
 }
@@ -62,12 +62,12 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 	switch (TriggerBehavior)
 	{
 		case EXRInteractionTriggerBehavior::Trigger:
-			Server_SetTriggerState(DefaultTriggerState);
+			Server_SetTriggerState(DefaultTriggerState, InInteractor);
 			break;
 		case EXRInteractionTriggerBehavior::Toggle:
 			break;
 		case EXRInteractionTriggerBehavior::Hold:
-			Server_SetTriggerState(DefaultTriggerState);
+			Server_SetTriggerState(DefaultTriggerState, InInteractor);
 			break;
 	}
 }
@@ -75,7 +75,18 @@ void UXRInteractionTrigger::EndInteraction(UXRInteractorComponent* InInteractor)
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Trigger State
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTriggerState)
+void UXRInteractionTrigger::SetTriggerState(bool InTriggerState, UXRInteractorComponent* InInteractor)
+{
+	if (GetWorld()->GetNetMode() == NM_Standalone)
+	{
+		bTriggerState = InTriggerState;
+		OnTriggerStateChanged.Broadcast(this, bTriggerState, InInteractor);
+		return;
+	}
+	Server_SetTriggerState(InTriggerState, InInteractor);
+}
+
+void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTriggerState, UXRInteractorComponent* InInteractor)
 {
 	if (InTriggerState == bTriggerState)
 	{
@@ -84,12 +95,18 @@ void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTrigger
 	bTriggerState = InTriggerState;
 	if (GetWorld()->GetNetMode() == NM_Standalone)
 	{
-		OnTriggerStateChanged.Broadcast(this, bTriggerState);
+		OnTriggerStateChanged.Broadcast(this, bTriggerState, InInteractor);
 	}
 }
+
 bool UXRInteractionTrigger::GetTriggerState() const
 {
 	return bTriggerState;
+}
+
+void UXRInteractionTrigger::SetTriggerBehavior(EXRInteractionTriggerBehavior InTriggerBehavior)
+{
+	TriggerBehavior = InTriggerBehavior;
 }
 
 EXRInteractionTriggerBehavior UXRInteractionTrigger::GetTriggerBehavior() const
@@ -118,25 +135,16 @@ void UXRInteractionTrigger::RequestInteractionTermination()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-// Editor UI
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRInteractionTrigger::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionTrigger, TriggerBehavior))
-	{
-		bInteractionDurationVisible = (TriggerBehavior != EXRInteractionTriggerBehavior::Hold);
-	}
-}
-
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Replication
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRInteractionTrigger::OnRep_TriggerState()
 {
-	OnTriggerStateChanged.Broadcast(this, bTriggerState);
+	if (GetActiveInteractors().Num() > 0)
+	{
+		OnTriggerStateChanged.Broadcast(this, bTriggerState, GetActiveInteractors()[0]);
+		return;
+	}
+	OnTriggerStateChanged.Broadcast(this, bTriggerState, nullptr);
 }
 
 void UXRInteractionTrigger::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const

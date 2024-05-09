@@ -3,6 +3,11 @@
 #include "XRInteractorComponent.h"
 
 
+EXRStandard UXRToolsUtilityFunctions::GetXRStandard()
+{
+    const UXRCoreSettings* Settings = GetDefault<UXRCoreSettings>();
+    return Settings->XRStandard;
+}
 
 
 bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInteractionComponent*>& OutXRInteractions)
@@ -19,7 +24,10 @@ bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInt
     for (UActorComponent* Component : Components)
     {
         UXRInteractionComponent* InteractionComponent = Cast<UXRInteractionComponent>(Component);
-        OutXRInteractions.Add(InteractionComponent);
+        if (InteractionComponent)
+        {
+            OutXRInteractions.Add(InteractionComponent);
+        }
     }
 
     return OutXRInteractions.Num() > 0;

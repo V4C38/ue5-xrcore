@@ -5,6 +5,7 @@
 #include "XRInteractionTrigger.generated.h"
 
 class UXRInteractionTrigger;
+class UXRInteractorComponent;
 
 UENUM(BlueprintType)
 enum class EXRInteractionTriggerBehavior : uint8
@@ -14,7 +15,7 @@ enum class EXRInteractionTriggerBehavior : uint8
     Hold UMETA(DisplayName = "Hold"),
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, TriggerState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, TriggerState, UXRInteractorComponent*, Interactor);
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
 class XR_TOOLKIT_API UXRInteractionTrigger : public UXRInteractionComponent
@@ -34,11 +35,27 @@ public:
     FOnTriggerStateChanged OnTriggerStateChanged;
 
     /**
-    * Get the state of the Trigger. Replicated.
+    * Set the state of the Trigger. Replicated if called with authority.
+    * @param InInteractor - Optional. Will be propagated to the FOnTriggerStateChanged Delegate as Interactor.
+    */
+    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
+    void SetTriggerState(bool InTriggerState, UXRInteractorComponent* InInteractor);
+
+    /**
+    * Get the state of the Trigger.
     */
     UFUNCTION(BlueprintPure, Category = "XRCore|Interaction")
     bool GetTriggerState() const;
 
+    /**
+    * Set the Triggers Behavior.
+    * Not Replicated - set this on all Clients/Server manually as it is assumed that the OwningActor does not have authority.
+    * Trigger: Single Interaction that ends and returns to DefaultState after InteractionDuration
+    * Toggle: Single Interaction that ends after InteractionDuration
+    * Hold: Interaction returns to DefaultState after the last XRInteractor stops interacting
+    */
+    UFUNCTION(BlueprintCallable, Category = "XRCore|Interaction")
+    void SetTriggerBehavior(EXRInteractionTriggerBehavior InTriggerBehavior);
     /**
     * Get the Triggers Behavior
     * Trigger: Single Interaction that ends and returns to DefaultState after InteractionDuration
@@ -63,18 +80,14 @@ protected:
     UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     EXRInteractionTriggerBehavior TriggerBehavior = EXRInteractionTriggerBehavior::Trigger;
 
-
     UFUNCTION(Server, Reliable)
-    void Server_SetTriggerState(bool InTriggerState);
+    void Server_SetTriggerState(bool InTriggerState, UXRInteractorComponent* InInteractor);
 
     /**
     * If this is a OneShot Trigger, the Interaction will be terminated after this duration (in seconds).
     */
-    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction", meta = (EditCondition = "bInteractionDurationVisible"))
+    UPROPERTY(EditAnywhere, Category = "XRCore|Interaction")
     float InteractionDuration = 0.25f;
-    UPROPERTY()
-    bool bInteractionDurationVisible = false;
-    virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 

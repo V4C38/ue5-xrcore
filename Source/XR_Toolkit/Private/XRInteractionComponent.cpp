@@ -40,7 +40,7 @@ void UXRInteractionComponent::StartInteraction(UXRInteractorComponent* InInterac
 	HoveringInteractors.Remove(TWeakObjectPtr<UXRInteractorComponent>(InInteractor));
 	OnInteractionStart(InInteractor);
 	OnInteractionStarted.Broadcast(this, InInteractor);
-	RequestAudioPlay(InteractionStartSound);\
+	RequestAudioPlay(InteractionStartSound);
 	if (XRHighlightComponent)
 	{
 		XRHighlightComponent->SetHighlighted(0.0f);
@@ -169,18 +169,6 @@ void UXRInteractionComponent::UpdateAbsolouteInteractionPriority()
 			break;
 	}
 	AbsolouteInteractionPriority = OutInteractionPriority;
-}
-
-void UXRInteractionComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
-{
-	Super::PostEditChangeProperty(PropertyChangedEvent);
-	FName PropertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
-
-	if (PropertyName == GET_MEMBER_NAME_CHECKED(UXRInteractionComponent, InteractionPriority))
-	{
-		bUsingCustomPriorityValue = InteractionPriority == EXRInteractionPriority::Custom;
-		UpdateAbsolouteInteractionPriority();
-	}
 }
 
 TArray<UXRInteractorComponent*> UXRInteractionComponent::GetActiveInteractors() const
