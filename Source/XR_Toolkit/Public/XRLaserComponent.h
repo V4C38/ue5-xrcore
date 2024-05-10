@@ -51,7 +51,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXRLaserSpawned, UXRLaserComponen
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXRLaserStateChanged, UXRLaserComponent*, Sender, EXRLaserState, NewState);
 
 UCLASS(Blueprintable, ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
-class XR_TOOLKIT_API UXRLaserComponent : public USceneComponent, public IXRLaserInterface
+class XR_TOOLKIT_API UXRLaserComponent : public USceneComponent, public IXRLaserInterface, public IXRInteractionInterface
 {
 	GENERATED_BODY()
 
@@ -84,6 +84,7 @@ public:
 	FOnXRLaserStateChanged OnXRLaserStateChanged;
 
 
+	// Laser Interaface
 	virtual void SetLaserActive_Implementation() override;
 	virtual void SetLaserInactive_Implementation() override;
 
@@ -93,6 +94,11 @@ public:
 
 	virtual void SetControllerHand_Implementation(EControllerHand InXRControllerHand) override;
 	virtual EControllerHand GetControllerHand_Implementation() const override;
+
+	// Interaction Interaface
+	virtual void StartInteractionByPriority_Implementation(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal) override;
+	virtual void StopInteractionByPriority_Implementation(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal) override;
+
 
 	/**
 	 * Returns the XRLaser Actor that is spawned at BeginPlay and managed by this component.

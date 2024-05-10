@@ -24,7 +24,7 @@ void UXRLaserComponent::BeginPlay()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-// API
+// XRLaser Interface
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRLaserComponent::SetLaserActive_Implementation()
 {
@@ -110,7 +110,26 @@ UXRInteractorComponent* UXRLaserComponent::GetXRInteractor_Implementation() cons
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// XRInteraction Interface
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+void UXRLaserComponent::StartInteractionByPriority_Implementation(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
+{
+	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
+	{
+		IXRInteractionInterface::Execute_StartInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
+	}
+}
+void UXRLaserComponent::StopInteractionByPriority_Implementation(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
+{
+	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
+	{
+		IXRInteractionInterface::Execute_StopInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
+	}
+}
 
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 bool UXRLaserComponent::SpawnXRLaserActor()
 {
 	if (!XRLaserClass)

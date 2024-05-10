@@ -11,6 +11,31 @@
 class UXRInteractionComponent;
 class UXRInteractorComponent;
 
+UINTERFACE(MinimalAPI, BlueprintType)
+class UXRInteractionInterface : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class IXRInteractionInterface
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void StartInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void StartInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void StopInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction);
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void StopInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void HoverInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction, bool InHoverState);
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStartedInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStoppedInteracting, UXRInteractorComponent*, Sender, UXRInteractionComponent*, XRInteractionComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHoverStateChanged, UXRInteractorComponent*, Sender, UXRInteractionComponent*, HoveredXRInteractionComponent, bool, bHoverState);
