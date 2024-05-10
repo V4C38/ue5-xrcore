@@ -31,7 +31,10 @@ void UXRConnectorComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 	if (ConnectedSocket.IsValid())
 	{
-		PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
+		if (PreviouslyConnectedSocket.IsValid())
+		{
+			PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
+		}
 		HideAllHolograms();
 	}
 }
