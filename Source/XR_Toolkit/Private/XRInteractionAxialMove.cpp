@@ -7,7 +7,7 @@ UXRInteractionAxialMove::UXRInteractionAxialMove()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
-	LaserBehavior = EXRLaserBehavior::SnapMove;
+	LaserBehavior = EXRLaserBehavior::Snap;
 }
 
 
