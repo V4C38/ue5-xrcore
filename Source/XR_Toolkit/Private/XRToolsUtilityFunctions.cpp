@@ -1,6 +1,8 @@
 #include "XRToolsUtilityFunctions.h"
 #include "XRInteractionComponent.h"
 #include "XRInteractorComponent.h"
+#include "XRConnectorComponent.h"
+#include "XRConnectorSocket.h"
 
 
 EXRStandard UXRToolsUtilityFunctions::GetXRStandard()
@@ -151,4 +153,33 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionOnActorByPrio
         }
     }
     return GetXRInteractionByPriority(InteractionComponents, InXRInteractor, InPriority, InPrioritySelectionCondition);
+}
+
+bool UXRToolsUtilityFunctions::TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID)
+{
+    if (!InActor || !InConnector)
+    {
+        return false;
+    }
+    TArray<UXRConnectorSocket*> ConnectorSockets;
+    InActor->GetComponents(ConnectorSockets);
+
+    if (ConnectorSockets.Num() == 0)
+    {
+        return false;
+    }
+    if (InSocketID.IsEmpty())
+    {
+        return InConnector->ConnectToSocket(ConnectorSockets[0]);
+    }
+
+    for (UXRConnectorSocket* ConnectorSocket : ConnectorSockets)
+    {
+        if (ConnectorSocket->GetSocketID() == InSocketID)
+        {
+            return InConnector->ConnectToSocket(ConnectorSocket);
+        }
+    }
+
+    return false;
 }
