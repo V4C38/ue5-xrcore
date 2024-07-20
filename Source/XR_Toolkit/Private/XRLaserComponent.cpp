@@ -1,6 +1,8 @@
 
-#include "XRInteractorComponent.h"
 #include "XRLaserComponent.h"
+#include "XRInteractorComponent.h"
+#include "Net/UnrealNetwork.h"
+
 
 UXRLaserComponent::UXRLaserComponent()
 {
