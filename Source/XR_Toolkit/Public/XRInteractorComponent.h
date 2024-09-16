@@ -118,11 +118,10 @@ public:
 		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
 
 	/**
-	 * Returns XRInteractionComponents on the closest overlapping Actor (that has XRInteractions) for this XRInteractor.
-	 * Distance is calculated based on the Actors root, not the contained XRInteractionComponents location.
+	 * Returns the highest priority XRInteraction that is a child of the overlapped component(s)
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
-	AActor* GetClosestXRInteractionActor(UXRInteractionComponent*& OutPrioritizedXRInteraction);
+	UXRInteractionComponent* GetOverlappedXRInteraction(AActor*& OutOverlappedActor);
 
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
