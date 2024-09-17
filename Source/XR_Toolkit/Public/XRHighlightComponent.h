@@ -47,24 +47,26 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	/**
-	 * Tag used to determine which MeshComponents to cache on the Owning Actor
+	 * Tag used to determine which MeshComponents to cache on the Owning Actor.
+	 * Specifying no Tag will cache all UMesh components. 
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Highlight")
-	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
+	TArray<FName> HighlightIncludeOnlyTags = {};
 
 	/**
 	* Caches all UMeshComponents with the given Tag on the Owning Actor.
-	* This is called on BeginPlay with tag "highlight".
+	* Specifying no Tag will cache all UMesh components. 
 	* @param InHighlightMeshTag All UMeshComponents with this tag will be cached for highlighting. 
 	*/
 	UFUNCTION(BlueprintCallable, Category="XRCore|Highlight")
-	void SetHighlightIgnoreMeshTag(FName InHighlightIgnoreMeshTag);
+	void SetHighlightIncludeOnlyTags(TArray<FName> InHighlightIncludeOnlyTags);
 
 	/**
-	* Returns the currently assigned HighlightTag.
+	* Returns the currently assigned HighlightTags.
+	* If None are returned, all UMeshComponents are cached.
 	*/
 	UFUNCTION(BlueprintPure, Category="XRCore|Highlight")
-	FName GetHighlightIgnoreMeshTag() const;
+	TArray<FName> GetHighlightIncludeOnlyTags() const;
 
 	/**
 	* Returns the currently cached UMeshComponents that are considered for Highlighting. 

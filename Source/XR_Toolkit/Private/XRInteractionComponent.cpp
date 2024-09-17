@@ -118,7 +118,7 @@ void UXRInteractionComponent::SpawnAndConfigureXRHighlight()
 	{
 		XRHighlightComponent->RegisterComponent();
 		XRHighlightComponent->SetHighlightFadeCurve(HighlightFadeCurve);
-		XRHighlightComponent->SetHighlightIgnoreMeshTag(HighlightIgnoreMeshTag);
+		XRHighlightComponent->SetHighlightIncludeOnlyTags(HighlightIncludeOnlyTags);
 		XRHighlightComponent->Activate();
 	}
 }
