@@ -25,12 +25,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
 	void StartInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction);
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
-	void StartInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+	void StartInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
 	void StopInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction);
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
-	void StopInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+	void StopInteractionByPriority(int32 InPriority = 5, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::HigherEqual);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
 	void HoverInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction, bool InHoverState);
@@ -64,7 +64,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor).
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void StartXRInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+	void StartXRInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
 
 	UPROPERTY(BlueprintAssignable, Category = "XRCore|Interactor|Delegates")
 	FOnStartedInteracting OnStartedInteracting;
@@ -81,7 +81,7 @@ public:
 	 * that is already being interacted with (using multiple interactions on one Actor). 
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Interactor")
-	void StopXRInteractionByPriority(int32 InPriority = 1, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+	void StopXRInteractionByPriority(int32 InPriority = 5, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::HigherEqual);
 
 	/**
 	 * Terminate all active Interactions.
@@ -114,14 +114,14 @@ public:
 	 * @param InActor - If provided, will for this Actor. Otherwise, the currently overlapped actors will be checked.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Interactor")
-	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction, AActor* InActor = nullptr, int32 InPriority = 0,
+	bool CanInteract(UXRInteractionComponent*& OutPrioritizedXRInteraction, int32 InPriority = 0,
 		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
 
 	/**
-	 * Returns the highest priority XRInteraction that is a child of the overlapped component(s)
+	 * Returns the highest priority XRInteraction that is a child of any the overlapped component(s)
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
-	UXRInteractionComponent* GetOverlappedXRInteraction(AActor*& OutOverlappedActor);
+	TArray<UXRInteractionComponent*> GetOverlappedXRInteractions() const;
 
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -198,6 +198,8 @@ protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	TArray<UXRInteractionComponent*> GetChildXRInteractionComponents(UPrimitiveComponent* InComponent);
 
 	UPROPERTY()
 	TArray<UPrimitiveComponent*> AdditionalColliders = {};
@@ -212,7 +214,7 @@ protected:
 	void RequestHover(UXRInteractionComponent* InInteraction, bool bInHoverState);
 
 	UFUNCTION()
-	bool IsAnyColliderOverlappingActor(TArray<UPrimitiveComponent*> InCollidersToIgnore, AActor* InActor);
+	bool IsAnyColliderOverlappingComponent(UPrimitiveComponent* InComponent, bool IgnoreSelf);
 
 	UFUNCTION(Server, Reliable, Category = "XRCore|Interactor")
 	void Server_ExecuteInteraction(UXRInteractionComponent* InInteractionComponent);
