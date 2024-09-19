@@ -80,7 +80,7 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionByPriority(TA
         {
             continue;
         }
-        // Discard Interactions unavailable to Lasers
+        // Discard Interactions unavailable to Lasers (if LaserInteractor)
         if (InXRInteractor)
         {
             if (InXRInteractor->IsLaserInteractor() && XRInteraction->GetLaserBehavior() == EXRLaserBehavior::Disabled)
@@ -98,6 +98,7 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionByPriority(TA
                     continue;
                 }
             }
+            // Adhere to MultiInteractor behavior
             switch (XRInteraction->GetMultiInteractorBehavior())
             {
                 default:

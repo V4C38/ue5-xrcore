@@ -228,11 +228,11 @@ protected:
 	bool bEnableHighlighting = true;
 
 	/**
-	 * Tag used to determine which MeshComponents to ignore for Highlighting - 
-	 * By default all UMeshComponents will be highlighted if a compatible material is assigned.
+	 * Tags used to determine which MeshComponents to be used for Highlighting.
+	 * If none are specified, all UMeshComponents will be highlighted if a compatible material is assigned.
 	 */
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|Highlighting")
-	FName HighlightIgnoreMeshTag = "XRHighlight_Ignore";
+	TArray<FName> HighlightIncludeOnlyTags = {};
 
 	/**
 	 * Fade the highlight based on this curve. If no curve is provided, HighlightState will be applied immediately.

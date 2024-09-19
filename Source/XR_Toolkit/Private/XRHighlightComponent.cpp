@@ -12,7 +12,7 @@ void UXRHighlightComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	InitializeFadeTimeline();
-	SetHighlightIgnoreMeshTag(HighlightIgnoreMeshTag);
+	SetHighlightIncludeOnlyTags(HighlightIncludeOnlyTags);
 	SetHighlightFadeCurve(HighlightFadeCurve);
 }
 
@@ -134,13 +134,26 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 	{
 		if (MeshComponent)
 		{
-			if (!MeshComponent->ComponentHasTag(HighlightIgnoreMeshTag))
+			if (HighlightIncludeOnlyTags.Num() == 0)
 			{
 				ValidComponents.Add(MeshComponent);
 			}
+
+			// Check for Inlcude Only Tags if applicable
+			else 
+			{
+				for (const FName& Tag : HighlightIncludeOnlyTags)
+				{
+					if (MeshComponent->ComponentHasTag(Tag))
+					{
+						ValidComponents.Add(MeshComponent);
+					}
+				}
+
+			}
+
 		}
 	}
-	
 	HighlightableMeshComponents = ValidComponents;
 }
 
@@ -151,14 +164,15 @@ float UXRHighlightComponent::GetHighlightState()
 	return HighlightState;
 }
 
-void UXRHighlightComponent::SetHighlightIgnoreMeshTag(FName InHighlightMeshTag)
+void UXRHighlightComponent::SetHighlightIncludeOnlyTags(TArray<FName> InHighlightIncludeOnlyTags)
 {
+	HighlightIncludeOnlyTags = InHighlightIncludeOnlyTags;
 	CacheHighlightableMeshComponents();
 }
 
-FName UXRHighlightComponent::GetHighlightIgnoreMeshTag() const
+TArray<FName> UXRHighlightComponent::GetHighlightIncludeOnlyTags() const
 {
-	return HighlightIgnoreMeshTag;
+	return HighlightIncludeOnlyTags;
 }
 
 TArray<UMeshComponent*> UXRHighlightComponent::GetHighlightMeshes() const

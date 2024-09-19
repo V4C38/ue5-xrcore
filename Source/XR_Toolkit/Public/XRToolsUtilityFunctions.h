@@ -51,7 +51,7 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
 	static UXRInteractionComponent* GetXRInteractionByPriority(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
-		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal, int32 MaxSecondaryPriority = 5);
+		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual, int32 MaxSecondaryPriority = 5);
 
 	/**
 	 * Returns true if this Actor has an XRInteractorComponent
@@ -59,7 +59,7 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
 	static UXRInteractionComponent* GetXRInteractionOnActorByPriority(AActor* InActor, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
-		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::Equal);
+		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual);
 
 
 	/**
