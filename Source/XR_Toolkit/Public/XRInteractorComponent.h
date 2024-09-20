@@ -33,6 +33,9 @@ public:
 	void StopInteractionByPriority(int32 InPriority = 5, EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::HigherEqual);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
+	void StopAllInteractions(UXRInteractorComponent* InInteractor);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRInteraction")
 	void HoverInteraction(UXRInteractorComponent* InInteractor, UXRInteractionComponent* InInteraction, bool InHoverState);
 };
 
