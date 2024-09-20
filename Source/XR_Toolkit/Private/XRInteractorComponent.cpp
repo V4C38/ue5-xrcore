@@ -292,7 +292,7 @@ bool UXRInteractorComponent::IsAnyColliderOverlappingComponent(UPrimitiveCompone
 void UXRInteractorComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!IsAnyColliderOverlappingComponent({OtherComp }, true))
+	if (!IsAnyColliderOverlappingComponent(OtherComp, true))
 	{
 		UXRInteractionComponent* PrioritizedInteraction = UXRToolsUtilityFunctions::GetXRInteractionByPriority(GetChildXRInteractionComponents(OtherComp), this, 0, EXRInteractionPrioritySelection::LowerEqual);
 		if (PrioritizedInteraction)
@@ -305,7 +305,7 @@ void UXRInteractorComponent::OnOverlapBegin(UPrimitiveComponent* OverlappedComp,
 void UXRInteractorComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!IsAnyColliderOverlappingComponent({OtherComp }, true))
+	if (!IsAnyColliderOverlappingComponent(OtherComp, true))
 	{
 		for (auto Interaction : GetChildXRInteractionComponents(OtherComp))
 		{
