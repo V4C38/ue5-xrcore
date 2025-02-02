@@ -98,3 +98,12 @@ bool UXRConnectorSocket::IsConnectionAllowed(UXRConnectorComponent* InXRConnecto
     }
     return CompatibleConnectorIDs.Contains(InXRConnectorComponent->GetConnectorID());
 }
+
+bool UXRConnectorSocket::IsHologramAllowed() const
+{
+    if (SocketState == EXRConnectorSocketState::Disabled || bSupressHologram)
+    {
+        return false;
+    }
+    return true;
+}

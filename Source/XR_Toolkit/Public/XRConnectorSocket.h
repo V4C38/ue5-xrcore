@@ -88,6 +88,12 @@ public:
 	UFUNCTION(Category = "XRConnectorSocket")
 	void DeregisterConnection(UXRConnectorComponent* InConnectorComponent);
 
+	/*
+	* Can this socket have a hologram associated with it? (No if disabled or bCanHaveHologram is false)
+	*/
+	UFUNCTION(BlueprintPure, Category = "XRConnectorSocket")
+	bool IsHologramAllowed() const;
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -121,6 +127,11 @@ protected:
 	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
 	int32 AllowedConnections = 1;
 
+	/*
+	* Never allow a hologram to be shown for this socket if true.
+	*/
+	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
+	bool bSupressHologram = false;
 
 private:
 	TArray<TWeakObjectPtr<UXRConnectorComponent>> AttachedXRConnectors = {};

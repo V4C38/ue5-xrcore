@@ -15,7 +15,17 @@ UXRConnectorComponent::UXRConnectorComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
-	HologramClass = AXRConnectorHologram::StaticClass();
+
+	// Assign default hologram class from settings if not already set.
+	const UXRCoreSettings* DefaultSettings = GetDefault<UXRCoreSettings>();
+	if (DefaultSettings && !HologramClass)
+	{
+		HologramClass = DefaultSettings->DefaultHologramClass.Get();
+	}
+	else
+	{
+		HologramClass = AXRConnectorHologram::StaticClass();
+	}
 }
 
 void UXRConnectorComponent::BeginPlay()
@@ -327,7 +337,6 @@ void UXRConnectorComponent::OnOverlapEnd(UPrimitiveComponent* OverlappedComponen
 	}
 }
 
-
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Hologram
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -341,6 +350,24 @@ void UXRConnectorComponent::ShowHologram(UXRConnectorSocket* InSocket)
 	{
 		return;
 	}
+	if (!InSocket->IsHologramAllowed())
+	{
+		return;
+	}
+
+	// Only show the Hologram in Bound to Grab mode when the GrabInteraction is currently active
+	if (bAutoBindToGrabInteraction)
+	{
+		if (!BoundGrabComponent)
+		{
+			return;
+		}
+		if (!BoundGrabComponent->IsInteractedWith())
+		{
+			return;
+		}
+	}
+
 	auto FoundHologram = AssignedHolograms.Find(InSocket);
 	if (FoundHologram && FoundHologram->IsValid())
 	{
@@ -399,17 +426,6 @@ void UXRConnectorComponent::ShowAllAvailableHolograms()
 	}
 }
 
-void UXRConnectorComponent::HideAllHolograms()
-{
-	for (auto Socket : OverlappedSockets)
-	{
-		if (Socket.IsValid())
-		{
-			HideHologram(Socket.Get());
-		}
-	}
-}
-
 void UXRConnectorComponent::HideHologram(UXRConnectorSocket* InSocket)
 {
 	if (!InSocket)
@@ -427,6 +443,17 @@ void UXRConnectorComponent::HideHologram(UXRConnectorSocket* InSocket)
 	else
 	{
 		AssignedHolograms.Remove(InSocket);
+	}
+}
+
+void UXRConnectorComponent::HideAllHolograms()
+{
+	for (auto Socket : OverlappedSockets)
+	{
+		if (Socket.IsValid())
+		{
+			HideHologram(Socket.Get());
+		}
 	}
 }
 

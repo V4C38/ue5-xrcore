@@ -124,6 +124,7 @@ protected:
 	/*
 	* If true, will find the highest priority XRInteractionGrab on this Actor and bind to the OnInteractionStarted and  OnInteractionEnded events.
 	* Will automatically ConnectToClosestOverlappedSocket when ending grab.
+	* Only shows holograms for this Connection while the GrabInteraction is active.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector")
 	bool bAutoBindToGrabInteraction = false;
@@ -151,7 +152,7 @@ protected:
 
 	/*
 	* When enabled, shows a Hologram in the location of each Socket that the OwningActor is overlapping. Can also be triggered manually. 
-	* This can cause performance issues, as a UStatickMeshActor is spawned for each hologram. 
+	* This can cause performance issues, as a UStatickMeshActor is spawned for each hologram.
 	* DevNote: if this becomes a concern, an ObjectPool should be used instead of spawning Actors at runtime.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
