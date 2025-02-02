@@ -28,63 +28,28 @@ void UXRLaserComponent::BeginPlay()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // XRLaser Interface
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void UXRLaserComponent::SetLaserActive_Implementation()
+void UXRLaserComponent::SetLaserActive_Implementation(bool bInState)
 {
-	if (XRLaserActive)
-	{
-		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
-		{
-			IXRLaserInterface::Execute_SetLaserActive(XRLaserActor);
-		}
-		GetLaserState_Implementation();
-		return;
-	}
-
-	Server_SetLaserActive(true);
-}
-
-void UXRLaserComponent::SetLaserInactive_Implementation()
-{
-	if (!XRLaserActive)
-	{
-		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
-		{
-			IXRLaserInterface::Execute_SetLaserInactive(XRLaserActor);
-			CurrentLaserState = EXRLaserState::Inactive;
-			OnXRLaserStateChanged.Broadcast(this, CurrentLaserState);
-		}
-		return;
-	}
-
-	Server_SetLaserActive(false);
+	Server_SetLaserActive(bInState);
 }
 
 bool UXRLaserComponent::IsLaserActive_Implementation() const
 {
-	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
-	{
-		return IXRLaserInterface::Execute_IsLaserActive(XRLaserActor);
-	}
-	return false;
+	return bIsLaserActive;
 }
 
 EXRLaserState UXRLaserComponent::GetLaserState_Implementation()
 {
-	EXRLaserState OutState = EXRLaserState::Inactive;
 	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
 	{
-		OutState =  IXRLaserInterface::Execute_GetLaserState(XRLaserActor);
+		return IXRLaserInterface::Execute_GetLaserState(XRLaserActor);
 	}
-	if (OutState != CurrentLaserState)
-	{
-		CurrentLaserState = OutState;
-		OnXRLaserStateChanged.Broadcast(this, CurrentLaserState);
-	}
-	return OutState;
+	return EXRLaserState::Inactive;
 }
 
 void UXRLaserComponent::SetControllerHand_Implementation(EControllerHand InXRControllerHand)
 {
+	XRControllerHand = InXRControllerHand;
 	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
 	{
 		IXRLaserInterface::Execute_SetControllerHand(XRLaserActor, XRControllerHand);
@@ -96,7 +61,7 @@ EControllerHand UXRLaserComponent::GetControllerHand_Implementation() const
 	return XRControllerHand;
 }
 
-AActor* UXRLaserComponent::GetXRLaserActor() const
+AActor* UXRLaserComponent::GetXRLaserActor_Implementation() const
 {
 	return XRLaserActor;
 }
@@ -110,28 +75,60 @@ UXRInteractorComponent* UXRLaserComponent::GetXRInteractor_Implementation() cons
 	}
 	return OutXRInteractor;
 }
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // XRInteraction Interface
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRLaserComponent::StartInteractionByPriority_Implementation(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
 {
-	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
-	{
-		IXRInteractionInterface::Execute_StartInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
-	}
+	Server_RequestInteraction(0, InPriority, InPrioritySelectionCondition);
 }
+
 void UXRLaserComponent::StopInteractionByPriority_Implementation(int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
 {
-	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
-	{
-		IXRInteractionInterface::Execute_StopInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
-	}
+	Server_RequestInteraction(1, InPriority, InPrioritySelectionCondition);
+}
+
+void UXRLaserComponent::StopAllInteractions_Implementation(UXRInteractorComponent* InInteractor)
+{
+	Server_RequestInteraction(2, 0, EXRInteractionPrioritySelection::Equal);
 }
 
 
+void UXRLaserComponent::Server_RequestInteraction_Implementation(int32 InID, int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
+{
+	Multicast_RequestInteraction_Implementation(InID, InPriority, InPrioritySelectionCondition);
+}
 
+void UXRLaserComponent::Multicast_RequestInteraction_Implementation(int32 InID, int32 InPriority, EXRInteractionPrioritySelection InPrioritySelectionCondition)
+{
+	if (InID == 0)
+	{
+		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
+		{
+			IXRInteractionInterface::Execute_StartInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
+		}
+	}
+	else if (InID == 1)
+	{
+		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
+		{
+			IXRInteractionInterface::Execute_StartInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
+		}
+
+	}
+	else if (InID == 2)
+	{
+		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
+		{
+			IXRInteractionInterface::Execute_StopAllInteractions(XRLaserActor, nullptr);
+		}
+	}
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 bool UXRLaserComponent::SpawnXRLaserActor()
 {
 	if (!XRLaserClass)
@@ -153,9 +150,9 @@ bool UXRLaserComponent::SpawnXRLaserActor()
 	{
 		return false;
 	}
-
+	IXRLaserInterface::Execute_ProvideAttachmentRoot(XRLaserActor, this);
+	IXRLaserInterface::Execute_SetControllerHand(XRLaserActor, XRControllerHand);
 	XRLaserActor->SetReplicates(true);
-
 	if (GetWorld()->GetNetMode() == NM_Standalone)
 	{
 		OnRep_XRLaserActor();
@@ -169,23 +166,21 @@ bool UXRLaserComponent::SpawnXRLaserActor()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void UXRLaserComponent::Server_SetLaserActive_Implementation(bool bInActive)
 {
-	XRLaserActive = bInActive;
-	if (GetWorld()->GetNetMode() == NM_Standalone)
+	bIsLaserActive = bInActive;
+	Multicast_SetLaserActive(bInActive);
+}
+
+void UXRLaserComponent::Multicast_SetLaserActive_Implementation(bool bInActive)
+{
+	if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRLaserInterface::StaticClass()))
 	{
-		OnRep_XRLaserActive();
+		IXRLaserInterface::Execute_SetLaserActive(XRLaserActor, bInActive);
 	}
 }
 
-void UXRLaserComponent::OnRep_XRLaserActive()
+void UXRLaserComponent::OnRep_IsLaserActive()
 {
-	if (XRLaserActive)
-	{
-		SetLaserActive_Implementation();
-	}
-	else
-	{
-		SetLaserInactive_Implementation();
-	}
+	OnXRLaserStateChanged.Broadcast(this, bIsLaserActive);
 }
 
 void UXRLaserComponent::OnRep_XRLaserActor()
@@ -205,5 +200,5 @@ void UXRLaserComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& 
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(UXRLaserComponent, XRLaserActor);
-	DOREPLIFETIME(UXRLaserComponent, XRLaserActive);
+	DOREPLIFETIME(UXRLaserComponent, bIsLaserActive);
 }

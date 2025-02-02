@@ -13,6 +13,24 @@ UXRInteractionComponent::UXRInteractionComponent()
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
+
+	// Assign default hologram class from settings if not already set.
+	const UXRCoreSettings* DefaultSettings = GetDefault<UXRCoreSettings>();
+	if (DefaultSettings)
+	{
+		if (!InteractionStartSound)
+		{
+			InteractionStartSound = DefaultSettings->DefaultInteractionStartSound.Get();
+		}
+		if (!InteractionEndSound)
+		{
+			InteractionEndSound = DefaultSettings->DefaultInteractionEndSound.Get();
+		}
+		if (!HighlightFadeCurve)
+		{
+			HighlightFadeCurve = DefaultSettings->DefaultHighlightFadeCurve.Get();
+		}
+	}
 }
 
 void UXRInteractionComponent::InitializeComponent()
