@@ -2,52 +2,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "XRCoreHandComponent.h"
 #include "XRCoreHand.generated.h"
 
 class UXRInteractorComponent;
 class UXRLaserComponent;
 
-UINTERFACE(MinimalAPI, BlueprintType)
-class UXRCoreHandInterface : public UInterface
-{
-    GENERATED_BODY()
-};
-
-class IXRCoreHandInterface
-{
-    GENERATED_BODY()
-
-public:
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    UXRInteractorComponent* GetXRInteractor() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    UXRLaserComponent* GetXRLaser() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRLaser")
-    void SetControllerHand(EControllerHand InControllerHand);
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    EControllerHand GetControllerHand() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    void PrimaryInputAction(float InAxisValue);
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    void SecondaryInputAction(float InAxisValue);
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    void SetIsHandtrackingActive(bool InIsActive);
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    bool IsHandtrackingActive() const;
-
-    UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRCoreHand")
-    APawn* GetOwningPawn() const;
-};
-
 // -------------------------------------------------------------------------------------------------------------------------------------
-// Hand used for Interacting with the world
+// Hand Actor representing the Motion Controller used for interacting with the world
 // -------------------------------------------------------------------------------------------------------------------------------------
 UCLASS()
 class XR_TOOLKIT_API AXRCoreHand : public AActor, public IXRCoreHandInterface
@@ -57,6 +19,10 @@ class XR_TOOLKIT_API AXRCoreHand : public AActor, public IXRCoreHandInterface
 public:
     AXRCoreHand();
     virtual void Tick(float DeltaTime) override;
+
+    UFUNCTION(BlueprintPure, Category = "XRCore|XRCoreHand")
+    FXRCoreHandData GetReplicatedHandData() const;
+
 
     // XRCoreHand Interface Implementations
     virtual UXRInteractorComponent* GetXRInteractor_Implementation() const override;
@@ -68,6 +34,7 @@ public:
     virtual void SetIsHandtrackingActive_Implementation(bool InIsActive) override;
     virtual bool IsHandtrackingActive_Implementation() const override;
     virtual APawn* GetOwningPawn_Implementation() const override;
+    virtual void Client_UpdateXRCoreHandData_Implementation(const FXRCoreHandData& InXRCoreHandData) override;
 
 
     UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
@@ -77,18 +44,33 @@ public:
     USceneComponent* RootSceneComponent;
 
     UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    USceneComponent* MotionControllerRoot;
+
+    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     UXRInteractorComponent* XRInteractor;
 
     UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     UXRLaserComponent* XRLaserComponent;
 
     UPROPERTY()
-    bool bIsHandtrackingActive = false;
-
-    UPROPERTY()
     APawn* OwningPawn = nullptr;
+    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    bool bIsLocallyControlled = false;
 
 protected:
     virtual void BeginPlay() override;
 
+    UPROPERTY()
+    FXRCoreHandData ReplicatedHandData;
+
+    UPROPERTY(EditDefaultsOnly, Category = "XRCore|XRCoreHand")
+    float InterpolationSpeed = 10.f;
+
+    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    bool bIsHandtrackingActive = false;
+
+    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    float LocallyControlled_PrimaryInputAxisValue = 0.0f;
+    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    float LocallyControlled_SecondaryInputAxisValue = 0.0f;
 };

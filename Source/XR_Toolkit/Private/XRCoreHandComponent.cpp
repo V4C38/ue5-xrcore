@@ -5,7 +5,8 @@
 
 UXRCoreHandComponent::UXRCoreHandComponent()
 {
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.TickInterval = ReplicationInterval;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	SetIsReplicatedByDefault(true);
 	bAutoActivate = true;
@@ -14,12 +15,15 @@ UXRCoreHandComponent::UXRCoreHandComponent()
 void UXRCoreHandComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (GetOwner()->HasAuthority())
 	{
 		Server_SpawnXRHand();
 	}
 }
-
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Managed Hand Actor
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 AXRCoreHand* UXRCoreHandComponent::GetXRCoreHand() const
 {
 	return XRCoreHand;
@@ -46,21 +50,68 @@ void UXRCoreHandComponent::Server_SpawnXRHand_Implementation()
 
 void UXRCoreHandComponent::OnRep_XRCoreHand()
 {
-	if (!XRCoreHand || !GetOwner())
+	if (!XRCoreHand)
 	{
 		return;
 	}
 
+	OwningPawn = Cast<APawn>(GetOwner());
+	if (!OwningPawn)
+	{
+		return;
+	}
+
+	bIsLocallyControlled = OwningPawn->IsLocallyControlled();
+	XRCoreHand->OwningPawn = OwningPawn;
+	XRCoreHand->bIsLocallyControlled = bIsLocallyControlled;
 	if (XRCoreHand->GetClass()->ImplementsInterface(UXRCoreHandInterface::StaticClass()))
 	{
 		IXRCoreHandInterface::Execute_SetControllerHand(XRCoreHand, ControllerHand);
 	}
 
-	OwningPawn = Cast<APawn>(GetOwner());
-	XRCoreHand->OwningPawn = OwningPawn;
-	if (OwningPawn && OwningPawn->HasAuthority())
+	// If this is the controlling client, just attach the Hands root and enable ticking to start replicating to other clients
+	if (bIsLocallyControlled)
 	{
-		XRCoreHand->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		if (XRCoreHand->MotionControllerRoot)
+		{
+			XRCoreHand->MotionControllerRoot->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		}
+		PrimaryComponentTick.SetTickFunctionEnable(true);
+	}	
+
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Replication
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// Tick only executes on the locally controlling client
+void UXRCoreHandComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bIsLocallyControlled)
+	{
+		FXRCoreHandData HandData;
+		HandData.Location = GetComponentLocation();
+		HandData.Rotation = GetComponentQuat();
+		HandData.PrimaryInputAxis = PrimaryInputAxisValue;
+		HandData.SecondaryInputAxis = SecondaryInputAxisValue;
+
+		Server_UpdateHandData(HandData);
+	}
+}
+
+void UXRCoreHandComponent::Server_UpdateHandData_Implementation(FXRCoreHandData InXRCoreHandData)
+{
+	Multicast_UpdateHandData(InXRCoreHandData);
+}
+
+void UXRCoreHandComponent::Multicast_UpdateHandData_Implementation(FXRCoreHandData InXRCoreHandData)
+{
+	if (XRCoreHand)
+	{
+		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandData(XRCoreHand, InXRCoreHandData);
 	}
 }
 
@@ -101,18 +152,22 @@ EControllerHand UXRCoreHandComponent::GetControllerHand_Implementation() const
 
 void UXRCoreHandComponent::PrimaryInputAction_Implementation(float InAxisValue)
 {
-	if (XRCoreHand)
+	if (!bIsLocallyControlled || !XRCoreHand)
 	{
-		IXRCoreHandInterface::Execute_PrimaryInputAction(XRCoreHand, InAxisValue);
+		return;
 	}
+	PrimaryInputAxisValue = InAxisValue;
+	IXRCoreHandInterface::Execute_PrimaryInputAction(XRCoreHand, InAxisValue);
 }
 
 void UXRCoreHandComponent::SecondaryInputAction_Implementation(float InAxisValue)
 {
-	if (XRCoreHand)
+	if (!bIsLocallyControlled || !XRCoreHand)
 	{
-		IXRCoreHandInterface::Execute_SecondaryInputAction(XRCoreHand, InAxisValue);
+		return;
 	}
+	SecondaryInputAxisValue = InAxisValue;
+	IXRCoreHandInterface::Execute_SecondaryInputAction(XRCoreHand, InAxisValue);
 }
 
 void UXRCoreHandComponent::SetIsHandtrackingActive_Implementation(bool InIsActive)
@@ -131,4 +186,12 @@ bool UXRCoreHandComponent::IsHandtrackingActive_Implementation() const
 APawn* UXRCoreHandComponent::GetOwningPawn_Implementation() const
 {
 	return OwningPawn;
+}
+
+void UXRCoreHandComponent::Client_UpdateXRCoreHandData_Implementation(const FXRCoreHandData& InXRCoreHandData)
+{
+	if (XRCoreHand)
+	{
+		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandData(XRCoreHand, InXRCoreHandData);
+	}
 }

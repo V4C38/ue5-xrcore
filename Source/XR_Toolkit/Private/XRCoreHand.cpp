@@ -11,6 +11,9 @@ AXRCoreHand::AXRCoreHand()
     RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
     RootComponent = RootSceneComponent;
 
+    MotionControllerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MotionControllerRoot"));
+    MotionControllerRoot->SetupAttachment(RootComponent);
+
     XRInteractor = CreateDefaultSubobject<UXRInteractorComponent>(TEXT("XRInteractor"));
     XRInteractor->SetupAttachment(RootSceneComponent);
 
@@ -28,15 +31,40 @@ void AXRCoreHand::BeginPlay()
     }
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Tick - Interpolate on remote clients towards replicated transform data
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 void AXRCoreHand::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    if (!bIsLocallyControlled)
+    {
+        // Current transform of MotionControllerRoot
+        FVector CurrentLoc = MotionControllerRoot->GetComponentLocation();
+        FQuat CurrentRot = MotionControllerRoot->GetComponentQuat();
+
+        // Target transform from replicated data
+        FVector TargetLoc = ReplicatedHandData.Location;
+        FQuat TargetRot = ReplicatedHandData.Rotation;
+
+        // Smooth interpolation
+        FVector NewLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, DeltaTime, InterpolationSpeed);
+        FQuat NewRot = FQuat::Slerp(CurrentRot, TargetRot, DeltaTime * InterpolationSpeed);
+
+        MotionControllerRoot->SetWorldLocation(NewLoc);
+        MotionControllerRoot->SetWorldRotation(NewRot);
+    }
+}
+
+FXRCoreHandData AXRCoreHand::GetReplicatedHandData() const
+{
+    return ReplicatedHandData;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // XRCoreHand Interface Implementations
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 UXRInteractorComponent* AXRCoreHand::GetXRInteractor_Implementation() const
 {
     return XRInteractor;
@@ -63,12 +91,12 @@ EControllerHand AXRCoreHand::GetControllerHand_Implementation() const
 
 void AXRCoreHand::PrimaryInputAction_Implementation(float InAxisValue)
 {
-    // Handle primary input
+    LocallyControlled_PrimaryInputAxisValue = InAxisValue;
 }
 
 void AXRCoreHand::SecondaryInputAction_Implementation(float InAxisValue)
 {
-    // Handle secondary input
+    LocallyControlled_SecondaryInputAxisValue = InAxisValue;
 }
 
 void AXRCoreHand::SetIsHandtrackingActive_Implementation(bool InIsActive)
@@ -84,4 +112,12 @@ bool AXRCoreHand::IsHandtrackingActive_Implementation() const
 APawn* AXRCoreHand::GetOwningPawn_Implementation() const
 {
     return OwningPawn;
+}
+
+void AXRCoreHand::Client_UpdateXRCoreHandData_Implementation(const FXRCoreHandData& InXRCoreHandData)
+{
+    if (!bIsLocallyControlled)
+    {
+        ReplicatedHandData = InXRCoreHandData;
+    }
 }
