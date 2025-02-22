@@ -41,6 +41,10 @@ void UXRCoreHandComponent::Server_SpawnXRHand_Implementation()
 	SpawnParams.Instigator = GetOwner()->GetInstigator();
 
 	XRCoreHand = GetWorld()->SpawnActor<AXRCoreHand>(XRCoreHandClass, GetComponentTransform(), SpawnParams);
+	if (XRCoreHand->GetClass()->ImplementsInterface(UXRCoreHandInterface::StaticClass()))
+	{
+		IXRCoreHandInterface::Execute_SetControllerHand(XRCoreHand, ControllerHand);
+	}
 
 	if (GetWorld()->GetNetMode() == NM_Standalone)
 	{
@@ -74,7 +78,7 @@ void UXRCoreHandComponent::OnRep_XRCoreHand()
 	{
 		if (XRCoreHand->MotionControllerRoot)
 		{
-			XRCoreHand->MotionControllerRoot->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			XRCoreHand->AttachToComponent(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 		PrimaryComponentTick.SetTickFunctionEnable(true);
 	}	

@@ -13,12 +13,15 @@ AXRCoreHand::AXRCoreHand()
 
     MotionControllerRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MotionControllerRoot"));
     MotionControllerRoot->SetupAttachment(RootComponent);
+    MotionControllerRoot->bEditableWhenInherited = true;
 
     XRInteractor = CreateDefaultSubobject<UXRInteractorComponent>(TEXT("XRInteractor"));
-    XRInteractor->SetupAttachment(RootSceneComponent);
+    XRInteractor->SetupAttachment(MotionControllerRoot);
+    XRInteractor->bEditableWhenInherited = true;
 
     XRLaserComponent = CreateDefaultSubobject<UXRLaserComponent>(TEXT("XRLaserComponent"));
-    XRLaserComponent->SetupAttachment(RootSceneComponent);
+    XRLaserComponent->SetupAttachment(MotionControllerRoot);
+    XRLaserComponent->bEditableWhenInherited = true;
 }
 
 void AXRCoreHand::BeginPlay()
@@ -38,11 +41,12 @@ void AXRCoreHand::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // Exclude locally controlling client as the HandActor is attached to the MotionController here
     if (!bIsLocallyControlled)
     {
         // Current transform of MotionControllerRoot
-        FVector CurrentLoc = MotionControllerRoot->GetComponentLocation();
-        FQuat CurrentRot = MotionControllerRoot->GetComponentQuat();
+        FVector CurrentLoc = GetActorLocation();
+        FQuat CurrentRot = GetActorQuat();
 
         // Target transform from replicated data
         FVector TargetLoc = ReplicatedHandData.Location;
@@ -52,8 +56,7 @@ void AXRCoreHand::Tick(float DeltaTime)
         FVector NewLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, DeltaTime, InterpolationSpeed);
         FQuat NewRot = FQuat::Slerp(CurrentRot, TargetRot, DeltaTime * InterpolationSpeed);
 
-        MotionControllerRoot->SetWorldLocation(NewLoc);
-        MotionControllerRoot->SetWorldRotation(NewRot);
+        SetActorLocationAndRotation(NewLoc, NewRot);
     }
 }
 

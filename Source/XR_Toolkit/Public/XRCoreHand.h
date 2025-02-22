@@ -43,18 +43,18 @@ public:
     UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     USceneComponent* RootSceneComponent;
 
-    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     USceneComponent* MotionControllerRoot;
 
-    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     UXRInteractorComponent* XRInteractor;
 
-    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     UXRLaserComponent* XRLaserComponent;
 
     UPROPERTY()
     APawn* OwningPawn = nullptr;
-    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     bool bIsLocallyControlled = false;
 
 protected:

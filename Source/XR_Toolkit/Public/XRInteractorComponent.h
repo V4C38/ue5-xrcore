@@ -106,6 +106,7 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	bool IsInteracting() const;
+
 	/**
 	 * Returns all active Interactions (iE. Continuous Interactions this Interactor is handling)
 	 */
@@ -125,7 +126,6 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, Category="XRCore|Interactor")
 	TArray<UXRInteractionComponent*> GetOverlappedXRInteractions() const;
-
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config
