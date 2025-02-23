@@ -116,7 +116,7 @@ void UXRConnectorComponent::Server_DisconnectFromSocket_Implementation()
 }
 
 
-UXRConnectorSocket* UXRConnectorComponent::GetClosestOverlappedSocket() const
+UXRConnectorSocket* UXRConnectorComponent::GetClosestOverlappedSocket()
 {
 	float MinSqDistance = FLT_MAX;
 	UXRConnectorSocket* ClosestSocket = nullptr;
@@ -127,7 +127,7 @@ UXRConnectorSocket* UXRConnectorComponent::GetClosestOverlappedSocket() const
 		{
 			continue;
 		}
-		if (OverlappedSocket.Get()->GetSocketState() == EXRConnectorSocketState::Disabled)
+		if (!OverlappedSocket.Get()->IsConnectionAllowed(this))
 		{
 			continue;
 		}
@@ -172,7 +172,7 @@ void UXRConnectorComponent::OnRep_ConnectedSocket()
 		UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
 		if (XRPhysicsComponent)
 		{
-			// Disable Physics on Server and disable attachment interpolation on client (As ReplicatedPhysicsComponent will handle that)
+			// Disable Physics
 			if (GetOwnerRole() == ROLE_Authority)
 			{
 				XRPhysicsComponent->SetSimulatePhysicsOnOwner(false);
@@ -192,17 +192,17 @@ void UXRConnectorComponent::OnRep_ConnectedSocket()
 			GetWorld()->GetTimerManager().SetTimer(EstablishConnectionTimer, this, &UXRConnectorComponent::InternalAttachToSocket, EstablishConnectionTime, false);
 			SetComponentTickEnabled(true);
 		}
-		PreviouslyConnectedSocket = ConnectedSocket;
 		OnConnected.Broadcast(this, ConnectedSocket);
 	}
 
 	// Detach
 	else
 	{
-		if (EstablishConnectionTime != 0.0f)
+		if (PreviouslyConnectedSocket.Get())
 		{
-			SetComponentTickEnabled(false);
+			PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
 		}
+		GetOwner()->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 
 		// Physics
 		UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
@@ -211,15 +211,10 @@ void UXRConnectorComponent::OnRep_ConnectedSocket()
 			// Re-Enable Physics on Server
 			if (GetOwnerRole() == ROLE_Authority)
 			{
-				GetOwner()->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 				XRPhysicsComponent->SetSimulatePhysicsOnOwner(true);
 			}
 		}
-		// Kinematic
-		else
-		{
-			GetOwner()->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
-		}
+
 		OnDisconnected.Broadcast(this, PreviouslyConnectedSocket.Get());
 		PreviouslyConnectedSocket = nullptr;
 	}
@@ -236,24 +231,31 @@ void UXRConnectorComponent::GetLifetimeReplicatedProps(TArray< FLifetimeProperty
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Connection Logic
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// This is it`s own Method so it can be called after EstablishConnectionTimer finishes
 void UXRConnectorComponent::InternalAttachToSocket() 
 {
+	UE_LOG(LogTemp, Warning, TEXT("InternalAttachToSocket"));
+
 	if (!ConnectedSocket)
 	{
 		return;
 	}
+
+	if (PreviouslyConnectedSocket.IsValid())
+	{
+		PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
+	}
+
+	SetComponentTickEnabled(false);
 	AActor* Owner = GetOwner();
 	if (!Owner)
 	{
 		return;
 	}
-	if (PreviouslyConnectedSocket.IsValid())
-	{
-		PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
-		GetOwner()->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
-	}
-
-	GetOwner()->AttachToComponent(ConnectedSocket, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	GetOwner()->AttachToComponent(ConnectedSocket, FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, false));
+	GetOwner()->SetActorRelativeLocation(FVector::ZeroVector);
+	GetOwner()->SetActorRelativeRotation(FQuat::Identity);
 
 	PreviouslyConnectedSocket = ConnectedSocket;
 	ConnectedSocket->RegisterConnection(this);
@@ -506,20 +508,14 @@ void UXRConnectorComponent::OnInteractionStarted(UXRInteractionComponent* Sender
 	{
 		Server_DisconnectFromSocket();
 	}
-	SetComponentTickEnabled(true);
 	ShowAllAvailableHolograms();
 }
 
 void UXRConnectorComponent::OnInteractionEnded(UXRInteractionComponent* Sender, UXRInteractorComponent* XRInteractorComponent)
 {
-	UXRConnectorSocket* OutConnectedSocket = {};
 	if (GetOwnerRole() == ROLE_Authority)
 	{
 		Server_ConnectToClosestOverlappedSocket();
-	}
-	if (!EstablishConnectionTimer.IsValid())
-	{
-		SetComponentTickEnabled(false);
 	}
 	HideAllHolograms();
 }

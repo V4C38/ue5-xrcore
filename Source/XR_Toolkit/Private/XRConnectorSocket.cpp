@@ -14,7 +14,7 @@ UXRConnectorSocket::UXRConnectorSocket()
 void UXRConnectorSocket::BeginPlay()
 {
     Super::BeginPlay();
-    CachedSocketState = SocketState;
+    SocketState = DefaultSocketState;
 }
 
 
@@ -26,7 +26,7 @@ void UXRConnectorSocket::SetSocketState(EXRConnectorSocketState InSocketState)
     SocketState = InSocketState;
     if (SocketState != EXRConnectorSocketState::Occupied)
     {
-        CachedSocketState = InSocketState;
+        DefaultSocketState = InSocketState;
     }
 }
 
@@ -59,7 +59,7 @@ void UXRConnectorSocket::DeregisterConnection(UXRConnectorComponent* InConnector
         return;
     }
     AttachedXRConnectors.Remove(InConnectorComponent);
-    SocketState = CachedSocketState;
+    SocketState = DefaultSocketState;
     OnSocketDisconnected.Broadcast(this, InConnectorComponent);
 }
 
@@ -96,7 +96,14 @@ bool UXRConnectorSocket::IsConnectionAllowed(UXRConnectorComponent* InXRConnecto
     {
         return false;
     }
-    return CompatibleConnectorIDs.Contains(InXRConnectorComponent->GetConnectorID());
+    if (!CompatibleConnectorIDs.IsEmpty())
+    {
+        if (!CompatibleConnectorIDs.Contains(InXRConnectorComponent->GetConnectorID()))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool UXRConnectorSocket::IsHologramAllowed() const

@@ -57,7 +57,7 @@ public:
 	* Return the closest of all currently overlapped sockets. 
 	*/
 	UFUNCTION(BlueprintPure, Category = "XRConnector")
-	UXRConnectorSocket* GetClosestOverlappedSocket() const;
+	UXRConnectorSocket* GetClosestOverlappedSocket();
 
 	/*
 	* Return all IDs this XRConnector is compatible with.

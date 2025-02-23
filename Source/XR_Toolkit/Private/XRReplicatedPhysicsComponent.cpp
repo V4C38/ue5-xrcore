@@ -173,15 +173,15 @@ bool UXRReplicatedPhysicsComponent::GetInteractedWith() const
 // -----------------------------------------------------------------------------------------------------------------------------------
 void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 {
+	if (IsSequenceIDNewer(LatestSnapshot.ID, ClientActiveSnapshot.ID))
+	{
+		ClientActiveSnapshot = LatestSnapshot;
+	}
+
 	if (bDebugDisableClientInterpolation)
 	{
 		GetOwner()->SetActorLocationAndRotation(LatestSnapshot.Location, LatestSnapshot.Rotation);
 		return;
-	}
-
-	if (IsSequenceIDNewer(LatestSnapshot.ID, ClientActiveSnapshot.ID))
-	{
-		ClientActiveSnapshot = LatestSnapshot;
 	}
 	float ReplicationInterval = LatestSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
 	float InterpSpeed = (1.0f / (ReplicationInterval * 2.0f));
