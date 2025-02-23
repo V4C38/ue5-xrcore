@@ -120,6 +120,9 @@ protected:
 	UFUNCTION()
 	void OnDeactivated(UActorComponent* Component);
 
+	UPROPERTY()
+	bool bIsSimulatingPhysics = true;
+
 	UFUNCTION()
 	void DelayedPhysicsSetup();
 

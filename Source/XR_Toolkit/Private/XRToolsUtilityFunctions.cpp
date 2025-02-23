@@ -156,31 +156,33 @@ UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionOnActorByPrio
     return GetXRInteractionByPriority(InteractionComponents, InXRInteractor, InPriority, InPrioritySelectionCondition);
 }
 
-bool UXRToolsUtilityFunctions::TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID)
+void UXRToolsUtilityFunctions::TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID)
 {
     if (!InActor || !InConnector)
     {
-        return false;
+        return;
     }
     TArray<UXRConnectorSocket*> ConnectorSockets;
     InActor->GetComponents(ConnectorSockets);
 
     if (ConnectorSockets.Num() == 0)
     {
-        return false;
+        return;
     }
     if (InSocketID.IsEmpty())
     {
-        return InConnector->ConnectToSocket(ConnectorSockets[0]);
+        InConnector->Server_ConnectToSocket(ConnectorSockets[0]);
+        return;
     }
 
     for (UXRConnectorSocket* ConnectorSocket : ConnectorSockets)
     {
         if (ConnectorSocket->GetSocketID() == InSocketID)
         {
-            return InConnector->ConnectToSocket(ConnectorSocket);
+            InConnector->Server_ConnectToSocket(ConnectorSocket);
+            return;
         }
     }
 
-    return false;
+    return;
 }

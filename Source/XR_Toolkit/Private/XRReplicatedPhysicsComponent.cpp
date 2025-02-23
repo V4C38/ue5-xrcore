@@ -123,7 +123,7 @@ void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 	}
 
 	// Do not replicate static objects
-	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith)
+	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith && bIsSimulatingPhysics)
 	{
 		// Replicate only one time, when the object becomes static
 		if (CachedSnapshot.Location != GetOwner()->GetActorLocation())
@@ -214,6 +214,7 @@ void UXRReplicatedPhysicsComponent::SetSimulatePhysicsOnOwner(bool InSimulatePhy
 	{
 		PhysicsMeshComponent->SetSimulatePhysics(InSimulatePhysics);
 	}
+	bIsSimulatingPhysics = InSimulatePhysics;
 }
 
 float UXRReplicatedPhysicsComponent::GetActorVelocity() const

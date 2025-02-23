@@ -14,6 +14,7 @@ UENUM(BlueprintType)
 enum class EXRConnectorSocketState : uint8
 {
 	Enabled UMETA(DisplayName = "Enabled"),
+	Occupied UMETA(DisplayName = "Occupied"),
 	Disabled UMETA(DisplayName = "Disabled"),
 };
 
@@ -110,22 +111,17 @@ protected:
 	/*
 	* Socket State:
 	* Enabled: Accepts new connections
-	* Disabled: no new connections will be allowed
+	* Disabled: No new connections will be allowed
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
 	EXRConnectorSocketState SocketState = EXRConnectorSocketState::Enabled;
+	EXRConnectorSocketState CachedSocketState = EXRConnectorSocketState::Enabled;
 
 	/*
 	* Define compatible XRConnectorSockets via a Name ID.
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
 	TArray<FName> CompatibleConnectorIDs = { "Default" };
-
-	/*
-	* Set how many XRConnectors are allowed to be connected simultaneously to this Socket.
-	*/
-	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
-	int32 AllowedConnections = 1;
 
 	/*
 	* Never allow a hologram to be shown for this socket if true.

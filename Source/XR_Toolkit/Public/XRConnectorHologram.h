@@ -23,7 +23,7 @@ class IXRHologramInterface
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void ShowHologram(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh);
+	void ShowHologram(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
 	void HideHologram(UXRConnectorComponent* InConnector);
@@ -43,7 +43,7 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// API
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-	virtual void ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh) override;
+	virtual void ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale) override;
     virtual void HideHologram_Implementation(UXRConnectorComponent* InConnector) override;
     virtual void SetHologramState_Implementation(UXRConnectorComponent* InConnector, bool InState) override;
 
@@ -67,8 +67,11 @@ protected:
 	*/
 	UPROPERTY(Editanywhere, Category = "XRConnector")
 	float DestroyAfterHiddenSeconds = 10.0f;
+
 	FTimerHandle DestroyActorTimer;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "XRConnector")
+	float HologramMeshScale = 1.0f;
 
 private:	
 
