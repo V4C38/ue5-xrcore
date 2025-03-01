@@ -37,6 +37,12 @@ public:
 	// API
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/**
+	 * Server immediately sends an updated transform to all clients. This works regardless of physics being enabled or not.
+	 **/
+	UFUNCTION(BlueprintCallable, Server, Reliable, Category = "XRCore|Physics Replication")
+	void Server_ForceUpdate();
+
+	/**
 	 * Client: return the latest Snapshot that this Client received from the server. 
 	 * Server: return the Snapshot the server is currently replicating to the clients. 
 	 **/

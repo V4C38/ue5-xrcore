@@ -93,6 +93,7 @@ void UXRInteractionTrigger::Server_SetTriggerState_Implementation(bool InTrigger
 		return;
 	}
 	bTriggerState = InTriggerState;
+	OnTriggerStateChanged.Broadcast(this, bTriggerState, InInteractor);
 	if (GetWorld()->GetNetMode() == NM_Standalone)
 	{
 		OnTriggerStateChanged.Broadcast(this, bTriggerState, InInteractor);

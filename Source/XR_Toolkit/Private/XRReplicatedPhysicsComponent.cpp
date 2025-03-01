@@ -93,6 +93,7 @@ void UXRReplicatedPhysicsComponent::OnRep_CachedSnapshot()
 	LatestSnapshot = CachedSnapshot;
 	if (GetOwnerRole() != ROLE_Authority)
 	{
+		ClientActiveSnapshot = LatestSnapshot;
 		GetOwner()->SetActorLocationAndRotation(CachedSnapshot.Location, CachedSnapshot.Rotation);
 	}
 }
@@ -115,6 +116,12 @@ void UXRReplicatedPhysicsComponent::OnDeactivated(UActorComponent* Component)
 // -----------------------------------------------------------------------------------------------------------------------------------
 // Serverside 
 // -----------------------------------------------------------------------------------------------------------------------------------
+void UXRReplicatedPhysicsComponent::Server_ForceUpdate_Implementation()
+{
+	ServerTick(GetWorld()->GetDeltaSeconds());
+}
+
+
 void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 {
 	if (!IsActive())
@@ -239,21 +246,19 @@ void UXRReplicatedPhysicsComponent::RegisterPhysicsMeshComponents(FName InCompon
 		OutMeshComponents.AddUnique(RootStaticMesh);
 	}
 
-	if (InComponentTag.IsNone())
-	{
-		return;
-	}
-
-	// Get all MeshComponents with the specified tag and add them to the list.
-	TInlineComponentArray<UMeshComponent*> MeshComponents;
-	Owner->GetComponents(MeshComponents);
-	for (UMeshComponent* MeshComponent : MeshComponents)
-	{
-		if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
+	if (!InComponentTag.IsNone())
+	{	// Get all MeshComponents with the specified tag and add them to the list.
+		TInlineComponentArray<UMeshComponent*> MeshComponents;
+		Owner->GetComponents(MeshComponents);
+		for (UMeshComponent* MeshComponent : MeshComponents)
 		{
-			OutMeshComponents.AddUnique(MeshComponent);
+			if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
+			{
+				OutMeshComponents.AddUnique(MeshComponent);
+			}
 		}
 	}
+
 	RegisteredMeshComponents = OutMeshComponents;
 }
 
