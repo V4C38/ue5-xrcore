@@ -67,5 +67,5 @@ public:
 	* @param InSocketID If no ID is provided, it will attempt to connect to the first Socket found on the Actor.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Utilities")
-	static bool TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID);
+	static void TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID);
 };

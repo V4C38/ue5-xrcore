@@ -8,11 +8,13 @@ UXRConnectorSocket::UXRConnectorSocket()
 {
     PrimaryComponentTick.bCanEverTick = false;
     bAutoActivate = true;
+    SetIsReplicatedByDefault(true);
 }
 
 void UXRConnectorSocket::BeginPlay()
 {
     Super::BeginPlay();
+    SocketState = DefaultSocketState;
 }
 
 
@@ -22,6 +24,10 @@ void UXRConnectorSocket::BeginPlay()
 void UXRConnectorSocket::SetSocketState(EXRConnectorSocketState InSocketState)
 {
     SocketState = InSocketState;
+    if (SocketState != EXRConnectorSocketState::Occupied)
+    {
+        DefaultSocketState = InSocketState;
+    }
 }
 
 EXRConnectorSocketState UXRConnectorSocket::GetSocketState() const
@@ -42,10 +48,7 @@ void UXRConnectorSocket::RegisterConnection(UXRConnectorComponent* InConnectorCo
         return;
     }
     AttachedXRConnectors.AddUnique(InConnectorComponent);
-    if (GetAttachedXRConnectors().Num() >= AllowedConnections)
-    {
-        SetSocketState(EXRConnectorSocketState::Disabled);
-    }
+    SocketState = EXRConnectorSocketState::Occupied;
     OnSocketConnected.Broadcast(this, InConnectorComponent);
 }
 
@@ -56,10 +59,7 @@ void UXRConnectorSocket::DeregisterConnection(UXRConnectorComponent* InConnector
         return;
     }
     AttachedXRConnectors.Remove(InConnectorComponent);
-    if (GetAttachedXRConnectors().Num() < AllowedConnections)
-    {
-        SetSocketState(EXRConnectorSocketState::Enabled);
-    }
+    SocketState = DefaultSocketState;
     OnSocketDisconnected.Broadcast(this, InConnectorComponent);
 }
 
@@ -92,11 +92,18 @@ bool UXRConnectorSocket::IsConnectionAllowed(UXRConnectorComponent* InXRConnecto
     {
         return false;
     }
-    if (SocketState == EXRConnectorSocketState::Disabled)
+    if (SocketState == EXRConnectorSocketState::Disabled || SocketState == EXRConnectorSocketState::Occupied)
     {
         return false;
     }
-    return CompatibleConnectorIDs.Contains(InXRConnectorComponent->GetConnectorID());
+    if (!CompatibleConnectorIDs.IsEmpty())
+    {
+        if (!CompatibleConnectorIDs.Contains(InXRConnectorComponent->GetConnectorID()))
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool UXRConnectorSocket::IsHologramAllowed() const

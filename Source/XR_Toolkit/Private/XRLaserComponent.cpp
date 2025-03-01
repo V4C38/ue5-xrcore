@@ -167,6 +167,11 @@ bool UXRLaserComponent::SpawnXRLaserActor()
 void UXRLaserComponent::Server_SetLaserActive_Implementation(bool bInActive)
 {
 	bIsLaserActive = bInActive;
+	if (GetWorld()->GetNetMode() == NM_Standalone)
+	{
+		OnRep_IsActive();
+	}
+
 	Multicast_SetLaserActive(bInActive);
 }
 

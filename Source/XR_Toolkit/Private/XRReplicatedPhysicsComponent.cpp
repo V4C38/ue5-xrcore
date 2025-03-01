@@ -93,6 +93,7 @@ void UXRReplicatedPhysicsComponent::OnRep_CachedSnapshot()
 	LatestSnapshot = CachedSnapshot;
 	if (GetOwnerRole() != ROLE_Authority)
 	{
+		ClientActiveSnapshot = LatestSnapshot;
 		GetOwner()->SetActorLocationAndRotation(CachedSnapshot.Location, CachedSnapshot.Rotation);
 	}
 }
@@ -115,6 +116,12 @@ void UXRReplicatedPhysicsComponent::OnDeactivated(UActorComponent* Component)
 // -----------------------------------------------------------------------------------------------------------------------------------
 // Serverside 
 // -----------------------------------------------------------------------------------------------------------------------------------
+void UXRReplicatedPhysicsComponent::Server_ForceUpdate_Implementation()
+{
+	ServerTick(GetWorld()->GetDeltaSeconds());
+}
+
+
 void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 {
 	if (!IsActive())
@@ -123,7 +130,7 @@ void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 	}
 
 	// Do not replicate static objects
-	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith)
+	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith && bIsSimulatingPhysics)
 	{
 		// Replicate only one time, when the object becomes static
 		if (CachedSnapshot.Location != GetOwner()->GetActorLocation())
@@ -173,15 +180,15 @@ bool UXRReplicatedPhysicsComponent::GetInteractedWith() const
 // -----------------------------------------------------------------------------------------------------------------------------------
 void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 {
+	if (IsSequenceIDNewer(LatestSnapshot.ID, ClientActiveSnapshot.ID))
+	{
+		ClientActiveSnapshot = LatestSnapshot;
+	}
+
 	if (bDebugDisableClientInterpolation)
 	{
 		GetOwner()->SetActorLocationAndRotation(LatestSnapshot.Location, LatestSnapshot.Rotation);
 		return;
-	}
-
-	if (IsSequenceIDNewer(LatestSnapshot.ID, ClientActiveSnapshot.ID))
-	{
-		ClientActiveSnapshot = LatestSnapshot;
 	}
 	float ReplicationInterval = LatestSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
 	float InterpSpeed = (1.0f / (ReplicationInterval * 2.0f));
@@ -214,6 +221,7 @@ void UXRReplicatedPhysicsComponent::SetSimulatePhysicsOnOwner(bool InSimulatePhy
 	{
 		PhysicsMeshComponent->SetSimulatePhysics(InSimulatePhysics);
 	}
+	bIsSimulatingPhysics = InSimulatePhysics;
 }
 
 float UXRReplicatedPhysicsComponent::GetActorVelocity() const
@@ -238,21 +246,19 @@ void UXRReplicatedPhysicsComponent::RegisterPhysicsMeshComponents(FName InCompon
 		OutMeshComponents.AddUnique(RootStaticMesh);
 	}
 
-	if (InComponentTag.IsNone())
-	{
-		return;
-	}
-
-	// Get all MeshComponents with the specified tag and add them to the list.
-	TInlineComponentArray<UMeshComponent*> MeshComponents;
-	Owner->GetComponents(MeshComponents);
-	for (UMeshComponent* MeshComponent : MeshComponents)
-	{
-		if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
+	if (!InComponentTag.IsNone())
+	{	// Get all MeshComponents with the specified tag and add them to the list.
+		TInlineComponentArray<UMeshComponent*> MeshComponents;
+		Owner->GetComponents(MeshComponents);
+		for (UMeshComponent* MeshComponent : MeshComponents)
 		{
-			OutMeshComponents.AddUnique(MeshComponent);
+			if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
+			{
+				OutMeshComponents.AddUnique(MeshComponent);
+			}
 		}
 	}
+
 	RegisteredMeshComponents = OutMeshComponents;
 }
 

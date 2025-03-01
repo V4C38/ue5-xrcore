@@ -32,11 +32,13 @@ void AXRConnectorHologram::RemoveHologram()
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // API
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void AXRConnectorHologram::ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh)
+void AXRConnectorHologram::ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale)
 {
 	if (MeshComponent->GetStaticMesh() != InHologramMesh)
 	{
 		MeshComponent->SetStaticMesh(InHologramMesh);
+		MeshComponent->SetWorldScale3D(FVector(InHologramMeshScale));
+		HologramMeshScale = InHologramMeshScale;
 	}
 	if (GetWorld()->GetTimerManager().IsTimerActive(DestroyActorTimer))
 	{
