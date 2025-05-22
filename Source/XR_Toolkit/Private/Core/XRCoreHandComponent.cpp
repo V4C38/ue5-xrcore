@@ -1,6 +1,6 @@
  
-#include "XRCoreHandComponent.h"
-#include "XRCoreHand.h"
+#include "Core/XRCoreHandComponent.h"
+#include "Core/XRCoreHand.h"
 #include "Net/UnrealNetwork.h"
 
 UXRCoreHandComponent::UXRCoreHandComponent()

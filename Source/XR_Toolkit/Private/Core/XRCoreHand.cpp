@@ -1,6 +1,6 @@
-#include "XRCoreHand.h"
-#include "XRInteractorComponent.h"
-#include "XRLaserComponent.h"
+#include "Core/XRCoreHand.h"
+#include "Core/XRLaserComponent.h"
+#include "Interactions/XRInteractorComponent.h"
 
 AXRCoreHand::AXRCoreHand()
 {

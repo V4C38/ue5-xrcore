@@ -1,11 +1,11 @@
 
 #pragma once
 
+#include "Utilities/XRToolsUtilityFunctions.h"
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
 #include "InputCoreTypes.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
-#include "XRToolsUtilityFunctions.h"
 #include "XRInteractorComponent.generated.h"
 
 class UXRInteractionComponent;

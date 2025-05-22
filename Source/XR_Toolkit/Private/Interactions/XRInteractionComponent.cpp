@@ -1,7 +1,7 @@
 
-#include "XRInteractionComponent.h"
-#include "XRInteractorComponent.h"
-#include "XRHighlightComponent.h"
+#include "Interactions/XRInteractionComponent.h"
+#include "Interactions/XRInteractorComponent.h"
+#include "Utilities/XRHighlightComponent.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"

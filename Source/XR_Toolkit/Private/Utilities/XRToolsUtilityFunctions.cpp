@@ -1,8 +1,8 @@
-#include "XRToolsUtilityFunctions.h"
-#include "XRInteractionComponent.h"
-#include "XRInteractorComponent.h"
-#include "XRConnectorComponent.h"
-#include "XRConnectorSocket.h"
+#include "Utilities/XRToolsUtilityFunctions.h"
+#include "Interactions/XRInteractionComponent.h"
+#include "Interactions/XRInteractorComponent.h"
+#include "Connections/XRConnectorComponent.h"
+#include "Connections/XRConnectorSocket.h"
 
 
 EXRStandard UXRToolsUtilityFunctions::GetXRStandard()

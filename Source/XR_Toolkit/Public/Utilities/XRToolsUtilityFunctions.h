@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Core/XRCoreSettings.h"
 #include "CoreMinimal.h"
-#include "XRCoreSettings.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "XRToolsUtilityFunctions.generated.h"
 

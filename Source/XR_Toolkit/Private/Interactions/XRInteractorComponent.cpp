@@ -1,8 +1,6 @@
-
-
-#include "XRInteractorComponent.h"
-#include "XRInteractionComponent.h"
-#include "XRToolsUtilityFunctions.h"
+#include "Interactions/XRInteractorComponent.h"
+#include "Interactions/XRInteractionComponent.h"
+#include "Utilities/XRToolsUtilityFunctions.h"
 #include "Net/UnrealNetwork.h"
 
 UXRInteractorComponent::UXRInteractorComponent()

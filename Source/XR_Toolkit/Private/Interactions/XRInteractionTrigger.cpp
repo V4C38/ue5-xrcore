@@ -1,5 +1,5 @@
-#include "XRInteractionTrigger.h"
-#include "XRInteractorComponent.h"
+#include "Interactions/XRInteractionTrigger.h"
+#include "Interactions/XRInteractorComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/World.h"
 

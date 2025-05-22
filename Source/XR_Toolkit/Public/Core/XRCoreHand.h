@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "XRCoreHandComponent.h"
+#include "Core/XRCoreHandComponent.h"
 #include "XRCoreHand.generated.h"
 
 class UXRInteractorComponent;

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
-#include "XRInteractorComponent.h"
+#include "Interactions/XRInteractorComponent.h"
 #include "XRLaserComponent.generated.h"
 
 class UXRLaserComponent;

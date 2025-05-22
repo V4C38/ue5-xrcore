@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "XRConnectorComponent.h"
-#include "XRConnectorSocket.h"
-#include "XRConnectorHologram.h"
-#include "XRToolsUtilityFunctions.h"
-#include "XRInteractionGrab.h"
-#include "XRReplicatedPhysicsComponent.h"
+#include "Connections/XRConnectorComponent.h"
+#include "Connections/XRConnectorSocket.h"
+#include "Connections/XRConnectorHologram.h"
+#include "Interactions/XRInteractionGrab.h"
+#include "Utilities/XRToolsUtilityFunctions.h"
+#include "Utilities/XRReplicatedPhysicsComponent.h"
 #include "Net/UnrealNetwork.h"
 
 UXRConnectorComponent::UXRConnectorComponent()

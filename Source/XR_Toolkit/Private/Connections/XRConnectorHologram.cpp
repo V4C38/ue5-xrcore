@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "XRConnectorHologram.h"
-#include "XRConnectorComponent.h"
+#include "Connections/XRConnectorHologram.h"
+#include "Connections/XRConnectorComponent.h"
 
 AXRConnectorHologram::AXRConnectorHologram()
 {

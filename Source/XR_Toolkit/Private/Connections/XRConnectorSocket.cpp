@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "XRConnectorSocket.h"
-#include "XRConnectorComponent.h"
+#include "Connections/XRConnectorSocket.h"
+#include "Connections/XRConnectorComponent.h"
 
 UXRConnectorSocket::UXRConnectorSocket()
 {

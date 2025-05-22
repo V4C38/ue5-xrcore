@@ -1,6 +1,6 @@
-#include "XRInteractionGrab.h"
-#include "XRReplicatedPhysicsComponent.h"
-#include "XRInteractorComponent.h"
+#include "Interactions/XRInteractionGrab.h"
+#include "Interactions/XRInteractorComponent.h"
+#include "Utilities/XRReplicatedPhysicsComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "Net/UnrealNetwork.h"
 

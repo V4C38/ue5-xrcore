@@ -1,4 +1,4 @@
-#include "XRCoreSettings.h"
+#include "Core/XRCoreSettings.h"
 
 UXRCoreSettings::UXRCoreSettings(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

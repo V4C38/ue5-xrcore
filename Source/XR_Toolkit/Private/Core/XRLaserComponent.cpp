@@ -1,6 +1,6 @@
 
-#include "XRLaserComponent.h"
-#include "XRInteractorComponent.h"
+#include "Core/XRLaserComponent.h"
+#include "Interactions/XRInteractorComponent.h"
 #include "Net/UnrealNetwork.h"
 
 

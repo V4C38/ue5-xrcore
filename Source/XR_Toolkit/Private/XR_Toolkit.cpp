@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "XR_Toolkit.h"
-#include "XRCoreSettings.h"
+#include "Core/XRCoreSettings.h"
 #include "ISettingsModule.h"
 
 #define LOCTEXT_NAMESPACE "FXR_ToolkitModule"

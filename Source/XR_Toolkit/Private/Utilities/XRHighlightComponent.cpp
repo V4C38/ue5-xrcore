@@ -1,5 +1,4 @@
-
-#include "XRHighlightComponent.h"
+#include "Utilities/XRHighlightComponent.h"
 
 UXRHighlightComponent::UXRHighlightComponent()
 {

@@ -1,5 +1,5 @@
-#include "XRReplicatedPhysicsComponent.h"
-#include "XRCoreSettings.h"
+#include "Utilities/XRReplicatedPhysicsComponent.h"
+#include "Core/XRCoreSettings.h"
 #include "Net/UnrealNetwork.h"
 
 UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()

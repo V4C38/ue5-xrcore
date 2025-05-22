@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "XRInteractionComponent.h"
+#include "Interactions/XRInteractionComponent.h"
 #include "XRInteractionTrigger.generated.h"
 
 class UXRInteractionTrigger;
