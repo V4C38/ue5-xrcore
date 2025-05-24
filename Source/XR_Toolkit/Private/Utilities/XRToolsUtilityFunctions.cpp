@@ -186,3 +186,17 @@ void UXRToolsUtilityFunctions::TryConnectToActor(UXRConnectorComponent* InConnec
 
     return;
 }
+
+
+ESimplifiedControllerHand UXRToolsUtilityFunctions::SimplyfyControllerHandEnum(EControllerHand InControllerHand)
+{
+    switch (InControllerHand)
+    {
+    case EControllerHand::Left:
+        return ESimplifiedControllerHand::Left;
+    case EControllerHand::Right:
+        return ESimplifiedControllerHand::Right;
+    default:
+        return ESimplifiedControllerHand::Any;
+    }
+}

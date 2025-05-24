@@ -2,6 +2,7 @@
 
 #include "Core/XRCoreSettings.h"
 #include "CoreMinimal.h"
+#include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "XRToolsUtilityFunctions.generated.h"
 
@@ -14,6 +15,29 @@ enum class EXRInteractionPrioritySelection : uint8
 	Equal UMETA(DisplayName = "Exactly this priority"),
 	HigherEqual UMETA(DisplayName = "This priority, then higher"),
 	LowerEqual UMETA(DisplayName = "This priority, then lower"),
+};
+
+UENUM(BlueprintType)
+enum class ESimplifiedControllerHand : uint8
+{
+	Left UMETA(DisplayName = "Left"),
+	Right UMETA(DisplayName = "Right"),
+	Any UMETA(DisplayName = "Any Hand"),
+};
+
+USTRUCT(BlueprintType)
+struct FLocationAndRotation
+{
+	GENERATED_BODY();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|Utilities")
+	FVector Location;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|Utilities")
+	FRotator Rotation;
+
+	FLocationAndRotation()
+		: Location(FVector::ZeroVector), Rotation(FRotator::ZeroRotator) {}
 };
 
 UCLASS()
@@ -68,4 +92,12 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "XRCore|Utilities")
 	static void TryConnectToActor(UXRConnectorComponent* InConnector, AActor* InActor, const FString& InSocketID);
+
+
+	/**
+	* Maps EControllerHand to ESimplifiedControllerHand which effectively outputs "any" for all types but right and left.
+	* @param InControllerHand The enum to be reduced to use any for all fields but Right and left
+	 */
+	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
+	static ESimplifiedControllerHand SimplyfyControllerHandEnum(EControllerHand InControllerHand);
 };
