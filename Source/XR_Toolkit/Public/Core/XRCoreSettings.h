@@ -1,21 +1,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "Engine/DeveloperSettings.h"
+#include "UObject/NoExportTypes.h"
+
+#include "Core/XRCoreTypes.h"
+
 #include "XRCoreSettings.generated.h"
 
 
-UENUM(BlueprintType)
-enum class EXRStandard : uint8
-{
-	OpenXR UMETA(DisplayName = "OpenXR"),
-	MetaXR UMETA(DisplayName = "MetaXR"),
-};
+// ================================================================================================================================================================
+// Default settings for XRCore
+// ================================================================================================================================================================
 
-/**
- * Default settings for XRCore
- */
 UCLASS(config = XRCore, defaultconfig)
 class XR_TOOLKIT_API UXRCoreSettings : public UDeveloperSettings
 {
@@ -64,12 +61,12 @@ public:
 	/**
 	 * The replication interval, in seconds, for sending snapshots from the server to all clients. 
 	**/
-	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
+	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication", meta = (ClampMin = "0.0"))
 	float DefaultReplicationInterval = 0.1f;
 
 	/**
 	 * The replication interval, in seconds, for when the Actor is currently interacted with.
 	 **/
-	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication")
+	UPROPERTY(EditDefaultsOnly, Category = "Physics Replication", meta = (ClampMin = "0.0"))
 	float InteractedReplicationInterval = 0.01f;
 };

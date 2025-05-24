@@ -5,9 +5,12 @@
 #include "Components/TimelineComponent.h"
 #include "Components/ActorComponent.h"
 #include "Components/MeshComponent.h"
+
 #include "XRHighlightComponent.generated.h"
 
-
+// ================================================================================================================================================================
+// Material based highlighting on assigned UMeshComponents
+// ================================================================================================================================================================
 
 UCLASS(Blueprintable, ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRHighlightComponent : public UActorComponent

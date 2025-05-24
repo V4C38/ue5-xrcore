@@ -464,7 +464,7 @@ void UXRConnectorComponent::SetHologramState(UXRConnectorSocket* InSocket, bool 
 		auto Hologram = FoundHologram->Get();
 		if (Hologram->Implements<UXRHologramInterface>())
 		{
-			IXRHologramInterface::Execute_SetHologramState(Hologram, this, InState);
+			IXRHologramInterface::Execute_SetHologramEnabled(Hologram, this, InState);
 		}
 	}
 	else

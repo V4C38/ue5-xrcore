@@ -60,7 +60,7 @@ void AXRCoreHand::Tick(float DeltaTime)
     }
 }
 
-FXRCoreHandData AXRCoreHand::GetReplicatedHandData() const
+FXRCoreHandReplicationData AXRCoreHand::GetReplicatedHandData() const
 {
     return ReplicatedHandData;
 }
@@ -117,7 +117,7 @@ APawn* AXRCoreHand::GetOwningPawn_Implementation() const
     return OwningPawn;
 }
 
-void AXRCoreHand::Client_UpdateXRCoreHandData_Implementation(const FXRCoreHandData& InXRCoreHandData)
+void AXRCoreHand::Client_UpdateXRCoreHandReplicationData_Implementation(const FXRCoreHandReplicationData& InXRCoreHandData)
 {
     if (!bIsLocallyControlled)
     {

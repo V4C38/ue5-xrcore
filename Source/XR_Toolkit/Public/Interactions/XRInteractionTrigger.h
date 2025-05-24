@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Interactions/XRInteractionComponent.h"
+
 #include "XRInteractionTrigger.generated.h"
 
 class UXRInteractionTrigger;
@@ -16,6 +18,10 @@ enum class EXRInteractionTriggerBehavior : uint8
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTriggerStateChanged, UXRInteractionTrigger*, Sender, bool, TriggerState, UXRInteractorComponent*, Interactor);
+
+// ================================================================================================================================================================
+// Trigger Interaction, state keeping switch with multiple modes
+// ================================================================================================================================================================
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
 class XR_TOOLKIT_API UXRInteractionTrigger : public UXRInteractionComponent

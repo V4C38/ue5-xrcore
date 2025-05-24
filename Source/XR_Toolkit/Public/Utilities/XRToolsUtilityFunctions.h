@@ -1,44 +1,22 @@
 #pragma once
 
-#include "Core/XRCoreSettings.h"
 #include "CoreMinimal.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+
+#include "Core/XRCoreSettings.h"
+#include "Core/XRCoreTypes.h"
+#include "Interactions/XRInteractionTypes.h"
+
 #include "XRToolsUtilityFunctions.generated.h"
 
 class UXRInteractionComponent;
 class UXRInteractorComponent;
 
-UENUM(BlueprintType)
-enum class EXRInteractionPrioritySelection : uint8
-{
-	Equal UMETA(DisplayName = "Exactly this priority"),
-	HigherEqual UMETA(DisplayName = "This priority, then higher"),
-	LowerEqual UMETA(DisplayName = "This priority, then lower"),
-};
 
-UENUM(BlueprintType)
-enum class ESimplifiedControllerHand : uint8
-{
-	Left UMETA(DisplayName = "Left"),
-	Right UMETA(DisplayName = "Right"),
-	Any UMETA(DisplayName = "Any Hand"),
-};
-
-USTRUCT(BlueprintType)
-struct FLocationAndRotation
-{
-	GENERATED_BODY();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|Utilities")
-	FVector Location;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|Utilities")
-	FRotator Rotation;
-
-	FLocationAndRotation()
-		: Location(FVector::ZeroVector), Rotation(FRotator::ZeroRotator) {}
-};
+// ================================================================================================================================================================
+// XRCore utility functions and helüers
+// ================================================================================================================================================================
 
 UCLASS()
 class XR_TOOLKIT_API UXRToolsUtilityFunctions : public UBlueprintFunctionLibrary

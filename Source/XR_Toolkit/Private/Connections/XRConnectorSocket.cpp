@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Connections/XRConnectorSocket.h"
 #include "Connections/XRConnectorComponent.h"
 
@@ -49,7 +46,7 @@ void UXRConnectorSocket::RegisterConnection(UXRConnectorComponent* InConnectorCo
     }
     AttachedXRConnectors.AddUnique(InConnectorComponent);
     SocketState = EXRConnectorSocketState::Occupied;
-    OnSocketConnected.Broadcast(this, InConnectorComponent);
+    OnConnectedTo.Broadcast(this, InConnectorComponent);
 }
 
 void UXRConnectorSocket::DeregisterConnection(UXRConnectorComponent* InConnectorComponent)
@@ -60,7 +57,7 @@ void UXRConnectorSocket::DeregisterConnection(UXRConnectorComponent* InConnector
     }
     AttachedXRConnectors.Remove(InConnectorComponent);
     SocketState = DefaultSocketState;
-    OnSocketDisconnected.Broadcast(this, InConnectorComponent);
+    OnDisconnectedFrom.Broadcast(this, InConnectorComponent);
 }
 
 TArray<UXRConnectorComponent*> UXRConnectorSocket::GetAttachedXRConnectors() const

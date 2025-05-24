@@ -1,37 +1,19 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/Interface.h"
-#include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
+#include "GameFramework/Actor.h"
+#include "UObject/Interface.h"
+
+#include "Connections/XRConnectorTypes.h"
+
 #include "XRConnectorHologram.generated.h"
 
 class UXRConnectorComponent;
 
-
-UINTERFACE(MinimalAPI, BlueprintType)
-class UXRHologramInterface : public UInterface
-{
-	GENERATED_BODY()
-};
-
-class IXRHologramInterface
-{
-	GENERATED_BODY()
-
-public:
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void ShowHologram(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void HideHologram(UXRConnectorComponent* InConnector);
-
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void SetHologramState(UXRConnectorComponent* InConnector, bool InState);
-};
-
+// ================================================================================================================================================================
+// Static mesh (or other visual) to indicate available connection sockets for an XRConnector with matching ID
+// ================================================================================================================================================================
 UCLASS()
 class XR_TOOLKIT_API AXRConnectorHologram : public AActor, public IXRHologramInterface
 {
@@ -45,7 +27,7 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	virtual void ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale) override;
     virtual void HideHologram_Implementation(UXRConnectorComponent* InConnector) override;
-    virtual void SetHologramState_Implementation(UXRConnectorComponent* InConnector, bool InState) override;
+    virtual void SetHologramEnabled_Implementation(UXRConnectorComponent* InConnector, bool InState) override;
 
 
 protected:
@@ -65,14 +47,17 @@ protected:
 	* Time in seconds after which a hidden Hologram will be destroyed.
 	* Note: if this becomes a performance issue in the future, an ObjectPool can be implemented instead.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector")
+	UPROPERTY(Editanywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
 	float DestroyAfterHiddenSeconds = 10.0f;
 
-	FTimerHandle DestroyActorTimer;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "XRConnector")
+	/*
+	* Override the scale of the StaticMesh in the hologram. This is also set by the connector when the hologram is requested.
+	*/
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "XRConnector", meta = (ClampMin = "0.0"))
 	float HologramMeshScale = 1.0f;
 
-private:	
+private:
+
+	FTimerHandle DestroyActorTimer;
 
 };

@@ -1,10 +1,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "Interactions/XRInteractionComponent.h"
+
 #include "XRInteractionGrab.generated.h"
 
 class UXRReplicatedPhysicsComponent;
+
+// ================================================================================================================================================================
+// Grab Interaction, physics or kinematics based
+// ================================================================================================================================================================
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
 class XR_TOOLKIT_API UXRInteractionGrab : public UXRInteractionComponent
@@ -17,7 +23,6 @@ public:
 
     void StartInteraction(UXRInteractorComponent* InInteractor) override;
     void EndInteraction(UXRInteractorComponent* InInteractor) override;
-
 
     /**
     * Enable Replicated Physics. 
@@ -58,7 +63,6 @@ protected:
     void PhysicsGrab(UXRInteractorComponent* InInteractor);
     UFUNCTION()
     void PhysicsUngrab(UXRInteractorComponent* InInteractor);
-
 
 
     /**

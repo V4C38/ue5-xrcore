@@ -1,12 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "UObject/NoExportTypes.h"
 #include "Engine/StaticMeshActor.h"
 #include "TimerManager.h"
+#include "UObject/NoExportTypes.h"
+
 #include "XRConnectorComponent.generated.h"
 
 class UXRConnectorComponent;
@@ -19,6 +18,9 @@ class UXRInteractorComponent;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnConnected, UXRConnectorComponent*, Sender, UXRConnectorSocket*, XRConnectorSocket);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDisconnected, UXRConnectorComponent*, Sender, UXRConnectorSocket*, XRConnectorSocket);
 
+// ================================================================================================================================================================
+// Connects the owning Actor to an XRConnectionSocket 
+// ================================================================================================================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRConnectorComponent : public UActorComponent
 {
@@ -124,16 +126,9 @@ protected:
 	* A connection will be established when the distance between the OwningActor and Socket is below this Treshold.
 	* Note: The OwningActor must be within the Collision of the Socket for this to work.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector")
+	UPROPERTY(Editanywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
 	float MinDistanceToConnect = 10.0;
 	float MinDistanceToConnectSquared = 0.0f;
-
-	/*
-	* Time in seconds the connector will interpolate towards the socket when a connection is established.
-	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector")
-	float EstablishConnectionTime = 0.5f;
-	FTimerHandle EstablishConnectionTimer;
 
 	/*
 	* If true, will find the highest priority XRInteractionGrab on this Actor and bind to the OnInteractionStarted and  OnInteractionEnded events.
@@ -169,7 +164,7 @@ protected:
 	/*
 	* Set the scale of the StaticMesh in the Hologram.
 	*/
-	UPROPERTY(EditAnywhere, Category = "XRConnector|Hologram")
+	UPROPERTY(EditAnywhere, Category = "XRConnector|Hologram", meta = (ClampMin = "0.0"))
 	float HologramScale = 1.0;
 
 	UFUNCTION()
@@ -186,28 +181,26 @@ protected:
 
 private:	
 
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Overlap Logic
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void InitializeOverlapBindings();
 	TArray<UPrimitiveComponent*> OwnerCollisions = {};
 	TArray<TWeakObjectPtr<UXRConnectorSocket>> OverlappedSockets = {};
-
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnOverlapEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Hologram
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	TMap<TWeakObjectPtr<UXRConnectorSocket>, TWeakObjectPtr<AActor>> AssignedHolograms = {};
 
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Interaction Mappings
-	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	void InitializeInteractionBindings();
 	UXRInteractionGrab* BoundGrabComponent = nullptr;
+
+	// Time in seconds the connector will interpolate towards the socket when a connection is established.
+	UPROPERTY(Editanywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
+	float EstablishConnectionTime = 0.5f;
+	FTimerHandle EstablishConnectionTimer;
 
 	UFUNCTION()
 	void OnInteractionStarted(UXRInteractionComponent* Sender, UXRInteractorComponent* XRInteractorComponent);

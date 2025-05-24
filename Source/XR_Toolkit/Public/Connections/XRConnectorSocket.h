@@ -1,26 +1,21 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
+
+#include "Connections/XRConnectorTypes.h"
+
 #include "XRConnectorSocket.generated.h"
 
 class UXRConnectorComponent;
 class UXRConnectorSocket;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnConnectedTo, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDisconnectedFrom, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
 
-UENUM(BlueprintType)
-enum class EXRConnectorSocketState : uint8
-{
-	Available UMETA(DisplayName = "Available"),
-	Occupied UMETA(DisplayName = "Occupied"),
-	Disabled UMETA(DisplayName = "Disabled"),
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSocketConnected, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnSocketDisconnected, UXRConnectorSocket*, Sender, UXRConnectorComponent*, XRConnector);
-
+// ================================================================================================================================================================
+// Socket that accepts a connecting XRConnector with matching ID. 
+// ================================================================================================================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRConnectorSocket : public USphereComponent
 {
@@ -30,9 +25,9 @@ public:
 	UXRConnectorSocket();
 
 	UPROPERTY(BlueprintAssignable, Category = "XRConnectorSocket")
-	FOnSocketConnected OnSocketConnected;
+	FOnConnectedTo OnConnectedTo;
 	UPROPERTY(BlueprintAssignable, Category = "XRConnectorSocket")
-	FOnSocketDisconnected OnSocketDisconnected;
+	FOnDisconnectedFrom OnDisconnectedFrom;
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// API

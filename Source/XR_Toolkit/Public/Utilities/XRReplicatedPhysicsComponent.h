@@ -3,8 +3,14 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "XRReplicatedPhysicsComponent.generated.h"
 
+
+// ================================================================================================================================================================
+// Snapshot based, Server authoritative physics replication system
+// This component can be added to any replicated actor with a StaticMeshComponent as the root
+// ================================================================================================================================================================
 
 USTRUCT(BlueprintType)
 struct FXRPhysicsSnapshot

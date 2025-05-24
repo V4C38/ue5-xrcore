@@ -4,40 +4,23 @@
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
 #include "Sound/SoundBase.h"
-#include "XRInteractionComponent.generated.h"
 
+#include "Interactions/XRInteractionTypes.h"
+
+#include "XRInteractionComponent.generated.h"
 
 class UXRInteractorComponent;
 class UXRInteractionComponent;
 class UXRInteractionHighlightComponent;
 
-UENUM(BlueprintType)
-enum class EXRInteractionPriority : uint8
-{
-	Primary UMETA(DisplayName = "Primary"),
-	Secondary UMETA(DisplayName = "Secondary"),
-	Custom UMETA(DisplayName = "Custom"),
-};
-
-UENUM(BlueprintType)
-enum class EXRLaserBehavior : uint8
-{
-	Disabled UMETA(DisplayName = "Disabled"),
-	Supress UMETA(DisplayName = "Supress while Interacting"),
-	Snap UMETA(DisplayName = "Snap to Interaction"),
-};
-
-UENUM(BlueprintType)
-enum class EXRMultiInteractorBehavior : uint8
-{
-	Enabled UMETA(DisplayName = "Allow multiple Interactors"),
-	Disabled UMETA(DisplayName = "Only Single Interactor"),
-	TakeOver UMETA(DisplayName = "Take over from current Interactor"),
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionStarted, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInteractionEnded, UXRInteractionComponent*, Sender, UXRInteractorComponent*, XRInteractorComponent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnInteractionHovered, UXRInteractionComponent*, Sender, UXRInteractorComponent*, HoveringXRInteractor, bool, bHovered);
+
+
+// ================================================================================================================================================================
+// Abstract component for replicated Interactions, handled by an XRInteractor
+// ================================================================================================================================================================
 
 UCLASS(Blueprintable, ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
 class XR_TOOLKIT_API UXRInteractionComponent : public USceneComponent
@@ -46,7 +29,6 @@ class XR_TOOLKIT_API UXRInteractionComponent : public USceneComponent
 
 public:	
 	UXRInteractionComponent();
-
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Interaction Events
@@ -178,6 +160,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="XRCore|Interaction")
 	void OnInteractionHover(bool bHovering, UXRInteractorComponent* HoveringXRInteractor);
 
+
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - General
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,6 +199,7 @@ protected:
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Interaction|General")
 	EXRLaserBehavior LaserBehavior = EXRLaserBehavior::Snap;
+
 
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// Config - Highlighting

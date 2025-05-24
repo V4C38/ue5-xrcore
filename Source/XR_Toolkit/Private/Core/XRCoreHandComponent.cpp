@@ -96,7 +96,7 @@ void UXRCoreHandComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 
 	if (bIsLocallyControlled)
 	{
-		FXRCoreHandData HandData;
+		FXRCoreHandReplicationData HandData;
 		HandData.Location = GetComponentLocation();
 		HandData.Rotation = GetComponentQuat();
 		HandData.PrimaryInputAxis = PrimaryInputAxisValue;
@@ -106,16 +106,16 @@ void UXRCoreHandComponent::TickComponent(float DeltaTime, ELevelTick TickType, F
 	}
 }
 
-void UXRCoreHandComponent::Server_UpdateHandData_Implementation(FXRCoreHandData InXRCoreHandData)
+void UXRCoreHandComponent::Server_UpdateHandData_Implementation(FXRCoreHandReplicationData InXRCoreHandData)
 {
 	Multicast_UpdateHandData(InXRCoreHandData);
 }
 
-void UXRCoreHandComponent::Multicast_UpdateHandData_Implementation(FXRCoreHandData InXRCoreHandData)
+void UXRCoreHandComponent::Multicast_UpdateHandData_Implementation(FXRCoreHandReplicationData InXRCoreHandData)
 {
 	if (XRCoreHand)
 	{
-		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandData(XRCoreHand, InXRCoreHandData);
+		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandReplicationData(XRCoreHand, InXRCoreHandData);
 	}
 }
 
@@ -192,10 +192,10 @@ APawn* UXRCoreHandComponent::GetOwningPawn_Implementation() const
 	return OwningPawn;
 }
 
-void UXRCoreHandComponent::Client_UpdateXRCoreHandData_Implementation(const FXRCoreHandData& InXRCoreHandData)
+void UXRCoreHandComponent::Client_UpdateXRCoreHandReplicationData_Implementation(const FXRCoreHandReplicationData& InXRCoreHandData)
 {
 	if (XRCoreHand)
 	{
-		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandData(XRCoreHand, InXRCoreHandData);
+		IXRCoreHandInterface::Execute_Client_UpdateXRCoreHandReplicationData(XRCoreHand, InXRCoreHandData);
 	}
 }

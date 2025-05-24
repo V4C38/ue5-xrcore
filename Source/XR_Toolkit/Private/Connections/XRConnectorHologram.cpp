@@ -55,7 +55,7 @@ void AXRConnectorHologram::HideHologram_Implementation(UXRConnectorComponent* In
 	GetWorld()->GetTimerManager().SetTimer(DestroyActorTimer, this, &AXRConnectorHologram::RemoveHologram, DestroyAfterHiddenSeconds, false);
 }
 
-void AXRConnectorHologram::SetHologramState_Implementation(UXRConnectorComponent* InConnector, bool InState)
+void AXRConnectorHologram::SetHologramEnabled_Implementation(UXRConnectorComponent* InConnector, bool InState)
 {
 }
 
