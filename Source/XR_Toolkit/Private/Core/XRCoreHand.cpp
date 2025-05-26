@@ -54,7 +54,8 @@ void AXRCoreHand::Tick(float DeltaTime)
 
         // Smooth interpolation
         FVector NewLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, DeltaTime, InterpolationSpeed);
-        FQuat NewRot = FQuat::Slerp(CurrentRot, TargetRot, DeltaTime * InterpolationSpeed);
+        FQuat NewRot = FQuat::FastLerp(CurrentRot, TargetRot, DeltaTime * InterpolationSpeed).GetNormalized();
+
 
         SetActorLocationAndRotation(NewLoc, NewRot);
     }

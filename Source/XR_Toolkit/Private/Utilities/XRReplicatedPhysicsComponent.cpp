@@ -14,12 +14,8 @@ void UXRReplicatedPhysicsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FString PluginConfigPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("XRToolkit"), TEXT("Config"), TEXT("DefaultXRToolkit.ini"));
-	if (GConfig)
-	{
-		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("DefaultReplicationInterval"), DefaultReplicationInterval, PluginConfigPath);
-		GConfig->GetFloat(TEXT("/Script/XRToolkit.XRReplicatedPhysicsComponent"), TEXT("InteractedReplicationInterval"), InteractedReplicationInterval, PluginConfigPath);
-	}
+	float DefaultInterval = GetDefault<UXRCoreSettings>()->DefaultReplicationInterval;
+	float InteractedInterval = GetDefault<UXRCoreSettings>()->InteractedReplicationInterval;
 
 	RegisterPhysicsMeshComponents(RegisterMeshComponentsWithTag);
 	if (GetOwnerRole() == ROLE_Authority )
@@ -29,8 +25,8 @@ void UXRReplicatedPhysicsComponent::BeginPlay()
 		NewSnapshot.Location = GetOwner()->GetActorLocation();
 		NewSnapshot.Rotation = GetOwner()->GetActorRotation();
 		NewSnapshot.bIsInteractedWith = false;
-		LatestSnapshot = NewSnapshot;
-		Server_SetCachedSnapshot(NewSnapshot);
+
+		Server_SetReplicatedSnapshot(NewSnapshot);
 		SetSimulatePhysicsOnOwner(true);
 	}
 	
@@ -88,24 +84,27 @@ void UXRReplicatedPhysicsComponent::TickComponent(float DeltaTime, ELevelTick Ti
 // -----------------------------------------------------------------------------------------------------------------------------------
 // State
 // -----------------------------------------------------------------------------------------------------------------------------------
-void UXRReplicatedPhysicsComponent::OnRep_CachedSnapshot()
+void UXRReplicatedPhysicsComponent::OnRep_ReplicatedSnapshot()
 {
-	LatestSnapshot = CachedSnapshot;
 	if (GetOwnerRole() != ROLE_Authority)
 	{
-		ClientActiveSnapshot = LatestSnapshot;
-		GetOwner()->SetActorLocationAndRotation(CachedSnapshot.Location, CachedSnapshot.Rotation);
+		ClientActiveSnapshot = ReplicatedSnapshot;
+		GetOwner()->SetActorLocationAndRotation(ReplicatedSnapshot.Location, ReplicatedSnapshot.Rotation);
 	}
 }
 
 FXRPhysicsSnapshot UXRReplicatedPhysicsComponent::GetLatestSnapshot() const
 {
-	return LatestSnapshot;
+	return ReplicatedSnapshot;
 }
 
 void UXRReplicatedPhysicsComponent::OnActivated(UActorComponent* Component, bool bReset)
 {
-	SetSimulatePhysicsOnOwner(GetOwnerRole() == ROLE_Authority);
+	bool bShouldSimulate = (GetOwnerRole() == ROLE_Authority);
+	if (bShouldSimulate != bIsSimulatingPhysics)
+	{
+		SetSimulatePhysicsOnOwner(bShouldSimulate);
+	}
 }
 
 void UXRReplicatedPhysicsComponent::OnDeactivated(UActorComponent* Component)
@@ -133,36 +132,38 @@ void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith && bIsSimulatingPhysics)
 	{
 		// Replicate only one time, when the object becomes static
-		if (CachedSnapshot.Location != GetOwner()->GetActorLocation())
+		if (ReplicatedSnapshot.Location != GetOwner()->GetActorLocation())
 		{
 			FXRPhysicsSnapshot NewSnapshot;
 			NewSnapshot.ID = 0;
 			NewSnapshot.Location = GetOwner()->GetActorLocation();
 			NewSnapshot.Rotation = GetOwner()->GetActorRotation();
 			NewSnapshot.bIsInteractedWith = false;
-			Server_SetCachedSnapshot(NewSnapshot);
+
+			Server_SetReplicatedSnapshot(NewSnapshot);
 		}
 		return;
 	}
 
-	float ReplicationInterval = LatestSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
+	float ReplicationInterval = ReplicatedSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
 	AccumulatedTime += DeltaTime;
 	if (AccumulatedTime >= ReplicationInterval)
 	{
 		FXRPhysicsSnapshot NewSnapshot;
-		NewSnapshot.ID = LatestSnapshot.ID + 1;
+		NewSnapshot.ID = ReplicatedSnapshot.ID + 1;
 		NewSnapshot.Location = GetOwner()->GetActorLocation();
 		NewSnapshot.Rotation = GetOwner()->GetActorRotation();
 		NewSnapshot.bIsInteractedWith = bIsInteractedWith;
 
-		LatestSnapshot = NewSnapshot;
+		Server_SetReplicatedSnapshot(NewSnapshot);
+
 		AccumulatedTime = 0.0f;
 	}
 }
 
-void UXRReplicatedPhysicsComponent::Server_SetCachedSnapshot_Implementation(FXRPhysicsSnapshot InCachedSnapshot)
+void UXRReplicatedPhysicsComponent::Server_SetReplicatedSnapshot_Implementation(FXRPhysicsSnapshot InReplicatedSnapshot)
 {
-	CachedSnapshot = InCachedSnapshot;
+	ReplicatedSnapshot = InReplicatedSnapshot;
 }
 
 void UXRReplicatedPhysicsComponent::SetInteractedWith(bool bInInteracedWith)
@@ -180,18 +181,20 @@ bool UXRReplicatedPhysicsComponent::GetInteractedWith() const
 // -----------------------------------------------------------------------------------------------------------------------------------
 void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 {
-	if (IsSequenceIDNewer(LatestSnapshot.ID, ClientActiveSnapshot.ID))
+	if (IsSequenceIDNewer(ReplicatedSnapshot.ID, ClientActiveSnapshot.ID))
 	{
-		ClientActiveSnapshot = LatestSnapshot;
+		ClientActiveSnapshot = ReplicatedSnapshot;
 	}
 
 	if (bDebugDisableClientInterpolation)
 	{
-		GetOwner()->SetActorLocationAndRotation(LatestSnapshot.Location, LatestSnapshot.Rotation);
+		GetOwner()->SetActorLocationAndRotation(ReplicatedSnapshot.Location, ReplicatedSnapshot.Rotation);
 		return;
 	}
-	float ReplicationInterval = LatestSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
-	float InterpSpeed = (1.0f / (ReplicationInterval * 2.0f));
+	float ReplicationInterval = ReplicatedSnapshot.bIsInteractedWith != 0 ? InteractedReplicationInterval : DefaultReplicationInterval;
+	float SafeInterval = FMath::Max(ReplicationInterval * 2.0f, KINDA_SMALL_NUMBER);
+	float InterpSpeed = 1.0f / SafeInterval;
+
 
 	FVector TargetLocation = ClientActiveSnapshot.Location;
 	FRotator TargetRotation = ClientActiveSnapshot.Rotation;
@@ -205,10 +208,7 @@ void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 
 bool UXRReplicatedPhysicsComponent::IsSequenceIDNewer(uint32 InID1, uint32 InID2) const
 {
-	int32 delta = InID1 - InID2;
-
-	// Check if InID1 is "ahead" of InID2, considering wrap-around.
-	return (delta > 0) || (delta < -static_cast<int32>(UINT32_MAX / 2));
+	return int32(InID1 - InID2) > 0;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------
@@ -274,6 +274,5 @@ TArray<UMeshComponent*> UXRReplicatedPhysicsComponent::GetRegisteredMeshComponen
 void UXRReplicatedPhysicsComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UXRReplicatedPhysicsComponent, LatestSnapshot);
-	DOREPLIFETIME(UXRReplicatedPhysicsComponent, CachedSnapshot);
+	DOREPLIFETIME(UXRReplicatedPhysicsComponent, ReplicatedSnapshot);
 }

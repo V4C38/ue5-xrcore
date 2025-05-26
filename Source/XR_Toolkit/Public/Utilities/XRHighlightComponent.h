@@ -34,10 +34,10 @@ public:
 	void SetHighlighted(float InHighlightState);
 
 	/**
-	 * Returns the current HighlightState. 0 - off, 1 - on, 2 - on, special state
+	 * 0 = off, 1 = on; if curve drives state, range is [0,1]
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Highlight")
-	float GetHighlightState();
+	float GetHighlightState() const;
 
 	/**
 	 * Using SetHighlightState() to Fade In or Out the Highlight via a Timeline controlled by the HighlightFadeCurve.

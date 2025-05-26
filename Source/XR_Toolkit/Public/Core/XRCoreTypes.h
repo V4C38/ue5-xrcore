@@ -150,9 +150,9 @@ UENUM(BlueprintType)
 enum class EXRLaserState : uint8
 {
 	Inactive UMETA(DisplayName = "Inactive"),
-	Seeking UMETA(DisplayName = "Seeking"),
-	Hovering UMETA(DisplayName = "Hovering"),
-	Interacting UMETA(DisplayName = "Interacting"),
+	Active UMETA(DisplayName = "Active"),
+	Hover UMETA(DisplayName = "Hover"),
+	Interact UMETA(DisplayName = "Interact"),
 };
 
 UINTERFACE(MinimalAPI, BlueprintType)

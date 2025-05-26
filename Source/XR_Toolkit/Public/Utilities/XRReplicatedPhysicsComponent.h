@@ -88,7 +88,7 @@ public:
 
 	/**
 	 * Default tag used to initially register all MeshComponents on the owning actor. 
-	 If the root component is a StaticMeshComponent, it will always be registered, even without any applied tag.
+	 * If no tag is set, only the root StaticMeshComponent is cached.
 	 **/
 	UPROPERTY(EditAnywhere, Category = "XRCore|Physics Replication")
 	FName RegisterMeshComponentsWithTag = "";
@@ -140,7 +140,7 @@ protected:
 
 private:
 	UFUNCTION(Server, Reliable)
-	void Server_SetCachedSnapshot(FXRPhysicsSnapshot InCachedSnapshot);
+	void Server_SetReplicatedSnapshot(FXRPhysicsSnapshot InReplicatedSnapshot);
 
 	float AccumulatedTime = 0.0f;
 	float InterpolationAlpha = 0.0f;
@@ -149,11 +149,8 @@ private:
 	float DefaultReplicationInterval = 0.0f;
 	float InteractedReplicationInterval = 0.0f;
 
-	UPROPERTY(Replicated)
-	FXRPhysicsSnapshot LatestSnapshot = {};
-	UPROPERTY(ReplicatedUsing = OnRep_CachedSnapshot)
-	FXRPhysicsSnapshot CachedSnapshot = {};
-
+	UPROPERTY(ReplicatedUsing = OnRep_ReplicatedSnapshot)
+	FXRPhysicsSnapshot ReplicatedSnapshot = {};
 
 	FXRPhysicsSnapshot ClientActiveSnapshot = {};
 
@@ -161,7 +158,7 @@ private:
 	bool IsSequenceIDNewer(uint32 InID1, uint32 InID2) const;
 
 	UFUNCTION()
-	void OnRep_CachedSnapshot();
+	void OnRep_ReplicatedSnapshot();
 
 	UPROPERTY()
 	TArray<UMeshComponent*> RegisteredMeshComponents = {};

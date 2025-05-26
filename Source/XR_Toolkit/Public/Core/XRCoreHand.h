@@ -44,10 +44,10 @@ public:
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
     // Default components 
     // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-    UPROPERTY(BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(VisibleDefaultsOnly, Category = "XRCore|XRCoreHand")
     USceneComponent* RootSceneComponent;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "XRCore|XRCoreHand")
     USceneComponent* MotionControllerRoot;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRCore|XRCoreHand")

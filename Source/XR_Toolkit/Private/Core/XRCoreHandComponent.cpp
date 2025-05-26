@@ -6,7 +6,6 @@
 UXRCoreHandComponent::UXRCoreHandComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	PrimaryComponentTick.TickInterval = ReplicationInterval;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	SetIsReplicatedByDefault(true);
 	bAutoActivate = true;
@@ -15,6 +14,7 @@ UXRCoreHandComponent::UXRCoreHandComponent()
 void UXRCoreHandComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	SetComponentTickInterval(ReplicationInterval);
 
 	if (GetOwner()->HasAuthority())
 	{
@@ -31,7 +31,7 @@ AXRCoreHand* UXRCoreHandComponent::GetXRCoreHand() const
 
 void UXRCoreHandComponent::Server_SpawnXRHand_Implementation()
 {
-	if (XRCoreHand || !XRCoreHandClass)
+	if (IsValid(XRCoreHand) || !XRCoreHandClass)
 	{
 		return;
 	}
@@ -44,6 +44,10 @@ void UXRCoreHandComponent::Server_SpawnXRHand_Implementation()
 	if (XRCoreHand->GetClass()->ImplementsInterface(UXRCoreHandInterface::StaticClass()))
 	{
 		IXRCoreHandInterface::Execute_SetControllerHand(XRCoreHand, ControllerHand);
+	}
+	if (XRCoreHand)
+	{
+		XRCoreHand->SetReplicates(true);
 	}
 
 	if (GetWorld()->GetNetMode() == NM_Standalone)

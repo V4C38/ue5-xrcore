@@ -36,7 +36,6 @@ bool UXRToolsUtilityFunctions::IsActorInteractive(AActor* InActor, TArray<UXRInt
 }
 
 
-UFUNCTION(BlueprintPure, Category = "XRTools|Utilities")
 bool UXRToolsUtilityFunctions::IsActorInteractedWith(AActor* InActor, TArray<UXRInteractionComponent*>& OutActiveXRInteractions)
 {
     if (!InActor)
@@ -61,7 +60,7 @@ bool UXRToolsUtilityFunctions::IsActorInteractedWith(AActor* InActor, TArray<UXR
 }
 
 
-UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionByPriority(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor, int32 InPriority, 
+UXRInteractionComponent* UXRToolsUtilityFunctions::GetXRInteractionByPriority(const TArray<UXRInteractionComponent*>& InInteractions, UXRInteractorComponent* InXRInteractor, int32 InPriority, 
     EXRInteractionPrioritySelection InPrioritySelectionCondition, int32 MaxSecondaryPriority)
 {
     if (InInteractions.Num() == 0)

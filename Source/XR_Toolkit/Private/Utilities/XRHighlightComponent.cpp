@@ -93,16 +93,8 @@ void UXRHighlightComponent::TimelineFinished()
 void UXRHighlightComponent::SetHighlightFadeCurve(UCurveFloat* InHighlightFadeCurve)
 {
 	HighlightFadeCurve = InHighlightFadeCurve;
-	if (HighlightFadeCurve)
-	{
-		FOnTimelineFloat TimelineUpdate;
-		TimelineUpdate.BindUFunction(this, FName("TimelineUpdate"));
-
-		FOnTimelineEventStatic TimelineFinished;
-		FadeTimeline.SetTimelineFinishedFunc(TimelineFinished);
-		FadeTimeline.SetLooping(false);
-		FadeTimeline.AddInterpFloat(HighlightFadeCurve, TimelineUpdate);
-	}
+	bIsTimelineInitialized = false;
+	InitializeFadeTimeline();
 }
 
 void UXRHighlightComponent::InitializeFadeTimeline()
@@ -135,7 +127,7 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 		{
 			if (HighlightIncludeOnlyTags.Num() == 0)
 			{
-				ValidComponents.Add(MeshComponent);
+				ValidComponents.AddUnique(MeshComponent);
 			}
 
 			// Check for Inlcude Only Tags if applicable
@@ -145,12 +137,11 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 				{
 					if (MeshComponent->ComponentHasTag(Tag))
 					{
-						ValidComponents.Add(MeshComponent);
+						ValidComponents.AddUnique(MeshComponent);
 					}
 				}
 
 			}
-
 		}
 	}
 	HighlightableMeshComponents = ValidComponents;
@@ -158,7 +149,7 @@ void UXRHighlightComponent::CacheHighlightableMeshComponents()
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-float UXRHighlightComponent::GetHighlightState()
+float UXRHighlightComponent::GetHighlightState() const
 {
 	return HighlightState;
 }

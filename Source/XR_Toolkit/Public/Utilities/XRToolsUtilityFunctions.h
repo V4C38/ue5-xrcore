@@ -48,11 +48,12 @@ public:
 	/**
 	 * Returns the first XRInteractionComponent with provided Priority Value. 
 	 * If specified by InPrioritySelectionCondition, returns either the next highest, or next lowest priority Interaction if no exactly matching priority interaction is found.
+	 * Max priority level for fallback search. Defaults to 5. Values >= this will be ignored.
 	 * @param InXRInteractor Optional, provide to validate the interaction for this XRInteractor specifically
 	 * @InPrioritySelectionCondition Determine whether only exactly matching priorities should be returned.
 	 */
 	UFUNCTION(BlueprintPure, Category = "XRCore|Utilities")
-	static UXRInteractionComponent* GetXRInteractionByPriority(TArray<UXRInteractionComponent*> InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
+	static UXRInteractionComponent* GetXRInteractionByPriority(const TArray<UXRInteractionComponent*>& InInteractions, UXRInteractorComponent* InXRInteractor = nullptr, int32 InPriority = 0, 
 		EXRInteractionPrioritySelection InPrioritySelectionCondition = EXRInteractionPrioritySelection::LowerEqual, int32 MaxSecondaryPriority = 5);
 
 	/**

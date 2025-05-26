@@ -115,7 +115,7 @@ void UXRLaserComponent::Multicast_RequestInteraction_Implementation(int32 InID, 
 	{
 		if (XRLaserActor && XRLaserActor->GetClass()->ImplementsInterface(UXRInteractionInterface::StaticClass()))
 		{
-			IXRInteractionInterface::Execute_StartInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
+			IXRInteractionInterface::Execute_StopInteractionByPriority(XRLaserActor, InPriority, InPrioritySelectionCondition);
 		}
 
 	}
@@ -136,6 +136,11 @@ bool UXRLaserComponent::SpawnXRLaserActor()
 		return false;
 	}
 	if (!XRLaserClass->ImplementsInterface(UXRLaserInterface::StaticClass()))
+	{
+
+		return false;
+	}
+	if (IsValid(XRLaserActor))
 	{
 		return false;
 	}
@@ -169,7 +174,7 @@ void UXRLaserComponent::Server_SetLaserActive_Implementation(bool bInActive)
 	bIsLaserActive = bInActive;
 	if (GetWorld()->GetNetMode() == NM_Standalone)
 	{
-		OnRep_IsActive();
+		OnRep_IsLaserActive();
 	}
 
 	Multicast_SetLaserActive(bInActive);
