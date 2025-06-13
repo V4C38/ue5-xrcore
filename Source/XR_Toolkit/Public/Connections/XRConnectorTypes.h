@@ -20,6 +20,15 @@ enum class EXRConnectorSocketState : uint8
 	Disabled UMETA(DisplayName = "Disabled"),
 };
 
+// Socket State
+UENUM(BlueprintType)
+enum class EXRHologramState : uint8
+{
+	Visible UMETA(DisplayName = "Visible"),
+	Highlighted UMETA(DisplayName = "Highlighted"),
+	Hidden UMETA(DisplayName = "Hidden"),
+};
+
 // Hologram Interface
 UINTERFACE(MinimalAPI, BlueprintType)
 class UXRHologramInterface : public UInterface
@@ -32,23 +41,16 @@ class IXRHologramInterface
 	GENERATED_BODY()
 
 public:	
-	/*
-	* Show / Enable the hologram for this connector. Requires a static mesh reference, scale can be overridden optionally.
-	*/
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void ShowHologram(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale = 1.0f);
 
 	/*
-	* Hide the hologram for this connector.
-	* Note: Currently the AActor is destroyed after DestroyAfterHiddenSeconds duration. 
+	* Setup the hologram for this connector. Requires a static mesh reference, scale can be overridden optionally.
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void HideHologram(UXRConnectorComponent* InConnector);
-
+	void InitHologram(const UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale = 1.0f);
+	
 	/*
-	* Enable/Disable the hologram for this connector.
-	* Note: Disabling a Hologram that is Occupied will retain the Occupied state but disable (iE. hide it)
+	* Set the display state of this hologram
 	*/
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRConnectorHologram")
-	void SetHologramEnabled(UXRConnectorComponent* InConnector, bool InState);
+	void SetHologramState(EXRHologramState InState);
 };

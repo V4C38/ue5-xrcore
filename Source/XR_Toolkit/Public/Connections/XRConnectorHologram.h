@@ -25,9 +25,8 @@ public:
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	// API
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
-	virtual void ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale) override;
-    virtual void HideHologram_Implementation(UXRConnectorComponent* InConnector) override;
-    virtual void SetHologramEnabled_Implementation(UXRConnectorComponent* InConnector, bool InState) override;
+	virtual void InitHologram_Implementation(const UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale) override;
+    virtual void SetHologramState_Implementation(EXRHologramState InState) override;
 
 
 protected:
@@ -35,7 +34,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	UFUNCTION()
-	void RemoveHologram();
+	void DestroyHologram();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* MeshComponent;
@@ -47,7 +46,7 @@ protected:
 	* Time in seconds after which a hidden Hologram will be destroyed.
 	* Note: if this becomes a performance issue in the future, an ObjectPool can be implemented instead.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
 	float DestroyAfterHiddenSeconds = 10.0f;
 
 	/*

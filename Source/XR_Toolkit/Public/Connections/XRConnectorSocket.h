@@ -50,7 +50,7 @@ public:
 	* Return this sockets ID.
 	*/
 	UFUNCTION(BlueprintPure, Category = "XRConnectorSocket")
-	FString GetSocketID() const;
+	FName GetSocketID() const;
 
 	/*
 	* Return all currently connected Components. 
@@ -101,7 +101,7 @@ protected:
 	* Define an ID for this socket to handle multiple sockets on one Actor. Used for identifying sockets throughout sessions for Persistence / SaveGame data.
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRConnectorSocket")
-	FString ID = "ID";
+	FName ID = "ID";
 
 	/*
 	* Socket State:
@@ -109,7 +109,7 @@ protected:
 	* Occupied: Currently occupied by another ConnectorComponent
 	* Disabled: No new connections will be allowed
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
+	UPROPERTY(EditAnywhere, Category = "XRConnectorSocket")
 	EXRConnectorSocketState DefaultSocketState = EXRConnectorSocketState::Available;
 	EXRConnectorSocketState SocketState = EXRConnectorSocketState::Available;
 
@@ -117,13 +117,13 @@ protected:
 	* Define compatible XRConnectorSockets via a Name ID.
 	* Leave empty to accept any XRConnector.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
+	UPROPERTY(EditAnywhere, Category = "XRConnectorSocket")
 	TArray<FName> CompatibleConnectorIDs = {};
 
 	/*
 	* Never allow a hologram to be shown for this socket if true.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnectorSocket")
+	UPROPERTY(EditAnywhere, Category = "XRConnectorSocket")
 	bool bSupressHologram = false;
 
 private:

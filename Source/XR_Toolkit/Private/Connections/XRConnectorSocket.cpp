@@ -1,5 +1,6 @@
 #include "Connections/XRConnectorSocket.h"
 #include "Connections/XRConnectorComponent.h"
+#include "Net/UnrealNetwork.h"
 
 UXRConnectorSocket::UXRConnectorSocket()
 {
@@ -32,7 +33,7 @@ EXRConnectorSocketState UXRConnectorSocket::GetSocketState() const
     return SocketState;
 }
 
-FString UXRConnectorSocket::GetSocketID() const
+FName  UXRConnectorSocket::GetSocketID() const
 {
     return ID;
 }

@@ -77,22 +77,10 @@ public:
 	// Hologram
 	// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 	/*
-	* Shows the Hologram for a specific Socket.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "XRConnector")
-	void ShowHologram(UXRConnectorSocket* InSocket);
-
-	/*
 	* Shows a Hologram for each overlapped Socket.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "XRConnector")
 	void ShowAllAvailableHolograms();
-
-	/*
-	* Hides the Hologram for a specific Socket if it is visible.
-	*/
-	UFUNCTION(BlueprintCallable, Category = "XRConnector")
-	void HideHologram(UXRConnectorSocket* InSocket);
 
 	/*
 	* Hides all Holograms.
@@ -104,7 +92,7 @@ public:
 	* Set this Hologram to be Prioritized, affecting visual indicators only.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "XRConnector")
-	void SetHologramState(UXRConnectorSocket* InSocket, bool InState);
+	void SetHologramState(UXRConnectorSocket* InSocket, EXRHologramState InState);
 
 
 protected:
@@ -119,7 +107,7 @@ protected:
 	/*
 	* ID that determines compatiblility with XRConnectorSockets.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector")
+	UPROPERTY(EditAnywhere, Category = "XRConnector")
 	FName ConnectorID = "Default";
 
 	/*
@@ -135,7 +123,7 @@ protected:
 	* Will automatically ConnectToClosestOverlappedSocket when ending grab.
 	* Only shows holograms for this Connection while the GrabInteraction is active.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector")
+	UPROPERTY(EditAnywhere, Category = "XRConnector")
 	bool bAutoBindToGrabInteraction = false;
 
 
@@ -144,7 +132,7 @@ protected:
 	* This can cause performance issues, as a UStatickMeshActor is spawned for each hologram.
 	* DevNote: if this becomes a concern, an ObjectPool should be used instead of spawning Actors at runtime.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
+	UPROPERTY(EditAnywhere, Category = "XRConnector|Hologram")
 	bool bShowConnectorHologram = true;
 
 
@@ -152,23 +140,20 @@ protected:
 	* Set the type of hologram that should be spawned.
 	* This must implement the Interface IXRHologramInterface. See BP_XRConnectorHologram as an example.
 	*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRConnector|Hologram")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XRConnector|Hologram", meta = (MustImplement = "XRHologramInterface"))
 	TSubclassOf<AActor> HologramClass;
 
 	/*
 	* Define the StaticMesh that should be spawned as a Hologram in the location of available Sockets.
 	*/
-	UPROPERTY(Editanywhere, Category = "XRConnector|Hologram")
-	UStaticMesh* HologramMesh = {};
+	UPROPERTY(EditAnywhere, Category = "XRConnector|Hologram")
+	UStaticMesh* HologramMesh;
 
 	/*
 	* Set the scale of the StaticMesh in the Hologram.
 	*/
 	UPROPERTY(EditAnywhere, Category = "XRConnector|Hologram", meta = (ClampMin = "0.0"))
 	float HologramScale = 1.0;
-
-	UFUNCTION()
-	void InternalAttachToSocket();
 
 	UPROPERTY(ReplicatedUsing = OnRep_ConnectedSocket)
 	UXRConnectorSocket* ConnectedSocket = {};
@@ -198,9 +183,19 @@ private:
 	UXRInteractionGrab* BoundGrabComponent = nullptr;
 
 	// Time in seconds the connector will interpolate towards the socket when a connection is established.
-	UPROPERTY(Editanywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "XRConnector", meta = (ClampMin = "0.0"))
 	float EstablishConnectionTime = 0.5f;
 	FTimerHandle EstablishConnectionTimer;
+
+
+	UFUNCTION()
+	void AttachToSocket();
+
+	UFUNCTION()
+	void DeferredAttachToSocket();
+
+	UFUNCTION()
+	void DetachFromSocket();
 
 	UFUNCTION()
 	void OnInteractionStarted(UXRInteractionComponent* Sender, UXRInteractorComponent* XRInteractorComponent);

@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Connections/XRConnectorHologram.h"
 #include "Connections/XRConnectorComponent.h"
 
@@ -10,13 +7,24 @@ AXRConnectorHologram::AXRConnectorHologram()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComponent"));
-	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MeshComponent->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	MeshComponent->SetGenerateOverlapEvents(false);
+	SetActorEnableCollision(false);
+
 	RootComponent = MeshComponent;
+
+	bReplicates = false;
+	SetReplicates(false);
+	SetReplicatingMovement(false);
 }
 
 void AXRConnectorHologram::BeginPlay()
 {
-	Super::BeginPlay();
+	Super::BeginPlay(); 
+	if (DestroyActorTimer.IsValid())
+	{
+		GetWorld()->GetTimerManager().ClearTimer(DestroyActorTimer);
+	}
 }
 
 void AXRConnectorHologram::Tick(float DeltaTime)
@@ -24,38 +32,51 @@ void AXRConnectorHologram::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AXRConnectorHologram::RemoveHologram()
+void AXRConnectorHologram::DestroyHologram()
 {
-	Destroy();
+	if (!IsActorBeingDestroyed())
+	{
+		Destroy();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 // API
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
-void AXRConnectorHologram::ShowHologram_Implementation(UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale)
+void AXRConnectorHologram::InitHologram_Implementation(const UXRConnectorComponent* InConnector, UStaticMesh* InHologramMesh, float InHologramMeshScale)
 {
+	if (IsActorBeingDestroyed())
+	{
+		return;
+	}
+
 	if (MeshComponent->GetStaticMesh() != InHologramMesh)
 	{
+		HologramMeshScale = InHologramMeshScale;
 		MeshComponent->SetStaticMesh(InHologramMesh);
 		MeshComponent->SetWorldScale3D(FVector(InHologramMeshScale));
-		HologramMeshScale = InHologramMeshScale;
-	}
-	if (GetWorld()->GetTimerManager().IsTimerActive(DestroyActorTimer))
-	{
-		GetWorld()->GetTimerManager().ClearTimer(DestroyActorTimer);
 	}
 }
 
-void AXRConnectorHologram::HideHologram_Implementation(UXRConnectorComponent* InConnector)
+void AXRConnectorHologram::SetHologramState_Implementation(EXRHologramState InState)
 {
-	if (GetWorld()->GetTimerManager().IsTimerActive(DestroyActorTimer))
+	switch (InState)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(DestroyActorTimer);
+	case EXRHologramState::Hidden:
+		SetActorHiddenInGame(true);
+		if (!GetWorld()->GetTimerManager().IsTimerActive(DestroyActorTimer))
+		{
+			GetWorld()->GetTimerManager().SetTimer(DestroyActorTimer, this, &AXRConnectorHologram::DestroyHologram, DestroyAfterHiddenSeconds, false);
+		}
+		break;
+
+	default:
+		if (GetWorld()->GetTimerManager().IsTimerActive(DestroyActorTimer))
+		{
+			GetWorld()->GetTimerManager().ClearTimer(DestroyActorTimer);
+		}
+		SetActorHiddenInGame(false);
+		break;
 	}
-	GetWorld()->GetTimerManager().SetTimer(DestroyActorTimer, this, &AXRConnectorHologram::RemoveHologram, DestroyAfterHiddenSeconds, false);
-}
 
-void AXRConnectorHologram::SetHologramEnabled_Implementation(UXRConnectorComponent* InConnector, bool InState)
-{
 }
-
