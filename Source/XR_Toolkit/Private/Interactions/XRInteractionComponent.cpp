@@ -1,5 +1,6 @@
 
 #include "Interactions/XRInteractionComponent.h"
+#include "Interactions/XRInteractionTypes.h"
 #include "Interactions/XRInteractorComponent.h"
 #include "Utilities/XRHighlightComponent.h"
 #include "Components/AudioComponent.h"
@@ -9,7 +10,6 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
 UXRInteractionComponent::UXRInteractionComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicatedByDefault(true);
@@ -131,9 +131,17 @@ void UXRInteractionComponent::SpawnAndConfigureXRHighlight()
 	{
 		return;
 	}
-	XRHighlightComponent = NewObject<UXRHighlightComponent>(this->GetOwner());
+
+	AActor* Owner = GetOwner();
+	if (!Owner)
+	{
+		return;
+	}
+
+	XRHighlightComponent = NewObject<UXRHighlightComponent>(Owner, TEXT("XRHighlight"));
 	if (XRHighlightComponent)
 	{
+		Owner->AddInstanceComponent(XRHighlightComponent);
 		XRHighlightComponent->RegisterComponent();
 		XRHighlightComponent->SetHighlightFadeCurve(HighlightFadeCurve);
 		XRHighlightComponent->SetHighlightIncludeOnlyTags(HighlightIncludeOnlyTags);
@@ -177,10 +185,10 @@ void UXRInteractionComponent::UpdateAbsolouteInteractionPriority()
 	switch (InteractionPriority)
 	{
 		case EXRInteractionPriority::Primary:
-			OutInteractionPriority = 1;
+			OutInteractionPriority = XRInteraction::PrimaryPriority;
 			break;
 		case EXRInteractionPriority::Secondary:
-			OutInteractionPriority = 2;
+			OutInteractionPriority = XRInteraction::SecondaryPriority;
 			break;
 		case EXRInteractionPriority::Custom:
 			OutInteractionPriority = AbsolouteInteractionPriority;
@@ -231,7 +239,7 @@ bool UXRInteractionComponent::IsLaserInteractionEnabled() const
 	{
 		return false;
 	}
-	if (LaserBehavior == EXRLaserBehavior::Supress && IsInteractedWith())
+	if (LaserBehavior == EXRLaserBehavior::Suppress && IsInteractedWith())
 	{
 		return false;
 	}

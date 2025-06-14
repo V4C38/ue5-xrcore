@@ -7,7 +7,6 @@
 
 UXRInteractionGrab::UXRInteractionGrab()
 {
-	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	bAutoActivate = true;
 	SetIsReplicated(true);

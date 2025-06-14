@@ -27,7 +27,8 @@ public class XR_Toolkit : ModuleRules
 			{
 				"Core", 
 				"InputCore",
-				// ... add other public dependencies that you statically link with here ...
+				"OpenXRHMD",
+				"OpenXRInput"
 			}
 			);
 			
@@ -37,6 +38,7 @@ public class XR_Toolkit : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
+				"HeadMountedDisplay",
                 "Settings",
                 "Slate",
 				"SlateCore",

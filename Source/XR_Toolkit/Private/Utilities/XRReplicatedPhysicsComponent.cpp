@@ -14,8 +14,8 @@ void UXRReplicatedPhysicsComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	float DefaultInterval = GetDefault<UXRCoreSettings>()->DefaultReplicationInterval;
-	float InteractedInterval = GetDefault<UXRCoreSettings>()->InteractedReplicationInterval;
+	DefaultReplicationInterval = GetDefault<UXRCoreSettings>()->DefaultReplicationInterval;
+	InteractedReplicationInterval = GetDefault<UXRCoreSettings>()->InteractedReplicationInterval;
 
 	RegisterPhysicsMeshComponents(RegisterMeshComponentsWithTag);
 	if (GetOwnerRole() == ROLE_Authority )
@@ -40,22 +40,6 @@ void UXRReplicatedPhysicsComponent::DelayedPhysicsSetup()
 	{
 		SetSimulatePhysicsOnOwner(GetOwnerRole() == ROLE_Authority);
 	}
-}
-
-void UXRReplicatedPhysicsComponent::OnRegister()
-{
-	Super::OnRegister();
-
-	OnComponentActivated.AddDynamic(this, &UXRReplicatedPhysicsComponent::OnActivated);
-	OnComponentDeactivated.AddDynamic(this, &UXRReplicatedPhysicsComponent::OnDeactivated);
-}
-
-void UXRReplicatedPhysicsComponent::OnUnregister()
-{
-	OnComponentActivated.RemoveDynamic(this, &UXRReplicatedPhysicsComponent::OnActivated);
-	OnComponentDeactivated.RemoveDynamic(this, &UXRReplicatedPhysicsComponent::OnDeactivated);
-
-	Super::OnUnregister();
 }
 
 void UXRReplicatedPhysicsComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -98,44 +82,36 @@ FXRPhysicsSnapshot UXRReplicatedPhysicsComponent::GetLatestSnapshot() const
 	return ReplicatedSnapshot;
 }
 
-void UXRReplicatedPhysicsComponent::OnActivated(UActorComponent* Component, bool bReset)
-{
-	bool bShouldSimulate = (GetOwnerRole() == ROLE_Authority);
-	if (bShouldSimulate != bIsSimulatingPhysics)
-	{
-		SetSimulatePhysicsOnOwner(bShouldSimulate);
-	}
-}
-
-void UXRReplicatedPhysicsComponent::OnDeactivated(UActorComponent* Component)
-{
-	SetSimulatePhysicsOnOwner(false);
-}
-
 // -----------------------------------------------------------------------------------------------------------------------------------
 // Serverside 
 // -----------------------------------------------------------------------------------------------------------------------------------
 void UXRReplicatedPhysicsComponent::Server_ForceUpdate_Implementation()
 {
-	ServerTick(GetWorld()->GetDeltaSeconds());
+	FXRPhysicsSnapshot NewSnapshot;
+	NewSnapshot.ID = ReplicatedSnapshot.ID + 1;
+	NewSnapshot.Location = GetOwner()->GetActorLocation();
+	NewSnapshot.Rotation = GetOwner()->GetActorRotation();
+	NewSnapshot.bIsInteractedWith = bIsInteractedWith;
+
+	Server_SetReplicatedSnapshot(NewSnapshot);
 }
 
 
 void UXRReplicatedPhysicsComponent::ServerTick(float DeltaTime)
 {
-	if (!IsActive())
+	if (!bPhysicsActive)
 	{
 		return;
 	}
 
 	// Do not replicate static objects
-	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith && bIsSimulatingPhysics)
+	if (GetActorVelocity() < 0.0001f && !bIsInteractedWith)
 	{
 		// Replicate only one time, when the object becomes static
 		if (ReplicatedSnapshot.Location != GetOwner()->GetActorLocation())
 		{
 			FXRPhysicsSnapshot NewSnapshot;
-			NewSnapshot.ID = 0;
+			NewSnapshot.ID = ReplicatedSnapshot.ID + 1;
 			NewSnapshot.Location = GetOwner()->GetActorLocation();
 			NewSnapshot.Rotation = GetOwner()->GetActorRotation();
 			NewSnapshot.bIsInteractedWith = false;
@@ -169,6 +145,7 @@ void UXRReplicatedPhysicsComponent::Server_SetReplicatedSnapshot_Implementation(
 void UXRReplicatedPhysicsComponent::SetInteractedWith(bool bInInteracedWith)
 {
 	bIsInteractedWith = bInInteracedWith;
+	Server_ForceUpdate();
 }
 
 bool UXRReplicatedPhysicsComponent::GetInteractedWith() const
@@ -181,6 +158,11 @@ bool UXRReplicatedPhysicsComponent::GetInteractedWith() const
 // -----------------------------------------------------------------------------------------------------------------------------------
 void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 {
+	if (!bPhysicsActive)
+	{
+		return;
+	}
+
 	if (IsSequenceIDNewer(ReplicatedSnapshot.ID, ClientActiveSnapshot.ID))
 	{
 		ClientActiveSnapshot = ReplicatedSnapshot;
@@ -203,7 +185,20 @@ void UXRReplicatedPhysicsComponent::ClientTick(float DeltaTime)
 	FRotator InterpRotation = FMath::RInterpTo(GetOwner()->GetActorRotation(), TargetRotation, DeltaTime, InterpSpeed);
 
 	GetOwner()->SetActorLocationAndRotation(InterpLocation, InterpRotation);
+}
 
+void UXRReplicatedPhysicsComponent::OnRep_PhysicsActive()
+{
+	if (bPhysicsActive)
+	{
+		ClientActiveSnapshot = ReplicatedSnapshot;
+		AccumulatedTime = 0.0f;
+		Activate();
+	}
+	else
+	{
+		Deactivate();
+	}
 }
 
 bool UXRReplicatedPhysicsComponent::IsSequenceIDNewer(uint32 InID1, uint32 InID2) const
@@ -221,13 +216,27 @@ void UXRReplicatedPhysicsComponent::SetSimulatePhysicsOnOwner(bool InSimulatePhy
 	{
 		PhysicsMeshComponent->SetSimulatePhysics(InSimulatePhysics);
 	}
-	bIsSimulatingPhysics = InSimulatePhysics;
+	bPhysicsActive = InSimulatePhysics;
+
+	if (GetNetMode() == NM_Client || GetNetMode() == NM_Standalone)
+	{
+		if (bPhysicsActive)
+		{
+			ClientActiveSnapshot = ReplicatedSnapshot;
+			AccumulatedTime = 0.0f;
+			Activate();
+		}
+		else
+		{
+			Deactivate();
+		}
+	}
 }
 
 float UXRReplicatedPhysicsComponent::GetActorVelocity() const
 {
-	if (!GetOwner()) return 0.0f;
-	return GetOwner()->GetVelocity().Size();
+	const AActor* Owner = GetOwner();
+	return Owner ? Owner->GetVelocity().Size() : 0.f;
 }
 
 void UXRReplicatedPhysicsComponent::RegisterPhysicsMeshComponents(FName InComponentTag)
@@ -274,5 +283,7 @@ TArray<UMeshComponent*> UXRReplicatedPhysicsComponent::GetRegisteredMeshComponen
 void UXRReplicatedPhysicsComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UXRReplicatedPhysicsComponent, ReplicatedSnapshot);
+	DOREPLIFETIME(UXRReplicatedPhysicsComponent, ReplicatedSnapshot); 
+	DOREPLIFETIME(UXRReplicatedPhysicsComponent, bPhysicsActive);
+
 }

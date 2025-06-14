@@ -180,6 +180,7 @@ public:
 protected:
 	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type) override;
 
 	UFUNCTION()
 	TArray<UXRInteractionComponent*> GetChildXRInteractionComponents(UPrimitiveComponent* InComponent);
@@ -217,13 +218,10 @@ private:
 	UPhysicsConstraintComponent* PhysicsConstraint;
 	UPROPERTY()
 	AActor* LocalInteractedActor = nullptr;
-	UPROPERTY(Replicated)
+	UPROPERTY(Transient)
 	TArray<TWeakObjectPtr<UXRInteractionComponent>> ActiveInteractionComponents = {};
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UXRInteractionComponent>> HoveredInteractionComponents = {};
-
-	void CacheIsLocallyControlled();
-	bool bIsLocallyControlled = false;
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,

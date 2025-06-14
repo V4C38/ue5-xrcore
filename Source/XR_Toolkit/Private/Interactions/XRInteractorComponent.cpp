@@ -5,7 +5,7 @@
 
 UXRInteractorComponent::UXRInteractorComponent()
 {
-	SphereRadius = 1.0f;
+	SphereRadius = 0.8f;
 	PrimaryComponentTick.bCanEverTick = false;
 	PrimaryComponentTick.bStartWithTickEnabled = false;
 	SetIsReplicatedByDefault(true);
@@ -15,7 +15,6 @@ UXRInteractorComponent::UXRInteractorComponent()
 void UXRInteractorComponent::InitializeComponent()
 {
 	Super::InitializeComponent();
-	CacheIsLocallyControlled();
 }
 
 void UXRInteractorComponent::BeginPlay()
@@ -23,6 +22,11 @@ void UXRInteractorComponent::BeginPlay()
 	Super::BeginPlay();
 	OnComponentBeginOverlap.AddDynamic(this, &UXRInteractorComponent::OnOverlapBegin);
 	OnComponentEndOverlap.AddDynamic(this, &UXRInteractorComponent::OnOverlapEnd);
+}
+
+void UXRInteractorComponent::EndPlay(const EEndPlayReason::Type)
+{
+	SetAdditionalColliders({});
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,11 +82,6 @@ void UXRInteractorComponent::Server_ExecuteInteraction_Implementation(UXRInterac
 	{
 		return;
 	}
-	if (InInteractionComponent->GetOwner() && GetOwner())
-	{
-		InInteractionComponent->GetOwner()->SetOwner(GetOwner());
-	}
-	ActiveInteractionComponents.AddUnique(InInteractionComponent);
 	Multicast_ExecuteInteraction(InInteractionComponent);
 }
 
@@ -92,6 +91,7 @@ void UXRInteractorComponent::Multicast_ExecuteInteraction_Implementation(UXRInte
 	{
 		return;
 	}
+	ActiveInteractionComponents.AddUnique(InteractionComponent);
 	InteractionComponent->StartInteraction(this);
 	OnStartedInteracting.Broadcast(this, InteractionComponent);
 	HoveredInteractionComponents.Remove(InteractionComponent);
@@ -137,7 +137,6 @@ void UXRInteractorComponent::Server_TerminateInteraction_Implementation(UXRInter
 	{
 		return;
 	}
-	ActiveInteractionComponents.Remove(InInteractionComponent);
 	Multicast_TerminateInteraction(InInteractionComponent);
 }
 
@@ -148,6 +147,7 @@ void UXRInteractorComponent::Multicast_TerminateInteraction_Implementation(UXRIn
 		return;
 	}
 	InteractionComponent->EndInteraction(this);
+	ActiveInteractionComponents.Remove(InteractionComponent);
 	OnStoppedInteracting.Broadcast(this, InteractionComponent);
 
 	// Restart Highlight after Interaction End (if hovering)
@@ -380,7 +380,13 @@ bool UXRInteractorComponent::IsLaserInteractor()
 
 bool UXRInteractorComponent::IsLocallyControlled() const
 {
-	return bIsLocallyControlled;
+	AActor* Owner = GetOwner();
+	APawn* TempOwningPawn = Cast<APawn>(Owner);
+	if (TempOwningPawn)
+	{
+		return TempOwningPawn->IsLocallyControlled();
+	}
+	return false;
 }
 
 UPhysicsConstraintComponent* UXRInteractorComponent::GetPhysicsConstraint() const
@@ -391,16 +397,6 @@ UPhysicsConstraintComponent* UXRInteractorComponent::GetPhysicsConstraint() cons
 void UXRInteractorComponent::SetPhysicsConstraint(UPhysicsConstraintComponent* InPhysicsConstraintComponent)
 {
 	PhysicsConstraint = InPhysicsConstraintComponent;
-}
-
-void UXRInteractorComponent::CacheIsLocallyControlled()
-{
-	AActor* Owner = GetOwner();
-	APawn* TempOwningPawn = Cast<APawn>(Owner);
-	if (TempOwningPawn)
-	{
-		bIsLocallyControlled = TempOwningPawn->IsLocallyControlled();
-	}
 }
 
 void UXRInteractorComponent::SetOwningPawn(APawn* InOwningPawn)
@@ -416,6 +412,5 @@ APawn* UXRInteractorComponent::GetOwningPawn() const
 void UXRInteractorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(UXRInteractorComponent, ActiveInteractionComponents);
 	DOREPLIFETIME(UXRInteractorComponent, XRControllerHand);
 }

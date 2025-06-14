@@ -117,6 +117,10 @@ EXRInteractionTriggerBehavior UXRInteractionTrigger::GetTriggerBehavior() const
 // Disable the component until the started timer completes.
 void UXRInteractionTrigger::EndInteractionAfterTimer()
 {
+	if (GetOwnerRole() != ROLE_Authority)
+	{
+		return;
+	}
 	if (InteractionDuration > 0.0f)
 	{
 		FTimerManager& TimerManager = GetWorld()->GetTimerManager();

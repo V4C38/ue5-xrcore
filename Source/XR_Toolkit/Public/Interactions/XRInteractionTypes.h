@@ -8,6 +8,13 @@
 // Interaction System types and interfaces
 // ================================================================================================================================================================
 
+namespace XRInteraction
+{
+	constexpr int32 PrimaryPriority = 1;
+	constexpr int32 SecondaryPriority = 2;
+	constexpr int32 LowestPriority = 5;
+}
+
 UENUM(BlueprintType)
 enum class EXRInteractionPriority : uint8
 {
@@ -28,7 +35,7 @@ UENUM(BlueprintType)
 enum class EXRLaserBehavior : uint8
 {
 	Disabled UMETA(DisplayName = "Disabled"),
-	Supress UMETA(DisplayName = "Supress while Interacting"),
+	Suppress UMETA(DisplayName = "Suppress while Interacting"),
 	Snap UMETA(DisplayName = "Snap to Interaction"),
 };
 

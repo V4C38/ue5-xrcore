@@ -193,22 +193,27 @@ void UXRConnectorComponent::AttachToSocket()
 
 	SetComponentTickEnabled(false);
 
-	// Physics
+	// Clear previous connection if exists
+	if (PreviouslyConnectedSocket.IsValid())
+	{
+		PreviouslyConnectedSocket.Get()->DeregisterConnection(this);
+		OnDisconnected.Broadcast(this, PreviouslyConnectedSocket.Get());
+	}
+
+	// Disable Physics
 	UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
 	if (XRPhysicsComponent)
 	{
 		XRPhysicsComponent->SetSimulatePhysicsOnOwner(false);
 	}
 
-	// Clear previous connection if exists
-	if (PreviouslyConnectedSocket.IsValid())
-	{
-		DetachFromSocket();
-	}
+	GetOwner()->AttachToComponent(ConnectedSocket, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false));
 
-	GetOwner()->AttachToComponent(ConnectedSocket, FAttachmentTransformRules(EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, EAttachmentRule::KeepWorld, false));
-	GetOwner()->SetActorRelativeLocation(FVector::ZeroVector);
-	GetOwner()->SetActorRelativeRotation(FQuat::Identity);
+	// Update Physics State after snapping
+	if (XRPhysicsComponent)
+	{
+		XRPhysicsComponent->Server_ForceUpdate();
+	}
 
 	PreviouslyConnectedSocket = ConnectedSocket;
 	ConnectedSocket->RegisterConnection(this);
@@ -219,7 +224,14 @@ void UXRConnectorComponent::AttachToSocket()
 }
 
 void UXRConnectorComponent::DeferredAttachToSocket()
-{
+{	
+	// Physics
+	UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
+	if (XRPhysicsComponent)
+	{
+		XRPhysicsComponent->SetSimulatePhysicsOnOwner(false);
+	}
+
 	if (GetWorld()->GetTimerManager().IsTimerActive(EstablishConnectionTimer))
 	{
 		GetWorld()->GetTimerManager().ClearTimer(EstablishConnectionTimer);
@@ -243,6 +255,14 @@ void UXRConnectorComponent::DetachFromSocket()
 	GetOwner()->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 	OnDisconnected.Broadcast(this, PreviouslyConnectedSocket.Get());
 	PreviouslyConnectedSocket = nullptr;
+
+	// Physics
+	UXRReplicatedPhysicsComponent* XRPhysicsComponent = GetOwner()->FindComponentByClass<UXRReplicatedPhysicsComponent>();
+	if (XRPhysicsComponent)
+	{
+		XRPhysicsComponent->SetSimulatePhysicsOnOwner(true);
+		XRPhysicsComponent->Server_ForceUpdate();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -384,7 +404,8 @@ void UXRConnectorComponent::SetHologramState(UXRConnectorSocket* InSocket, EXRHo
 	}
 
 	// Hologram needs to be spawned (Client only)
-	if (GetOwnerRole() == ROLE_AutonomousProxy || GetNetMode() == NM_Client)
+	ENetMode Mode = GetNetMode();
+	if (Mode == NM_Client || Mode == NM_Standalone)
 	{
 		if (!HologramMesh)
 		{
