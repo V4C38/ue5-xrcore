@@ -125,25 +125,23 @@ protected:
 	UFUNCTION()
 	void ClientTick(float DeltaTime);
 
-	virtual void OnRegister() override;
-	virtual void OnUnregister() override;
-	UFUNCTION()
-	void OnActivated(UActorComponent* Component, bool bReset);
-	UFUNCTION()
-	void OnDeactivated(UActorComponent* Component);
-
-	UPROPERTY()
-	bool bIsSimulatingPhysics = true;
-
 	UFUNCTION()
 	void DelayedPhysicsSetup();
+
+	/**
+	 * True while we still replicate/consume physics snapshots
+	 **/
+	UPROPERTY(ReplicatedUsing = OnRep_PhysicsActive)
+	bool bPhysicsActive = true;
+
+	UFUNCTION()
+	void OnRep_PhysicsActive();
 
 private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetReplicatedSnapshot(FXRPhysicsSnapshot InReplicatedSnapshot);
 
 	float AccumulatedTime = 0.0f;
-	float InterpolationAlpha = 0.0f;
 
 	bool bIsInteractedWith = false;
 	float DefaultReplicationInterval = 0.0f;
@@ -162,6 +160,5 @@ private:
 
 	UPROPERTY()
 	TArray<UMeshComponent*> RegisteredMeshComponents = {};
-
 };
 
