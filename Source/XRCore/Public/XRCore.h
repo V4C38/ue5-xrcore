@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FXR_ToolkitModule : public IModuleInterface
+class FXRCoreModule : public IModuleInterface
 {
 public:
 

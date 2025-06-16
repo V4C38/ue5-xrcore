@@ -17,7 +17,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDisconnectedFrom, UXRConnectorSo
 // Socket that accepts a connecting XRConnector with matching ID. 
 // ================================================================================================================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRConnectorSocket : public USphereComponent
+class XRCORE_API UXRConnectorSocket : public USphereComponent
 {
 	GENERATED_BODY()
 

@@ -24,7 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnHoverStateChanged, UXRInteract
 // ================================================================================================================================================================
 
 UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRInteractorComponent : public USphereComponent
+class XRCORE_API UXRInteractorComponent : public USphereComponent
 {
 	GENERATED_BODY()
 

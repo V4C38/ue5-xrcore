@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class XR_Toolkit : ModuleRules
+public class XRCore : ModuleRules
 {
-	public XR_Toolkit(ReadOnlyTargetRules Target) : base(Target)
+	public XRCore(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		

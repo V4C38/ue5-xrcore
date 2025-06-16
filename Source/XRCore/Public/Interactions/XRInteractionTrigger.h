@@ -24,7 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTriggerStateChanged, UXRIntera
 // ================================================================================================================================================================
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
-class XR_TOOLKIT_API UXRInteractionTrigger : public UXRInteractionComponent
+class XRCORE_API UXRInteractionTrigger : public UXRInteractionComponent
 {
 	GENERATED_BODY()
 

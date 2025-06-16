@@ -13,7 +13,7 @@ class UXRReplicatedPhysicsComponent;
 // ================================================================================================================================================================
 
 UCLASS(ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
-class XR_TOOLKIT_API UXRInteractionGrab : public UXRInteractionComponent
+class XRCORE_API UXRInteractionGrab : public UXRInteractionComponent
 {
 	GENERATED_BODY()
 

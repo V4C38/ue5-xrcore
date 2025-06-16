@@ -22,7 +22,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnDisconnected, UXRConnectorCompon
 // Connects the owning Actor to an XRConnectionSocket 
 // ================================================================================================================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRConnectorComponent : public UActorComponent
+class XRCORE_API UXRConnectorComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

@@ -19,7 +19,7 @@ class UXRInteractorComponent;
 // ================================================================================================================================================================
 
 UCLASS()
-class XR_TOOLKIT_API UXRToolsUtilityFunctions : public UBlueprintFunctionLibrary
+class XRCORE_API UXRToolsUtilityFunctions : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

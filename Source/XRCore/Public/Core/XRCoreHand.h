@@ -14,7 +14,7 @@ class UXRLaserComponent;
 // Replicated Hand Actor, attached to the MotionController and used for InteractionSystem and Input
 // ================================================================================================================================================================
 UCLASS()
-class XR_TOOLKIT_API AXRCoreHand : public AActor, public IXRCoreHandInterface
+class XRCORE_API AXRCoreHand : public AActor, public IXRCoreHandInterface
 {
     GENERATED_BODY()
 

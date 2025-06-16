@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "XR_Toolkit",
+			"Name": "XRCore",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

@@ -23,7 +23,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnInteractionHovered, UXRInterac
 // ================================================================================================================================================================
 
 UCLASS(Blueprintable, ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRInteractionComponent : public USceneComponent
+class XRCORE_API UXRInteractionComponent : public USceneComponent
 {
 	GENERATED_BODY()
 

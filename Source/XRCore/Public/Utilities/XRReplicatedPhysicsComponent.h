@@ -32,7 +32,7 @@ struct FXRPhysicsSnapshot
 
 
 UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRReplicatedPhysicsComponent : public UActorComponent
+class XRCORE_API UXRReplicatedPhysicsComponent : public UActorComponent
 {
 	GENERATED_BODY()
 

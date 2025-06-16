@@ -13,7 +13,7 @@ class AXRCoreHand;
 // Spawns, configures and manages an XRCoreHand Actor - to be parented to a MotionControllerComponent
 // ================================================================================================================================================================
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRCoreHandComponent : public USceneComponent, public IXRCoreHandInterface
+class XRCORE_API UXRCoreHandComponent : public USceneComponent, public IXRCoreHandInterface
 {
 	GENERATED_BODY()
 

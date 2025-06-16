@@ -14,7 +14,7 @@
 // ================================================================================================================================================================
 
 UCLASS(config = XRCore, defaultconfig)
-class XR_TOOLKIT_API UXRCoreSettings : public UDeveloperSettings
+class XRCORE_API UXRCoreSettings : public UDeveloperSettings
 {
     GENERATED_BODY()
 

@@ -15,7 +15,7 @@ class UXRConnectorComponent;
 // Static mesh (or other visual) to indicate available connection sockets for an XRConnector with matching ID
 // ================================================================================================================================================================
 UCLASS()
-class XR_TOOLKIT_API AXRConnectorHologram : public AActor, public IXRHologramInterface
+class XRCORE_API AXRConnectorHologram : public AActor, public IXRHologramInterface
 {
 	GENERATED_BODY()
 	

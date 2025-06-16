@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnXRLaserStateChanged, UXRLaserCom
 // Manages a XRLaser Actor (must implement IXRLaserInterface), interfaces with the InteractionSystem and UMG elements 
 // ================================================================================================================================================================
 UCLASS(Blueprintable, ClassGroup = (XRToolkit), meta = (BlueprintSpawnableComponent))
-class XR_TOOLKIT_API UXRLaserComponent : public USceneComponent, public IXRLaserInterface, public IXRInteractionInterface
+class XRCORE_API UXRLaserComponent : public USceneComponent, public IXRLaserInterface, public IXRInteractionInterface
 {
 	GENERATED_BODY()
 

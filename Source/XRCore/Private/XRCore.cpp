@@ -1,12 +1,12 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "XR_Toolkit.h"
+#include "XRCore.h"
 #include "Core/XRCoreSettings.h"
 #include "ISettingsModule.h"
 
-#define LOCTEXT_NAMESPACE "FXR_ToolkitModule"
+#define LOCTEXT_NAMESPACE "FXRCoreModule"
 
-void FXR_ToolkitModule::StartupModule()
+void FXRCoreModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 
@@ -20,7 +20,7 @@ void FXR_ToolkitModule::StartupModule()
     }
 }
 
-void FXR_ToolkitModule::ShutdownModule()
+void FXRCoreModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
@@ -28,4 +28,4 @@ void FXR_ToolkitModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 	
-IMPLEMENT_MODULE(FXR_ToolkitModule, XR_Toolkit)
+IMPLEMENT_MODULE(FXRCoreModule, XRCore)

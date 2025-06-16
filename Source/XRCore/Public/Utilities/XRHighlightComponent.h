@@ -13,7 +13,7 @@
 // ================================================================================================================================================================
 
 UCLASS(Blueprintable, ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
-class XR_TOOLKIT_API UXRHighlightComponent : public UActorComponent
+class XRCORE_API UXRHighlightComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
