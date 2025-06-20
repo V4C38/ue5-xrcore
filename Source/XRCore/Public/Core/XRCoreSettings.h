@@ -1,7 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Curves/CurveFloat.h"
 #include "Engine/DeveloperSettings.h"
+#include "Sound/SoundBase.h"
 #include "UObject/NoExportTypes.h"
 
 #include "Core/XRCoreTypes.h"
@@ -13,7 +15,7 @@
 // Default settings for XRCore
 // ================================================================================================================================================================
 
-UCLASS(config = XRCore, defaultconfig)
+UCLASS(config = XRCore, defaultconfig, Category = "XRCore")
 class XRCORE_API UXRCoreSettings : public UDeveloperSettings
 {
     GENERATED_BODY()
@@ -27,7 +29,7 @@ public:
      * XR Standard to use. Specify whether if the default OpenXR plugin or MetaXR is used for this project.
      * This will impact the way MotionControllers and HandTracking is utilized as using the MetaXR plugin changes some of the rotations.
      */
-    UPROPERTY(config, EditAnywhere)
+    UPROPERTY(config, EditAnywhere, Category = "Defaults")
     EXRStandard XRStandard = EXRStandard::OpenXR;
 
 	/**

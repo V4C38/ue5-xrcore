@@ -1,6 +1,9 @@
  
 #include "Core/XRCoreHandComponent.h"
 #include "Core/XRCoreHand.h"
+
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "Net/UnrealNetwork.h"
 
 UXRCoreHandComponent::UXRCoreHandComponent()

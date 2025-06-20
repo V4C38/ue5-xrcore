@@ -2,6 +2,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/AudioComponent.h"
+#include "Components/MeshComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Components/SceneComponent.h"
 #include "Sound/SoundBase.h"
 
@@ -254,7 +257,7 @@ private:
 	void SpawnAndConfigureXRHighlight();
 	
 	UPROPERTY()
-	TArray<UMeshComponent*> InteractionCollision = {nullptr};
+	TArray<UMeshComponent*> InteractionCollision = {};
 	
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UXRInteractorComponent>> ActiveInteractors = {};

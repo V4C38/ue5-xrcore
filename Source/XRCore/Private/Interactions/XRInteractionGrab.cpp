@@ -1,8 +1,12 @@
 #include "Interactions/XRInteractionGrab.h"
 #include "Interactions/XRInteractorComponent.h"
 #include "Utilities/XRReplicatedPhysicsComponent.h"
+
+
+#include "Components/PrimitiveComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "Net/UnrealNetwork.h"
+
 
 
 UXRInteractionGrab::UXRInteractionGrab()
@@ -97,22 +101,30 @@ bool UXRInteractionGrab::HasPhysicsEnabled() const
 
 void UXRInteractionGrab::PhysicsGrab(UXRInteractorComponent* InInteractor)
 {
-	if (InInteractor)
+	if (!InInteractor)
 	{
-		if (GetOwner()->HasAuthority())
-		{
-			XRReplicatedPhysicsComponent->SetInteractedWith(true);
-		}
+		return;
+	}
 
-		TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetRegisteredMeshComponents();
-		if (MeshComponents.Num() > 0)
-		{
-			UMeshComponent* PhysicsEnabledMesh = MeshComponents[0];
-			UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetPhysicsConstraint();
+	if (GetOwner()->HasAuthority())
+	{
+		XRReplicatedPhysicsComponent->SetInteractedWith(true);
+	}
 
-			if (ActivePhysicsConstraint && PhysicsEnabledMesh)
+	TArray<UMeshComponent*> MeshComponents = XRReplicatedPhysicsComponent->GetRegisteredMeshComponents();
+	if (MeshComponents.Num() > 0)
+	{
+		UMeshComponent* PhysicsEnabledMesh = MeshComponents[0];
+		UPhysicsConstraintComponent* ActivePhysicsConstraint = InInteractor->GetPhysicsConstraint();
+
+		if (ActivePhysicsConstraint && PhysicsEnabledMesh)
+		{
+			UPrimitiveComponent* CastMesh = Cast<UPrimitiveComponent>(PhysicsEnabledMesh);
+			UPrimitiveComponent* CastInteractor = Cast<UPrimitiveComponent>(InInteractor);
+
+			if (CastMesh && CastInteractor)
 			{
-				ActivePhysicsConstraint->SetConstrainedComponents(PhysicsEnabledMesh, "", InInteractor, "");
+				ActivePhysicsConstraint->SetConstrainedComponents(CastMesh, NAME_None, CastInteractor, NAME_None);
 			}
 		}
 	}

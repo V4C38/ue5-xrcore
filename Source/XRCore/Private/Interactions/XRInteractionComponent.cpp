@@ -3,6 +3,7 @@
 #include "Interactions/XRInteractionTypes.h"
 #include "Interactions/XRInteractorComponent.h"
 #include "Utilities/XRHighlightComponent.h"
+
 #include "Components/AudioComponent.h"
 #include "GameFramework/GameSession.h"
 #include "Kismet/GameplayStatics.h"
@@ -164,11 +165,7 @@ void UXRInteractionComponent::RequestAudioPlay(USoundBase* InSound)
 
 	if (InSound)
 	{
-		CurrentAudioComponent = UGameplayStatics::SpawnSoundAtLocation(
-			GetWorld(),
-			InSound,
-			this->GetComponentLocation()
-		);
+		CurrentAudioComponent = UGameplayStatics::SpawnSoundAtLocation(this, InSound, this->GetComponentLocation());
 	}
 }
 

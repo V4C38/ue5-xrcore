@@ -2,6 +2,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "Components/MeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/ActorComponent.h"
 
 #include "XRReplicatedPhysicsComponent.generated.h"
@@ -12,7 +17,7 @@
 // This component can be added to any replicated actor with a StaticMeshComponent as the root
 // ================================================================================================================================================================
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = "XRCore")
 struct FXRPhysicsSnapshot
 {
 	GENERATED_BODY()
@@ -20,18 +25,18 @@ struct FXRPhysicsSnapshot
 	UPROPERTY()
 	uint32 ID = 0;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Physics")
 	uint8 bIsInteractedWith = false;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Physics")
 	FVector Location = {};
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Physics")
 	FRotator Rotation = {};
 };
 
 
-UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(XRToolkit), meta=(BlueprintSpawnableComponent), Category = "XRCore")
 class XRCORE_API UXRReplicatedPhysicsComponent : public UActorComponent
 {
 	GENERATED_BODY()

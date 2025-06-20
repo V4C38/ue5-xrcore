@@ -4,7 +4,11 @@
 #include "Interactions/XRInteractionGrab.h"
 #include "Utilities/XRToolsUtilityFunctions.h"
 #include "Utilities/XRReplicatedPhysicsComponent.h"
+
 #include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
+#include "GameFramework/Actor.h"
+
 
 UXRConnectorComponent::UXRConnectorComponent()
 {

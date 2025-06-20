@@ -1,7 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/World.h"
+#include "Engine/EngineTypes.h"
 #include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "InputCoreTypes.h"
 
 #include "Core/XRCoreHandComponent.h"
 

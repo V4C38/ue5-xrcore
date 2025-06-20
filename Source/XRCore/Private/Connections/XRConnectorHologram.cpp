@@ -1,5 +1,9 @@
+
 #include "Connections/XRConnectorHologram.h"
 #include "Connections/XRConnectorComponent.h"
+
+#include "Engine/World.h"
+#include "GameFramework/Actor.h"
 
 AXRConnectorHologram::AXRConnectorHologram()
 {

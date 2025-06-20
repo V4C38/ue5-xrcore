@@ -1,7 +1,13 @@
 
 #include "Core/XRLaserComponent.h"
 #include "Interactions/XRInteractorComponent.h"
+
 #include "Net/UnrealNetwork.h"
+#include "GameFramework/Actor.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "TimerManager.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
 
 
 UXRLaserComponent::UXRLaserComponent()

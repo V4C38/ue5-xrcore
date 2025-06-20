@@ -4,6 +4,8 @@
 #include "Connections/XRConnectorComponent.h"
 #include "Connections/XRConnectorSocket.h"
 
+#include "Math/RandomStream.h"
+
 
 EXRStandard UXRToolsUtilityFunctions::GetXRStandard()
 {

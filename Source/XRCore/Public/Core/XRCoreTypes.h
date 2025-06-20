@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UObject/Interface.h"
 
 #include "XRCoreTypes.generated.h"
 
@@ -8,14 +9,14 @@
 // Types and Interfaces used throughout core components
 // ================================================================================================================================================================
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, Category = "XRCore")
 enum class EXRStandard : uint8
 {
 	OpenXR UMETA(DisplayName = "OpenXR"),
 	MetaXR UMETA(DisplayName = "MetaXR"),
 };
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = "XRCore")
 struct FLocationAndRotation
 {
 	GENERATED_BODY();
@@ -42,27 +43,27 @@ enum class ESimplifiedControllerHand : uint8
 	Any UMETA(DisplayName = "Any Hand"),
 };
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Category = "XRCore")
 struct FXRCoreHandReplicationData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Hand")
 	FVector Location = FVector::ZeroVector;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Hand")
 	FQuat Rotation = FQuat::Identity;
 
 	// Input data (for example trigger or pinch amount), used for animation on remotes
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Hand")
 	float PrimaryInputAxis = 0.0f;
 
 	// Input data (for example grip), used for animation on remotes
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "XRCore|Hand")
 	float SecondaryInputAxis = 0.0f;
 };
 
-UINTERFACE(MinimalAPI, BlueprintType)
+UINTERFACE(MinimalAPI, BlueprintType, Category = "XRCore")
 class UXRCoreHandInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -146,7 +147,7 @@ public:
 // -------------------------------------------------------------------------------------------------------------------------------------
 // Laser
 // -------------------------------------------------------------------------------------------------------------------------------------
-UENUM(BlueprintType)
+UENUM(BlueprintType, Category = "XRCore")
 enum class EXRLaserState : uint8
 {
 	Inactive UMETA(DisplayName = "Inactive"),
@@ -155,7 +156,7 @@ enum class EXRLaserState : uint8
 	Interact UMETA(DisplayName = "Interact"),
 };
 
-UINTERFACE(MinimalAPI, BlueprintType)
+UINTERFACE(MinimalAPI, BlueprintType, Category = "XRCore")
 class UXRLaserInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -179,22 +180,19 @@ public:
 	bool IsLaserActive() const;
 
 	/**
-	 * Propagate the current InputAxis value to the Hand actor to process.
-	*/
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRLaser")
-
-	/**
 	 * Get the laser state with more information than active/inactive.
 	 * Seeking: not hovering over an interaction
 	 * Hovering: hovering an interaction that is enabled and available
 	 * Interacting: XRLaser actors XRInteractor is currently interacting
 	*/
-	EXRLaserState GetLaserState();
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRLaser")
+	EXRLaserState GetLaserState();
+
 
 	/**
 	 * Get this laser actors Interactor. (This is expected to be valid if using the XRCoreLaser actor)
 	*/
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "XRCore|XRLaser")
 	UXRInteractorComponent* GetXRInteractor() const;
 
 	/**

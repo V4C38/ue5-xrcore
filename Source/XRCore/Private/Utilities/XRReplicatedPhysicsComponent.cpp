@@ -1,5 +1,11 @@
 #include "Utilities/XRReplicatedPhysicsComponent.h"
 #include "Core/XRCoreSettings.h"
+
+#include "TimerManager.h"
+#include "Components/MeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
+#include "GameFramework/Actor.h"
 #include "Net/UnrealNetwork.h"
 
 UXRReplicatedPhysicsComponent::UXRReplicatedPhysicsComponent()
@@ -257,9 +263,9 @@ void UXRReplicatedPhysicsComponent::RegisterPhysicsMeshComponents(FName InCompon
 
 	if (!InComponentTag.IsNone())
 	{	// Get all MeshComponents with the specified tag and add them to the list.
-		TInlineComponentArray<UMeshComponent*> MeshComponents;
+		TInlineComponentArray<UStaticMeshComponent*> MeshComponents;
 		Owner->GetComponents(MeshComponents);
-		for (UMeshComponent* MeshComponent : MeshComponents)
+		for (UStaticMeshComponent* MeshComponent : MeshComponents)
 		{
 			if (MeshComponent && MeshComponent->ComponentHasTag(InComponentTag))
 			{

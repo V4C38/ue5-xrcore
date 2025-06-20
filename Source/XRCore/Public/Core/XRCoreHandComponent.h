@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+#include "InputCoreTypes.h"
 
 #include "Core/XRCoreTypes.h"
-
 #include "XRCoreHandComponent.generated.h"
 
 class AXRCoreHand;

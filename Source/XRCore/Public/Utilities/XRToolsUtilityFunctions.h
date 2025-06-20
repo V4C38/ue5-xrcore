@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "InputCoreTypes.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Math/RandomStream.h"
 
 #include "Core/XRCoreSettings.h"
 #include "Core/XRCoreTypes.h"
@@ -11,7 +12,8 @@
 #include "XRToolsUtilityFunctions.generated.h"
 
 class UXRInteractionComponent;
-class UXRInteractorComponent;
+class UXRInteractorComponent; 
+class UXRConnectorComponent;
 
 
 // ================================================================================================================================================================
