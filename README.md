@@ -1,66 +1,76 @@
-# XRCore
-XRCore is a multiplayer XR interaction system designed for Unreal Engine, featuring a player pawn with hands that support both hand tracking and controllers.
+# XRCore 0.9.0 beta
+XR in Unreal Engine 5.5 - OpenXR based Multiplayer Interaction and Utilities.
  
-## Overview
-
 [Demo Video](https://vimeo.com/1002763137)
 
+![Header Image](Assets/T_XRCore_Docu_Header.psd.png)
 
 
-## Pawn & Hands
-The foundation of XRCore’s player system, including the XRCore Pawn and XRHand components, which enable movement, interaction, and hand-based controls.
 
-### XRCore Pawn
-Maintains and owns the players XRHands. Supports optional snap turn and teleportation locomotion.
-### XRCore Hand
-Handles the player's hands using OpenXR controller data. Supports both tracking hand and motion controllers.
+## Player System
+XRCore’s player system is built around a modular XR pawn and flexible hand components. Designed for both tracked hands and motion controllers using OpenXR, with multiplayer and input support baked in.
 
-#### Unreals Enhanced Input
+#### XRCore Hand Actor & Component
+The XRCoreHand system spawns and manages a network-replicated hand actor that attaches to a motion controller, enabling interaction and input handling via modular components like XRInteractor and XRLaser. 
+It supports both hand tracking and controller input, with smooth transform interpolation for remote clients and customizable replication behavior.
 
-#### OpenXR Handtracking
-
-
-### XRCore GameMode
-Manages the overall multiplayer experience, ensuring seamless player spawning.
-#### PlayerSpawnPoint
-A networked spawn system that places players in predefined locations using the XRCore Game Mode.
-
+#### XRCore Pawn
+A light-weight demonstration of how to use XRHands on your own Pawn - initializes the Input system and only forwards commands via an Interface to the Hands.
 
 ## Interaction System
-A robust, networked system for handling XR interactions, including grabbing, triggering, and custom interaction mechanics. 
-### XRInteractorComponent
-A component responsible for detecting and interacting with objects in the XR world, owned by the Pawn to initiate serverside logic.
-#### Replication
-An overview of how interactions are correctly synchronized across all players in a multiplayer session including late-joining and high latency/package loss scenarios.
+![Screenshot: hand/controller interacting with objects, showing grab + hover highlight.](Assets/T_XRCore_Docu_InteractionSystem.png)
 
+A modular, multiplayer-ready XR interaction framework for Unreal Engine. Designed for VR/AR, it handles grabbing, triggering, hovering, and more — cleanly synced over the network, including support for late-joining players and high-latency sessions.
 
-### XRInteractionComponent
-Base class for interactive objects that can be used together with the XRInteractorComponent.
-#### Grab Interaction
-Allows players to pick up, hold, and manipulate objects using their hands or controllers. Can be physics or kinematics based (multi hand grab only available with physics system).
-#### Trigger Interaction
-Handles button presses, switches, and other trigger-based mechanics.
-#### Creating custom Interactions
-Provides a how-to guide for developers to create their own interactions.
+**Replication:** all interactions are replicated — including start/stop events, physics state, and hover highlights. The system supports proper late-joining, high latency tolerance and  physics replication.
+  
+#### XRInteractorComponent
+Attach this to your XR Pawn or controller to drive interactions. It finds nearby interactive components, manages priorities, and triggers interaction logic server-side.
 
-### Connection System
+#### XRInteractionComponent
+Drop this on any object to make it interactive. It handles state, hover, priority, and networking.
+
+- **Grab Interaction** Pick up objects using physics or attachments. Physics grabs allow two-hand holding and are ideal for shared multiplayer manipulation.
+- **Trigger Interaction** Use this for buttons, toggles, switches, etc. Supports toggle/hold/one-shot behavior, all replicated.
+- **Creating custom Interactions** Extend UXRInteractionComponent, override OnInteractionStart, OnInteractionEnd, and optionally OnInteractionHover. You can hook into all XRInteractor events and fully customize behavior.
+
+#### Setting Up an Interactive Actor
+Add an XRInteractionComponent subclass to your actor
+For multiplayer, ensure that IsReplicated is set to true.
+
+-> Check out /Demo/Blueprints for ready-to-use examples.
+
+## Connection System
+![Screenshot: Connector, Socket, Hologram](Assets/T_XRCore_Docu_ConnectionSystem.png)
+
 A modular and fully replicated system for dynamically connecting and attaching actors at runtime.
-#### XRConnectorComponent
-A component that allows objects to establish and manage networked connections.
-#### XRConnectorSocket
-Defines attachment points for objects.
-#### Holograms
-A visual feedback system used for guiding interactions, providing object placement previews.
 
+- **XRConnectorComponent** A component that allows objects to establish and manage networked connections.
+- **XRConnectorSocket** Defines where things can connect. Each socket supports compatibility checks, states, and connection logic.
+- **Holograms** Preview placement with dynamic holograms — shown when overlapping or grabbing, fully customizable and optional.
 
 ## Utilities
 A collection of adjacent helper functions and tools to streamline development.
+
 #### XRCoreUtilityFunctions
-A set of utility functions to simplify common XR-related tasks and operations.
+Collection of common XRCore helpers – like checking if an actor is interactive, resolving interaction priorities, and mapping controller hands.
+
 #### Spatial Annotation
-Customizeable UI element that can be attached to actors and tracks the players head location.
+[Screenshot: Annotation]
 
-#### MetaXR Integration
-A separate plugin that provides additional functionality for Meta Quest devices by integrating the UE5 MetaXR plugin.
-See https://github.com/V4C38/ue5-xrcore-meta-integration
+A simple world-space UI that follows the player’s view – perfect for labels, hints, or tooltips. Fully customizable.
 
+## Demo
+### Interaction Demo
+![Screenshot: Demo UI](Assets/T_XRCore_Docu_DemoScene1.png)
+
+Single player scene that shows all aspects of the interaction system. Grab, Trigger, Connections and composite interactions (iE. Actors that have multiple interaction components and types). 
+
+The map **M_Demo_Interactions** provides a good showcase of utilities like spatial annotations and how to interface XRCore with sequencers.
+
+-> Provided as a built .apk for Quest Headsets and is available on the Meta Quest store as "XRCore Interaction Demo".
+
+### Multiplayer Demo
+[Screenshot: MP Demo, 2 players]
+
+Shared physics, interactions. Use this to try multiplayer with NetMode client or listen-server. Physics, late-joining, Interactions.
