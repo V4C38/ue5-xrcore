@@ -1,22 +1,24 @@
-# XRCore 0.8
+# XRCore 0.9.0 beta
 XR in Unreal Engine 5.5 - OpenXR based Multiplayer Interaction and Utilities.
  
 [Demo Video](https://vimeo.com/1002763137)
+
+![Header Image](Assets/T_XRCore_Docu_Header.psd.png)
+
 
 
 ## Player System
 XRCore’s player system is built around a modular XR pawn and flexible hand components. Designed for both tracked hands and motion controllers using OpenXR, with multiplayer and input support baked in.
 
-#### XRCore Pawn
-TBD
-
 #### XRCore Hand Actor & Component
-TBD
+The XRCoreHand system spawns and manages a network-replicated hand actor that attaches to a motion controller, enabling interaction and input handling via modular components like XRInteractor and XRLaser. 
+It supports both hand tracking and controller input, with smooth transform interpolation for remote clients and customizable replication behavior.
 
+#### XRCore Pawn
+A light-weight demonstration of how to use XRHands on your own Pawn - initializes the Input system and only forwards commands via an Interface to the Hands.
 
 ## Interaction System
-
-[Screenshot: hand/controller interacting with objects, showing grab + hover highlight.]
+![Screenshot: hand/controller interacting with objects, showing grab + hover highlight.](Assets/T_XRCore_Docu_InteractionSystem.png)
 
 A modular, multiplayer-ready XR interaction framework for Unreal Engine. Designed for VR/AR, it handles grabbing, triggering, hovering, and more — cleanly synced over the network, including support for late-joining players and high-latency sessions.
 
@@ -39,7 +41,7 @@ For multiplayer, ensure that IsReplicated is set to true.
 -> Check out /Demo/Blueprints for ready-to-use examples.
 
 ## Connection System
-[Screenshot: Connector, Socket, Hologram]
+![Screenshot: Connector, Socket, Hologram](Assets/T_XRCore_Docu_ConnectionSystem.png)
 
 A modular and fully replicated system for dynamically connecting and attaching actors at runtime.
 
@@ -60,7 +62,7 @@ A simple world-space UI that follows the player’s view – perfect for labels,
 
 ## Demo
 ### Interaction Demo
-[Screenshot: Demo UI]
+![Screenshot: Demo UI](Assets/T_XRCore_Docu_DemoScene1.png)
 
 Single player scene that shows all aspects of the interaction system. Grab, Trigger, Connections and composite interactions (iE. Actors that have multiple interaction components and types). 
 
