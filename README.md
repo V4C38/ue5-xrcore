@@ -1,6 +1,6 @@
 <div align="center">
 
-# UE5 XRCore V1.0.0
+# UE5 XRCore
 
 **OpenXR-based multiplayer interaction framework and utilities**  for **Unreal Engine 5.6.1+**
 
