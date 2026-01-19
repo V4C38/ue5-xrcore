@@ -6,7 +6,11 @@
 
 ![Header Image](Assets/T_XRCore_Docu_Header.gif)
 
+
+[Demo Video](https://www.youtube.com/watch?v=gnpYVznTpzo)
+
 </div>
+
 
 ---
 
@@ -22,7 +26,7 @@ You can either use the **precompiled binaries** or **build from source**.
    ```
    [YourProject]/Plugins/XRCore
    ```
-3. Open the project in Unreal Engine 5.5 and enable **XRCore** if needed.
+3. Open the project in Unreal Engine 5.6.1 or above and enable **XRCore** if needed.
 4. Restart the editor.
 
 </details>
@@ -180,7 +184,7 @@ Useful for labels, hints, and tooltips.
 Single-player scene showcasing grabs, triggers, connections, and composite interactions.  
 Map: **`M_Demo_Interactions`**, including spatial annotations and Sequencer integration.
 
-A prebuilt Quest `.apk` is available on the Meta Quest Store as  
+A prebuilt Quest `.apk` is available in the Release package 
 **"XRCore Interaction Demo"**.
 
 ---
